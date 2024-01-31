@@ -8,10 +8,13 @@ Talk Calendar is a personal desktop calendar for Linux which has some speech cap
 
 * built with C and GTK 4.8.3 (Debian 12)
 * bespoke custom calendar which allows dates with events to be marked (colour and audio)
-* event type, details, location, start and end time can be entered and edited
+* event summary, location, start and end time can be entered and edited
 * priority, is-yearly and notifications can be used
-* built-in speech synthesizer: date reader, time reader, event type reader
+* date reader
+* time reader
+* event type reader
 * Sqlite3 database used to store events
+* small built-in speech synthesizer
 
 ## Installing
 
@@ -484,7 +487,7 @@ To install development tools on Solus linux including gcc you need to [install t
 ```
 make
 ```
-To run Talk Calendar use the following.
+Here, talkcalendar is the Makefile target. To run Talk Calendar use the following.
 
 ```
 ./talkcalendar
