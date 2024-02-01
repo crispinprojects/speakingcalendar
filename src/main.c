@@ -4055,7 +4055,7 @@ static void speak_events() {
 		else {		
 		if(m_12hour_format) {
 		
-		if(start_hour >=1 && start_hour<=12) {
+		if(start_hour >=1 && start_hour<12) {
 		//AM
 		hour_str =get_cardinal_string(start_hour);
 		
@@ -4068,7 +4068,7 @@ static void speak_events() {
 		speak_word_list = g_list_append(speak_word_list, min_str);
 		speak_word_list = g_list_append(speak_word_list, ampm_str);				
 		}
-		if(start_hour ==12) {
+		else if(start_hour ==12) {
 		//PM
 		hour_str =get_cardinal_string(start_hour);
 		min_str=get_cardinal_string(start_min);
@@ -4081,7 +4081,7 @@ static void speak_events() {
 		}				
 		speak_word_list = g_list_append(speak_word_list, ampm_str);
 		}
-		if (start_hour >=13 && start_hour<=23) {
+		else if (start_hour >=13 && start_hour<=23) {
 		//PM
 		start_hour=start_hour-12;
 		hour_str =get_cardinal_string(start_hour);
