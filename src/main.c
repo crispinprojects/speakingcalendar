@@ -2866,7 +2866,7 @@ static void callbk_about(GSimpleAction* action, GVariant *parameter, gpointer us
 	gtk_widget_set_size_request(about_dialog, 200,200);
     gtk_window_set_modal(GTK_WINDOW(about_dialog),TRUE);
 	gtk_about_dialog_set_program_name(GTK_ABOUT_DIALOG(about_dialog), "Talk Calendar");
-	gtk_about_dialog_set_version (GTK_ABOUT_DIALOG(about_dialog), "0.1.0");
+	gtk_about_dialog_set_version (GTK_ABOUT_DIALOG(about_dialog), "0.1.1");
 	gtk_about_dialog_set_copyright(GTK_ABOUT_DIALOG(about_dialog),"Copyright © 2024");
 	gtk_about_dialog_set_comments(GTK_ABOUT_DIALOG(about_dialog),"Personal calendar");
 	gtk_about_dialog_set_license_type (GTK_ABOUT_DIALOG(about_dialog), GTK_LICENSE_LGPL_2_1);
@@ -5012,7 +5012,7 @@ static void speak_time(gint hour, gint min)
 		
 	if(m_12hour_format) {
 	
-	if(hour >=1 && hour<=12) {
+	if(hour >=1 && hour<12) {
 	//AM
 	hour_str =get_cardinal_string(hour);
 	
@@ -5025,7 +5025,7 @@ static void speak_time(gint hour, gint min)
 	speak_word_list = g_list_append(speak_word_list, min_str);
 	speak_word_list = g_list_append(speak_word_list, ampm_str);				
 	}
-	if(hour ==12) {
+	else if(hour ==12) {
 	//PM
 	hour_str =get_cardinal_string(hour);
 	min_str=get_cardinal_string(min);
@@ -5038,7 +5038,7 @@ static void speak_time(gint hour, gint min)
 	}				
 	speak_word_list = g_list_append(speak_word_list, ampm_str);
 	}
-	if (hour >=13 && hour<=23) {
+	else if (hour >=13 && hour<=23) {
 	//PM
 	hour=hour-12;
 	hour_str =get_cardinal_string(hour);
@@ -5065,6 +5065,7 @@ static void speak_time(gint hour, gint min)
 	gchar* word_str_lower;	
 	gint word_number  =g_list_length(speak_word_list);
 	
+	
 	//create word array using list size
 	unsigned char *word_arrays[word_number]; 
 	unsigned int word_arrays_sizes[word_number];
@@ -5074,6 +5075,7 @@ static void speak_time(gint hour, gint min)
 	{
 	word_list_pointer=g_list_nth_data(speak_word_list,i);
 	word_str=(gchar *)word_list_pointer;
+	//g_print("time: wordStr = %s\n", word_str);
 	gchar* word_str_lower= g_ascii_strdown(word_str,-1);	//make sure lower	
 		
 	//load up arrays
