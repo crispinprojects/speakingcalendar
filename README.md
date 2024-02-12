@@ -379,10 +379,7 @@ With GNOME based desktops use the GNOME "Tweak Tool" to add Talk Calendar to you
 
 ## How is Speech Generated?
 
-Talk Calendar incorporates a small English speech synthesizer used to concatenate and play pre-recorded words using the computer speaker. The previous diphone speech synthesizer has been dropped for [audibility](https://en.wiktionary.org/wiki/audibility) reasons but the original diphone synthesizer code can be found [here](https://github.com/crispinprojects/diphone-synthesizer). 
-
-Currently I have reverted back to using my original approach to generating speech which concatenates pre-recorded words stored in memory. This is feasibly because the Talk Calendar application uses a highly restricted set of speech words. My implementation of a diphone speech synthesizer relied on reading and concatenating pre-recorded diphone wave files to produce speech output for a given text input using a word-to-diphone mapping dictionary. The quality of the speech output although better than my [formant speech synthesizer](https://github.com/crispinprojects/formant-synthesizer) test was constrained by the wave file reading and concatenation code. The only way I can see to improve performance would be to store the diphones in memory and write a faster concatenation algorithm using [memcpy](https://www.tutorialspoint.com/c_standard_library/c_function_memcpy.htm) or better still raw assembly code. 
-
+Talk Calendar incorporates a small English word speech synthesizer used to concatenate and play-back pre-recorded words using the computer speaker. I have reverted back from using my diphone speech synthesizer but I am still working on this and the latest code can be found [here](https://github.com/crispinprojects/talker).
 
 ### Events Database
 
