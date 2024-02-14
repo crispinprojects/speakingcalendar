@@ -10,7 +10,7 @@ Talk Calendar is a personal desktop calendar for Linux which has some speech cap
 * bespoke custom calendar which allows dates with events to be marked (colour and audio)
 * event type, details, location, start and end time can be entered and edited
 * priority, is-yearly and notifications can be used
-* built-in speech synthesizer: date reader, time reader, event type reader
+* built-in diphone speech synthesizer
 * Sqlite3 database used to store events
 
 ## Installing
@@ -379,7 +379,11 @@ With GNOME based desktops use the GNOME "Tweak Tool" to add Talk Calendar to you
 
 ## How is Speech Generated?
 
-Talk Calendar incorporates a small English word speech synthesizer used to concatenate and play-back pre-recorded words using the computer speaker. I have reverted back from using my diphone speech synthesizer but I am still working on this and the latest code can be found [here](https://github.com/crispinprojects/talker).
+Words are formed as sequences of elementary speech units. A phoneme is the smallest unit of sound that distinguishes one word from another word and there are 44 phonemes in the English language. A diphone is a sound unit composed of two adjacent partial phonemes i.e. the second half of the first phoneme and the first half of the second phoneme. 
+
+This voice used by Talk Calendar is derivative work based on the diphone collection created by Alan W Black and Kevin Lenzo which is free for use for any purpose (commercial or otherwise) and subject to the pretty light restrictions detailed [here](https://github.com/hypnaceae/DiphoneSynth/blob/master/diphones_license.txt). I have used the same notation and licence for the voices that I have created. There is information about recording your own diphones [here](http://festvox.org/bsv/x2401.html) and in the speech synthesis lecture by Professor Alan W Black [here](https://www.youtube.com/watch?v=eDjtEsOvouM&t=1459s).
+
+The diphone speech synthesizer uses a small word-to-diphones dictionary of approximately 56,600 English words. If a word is not recognised by the dictionary it is skipped over. More words will be added in future updates.
 
 ### Events Database
 
@@ -526,5 +530,8 @@ Active.
 * [Geany](https://www.geany.org/) is a lightweight source-code editor (version 2 now uses GTK3). [GPL v2 license](https://www.gnu.org/licenses/old-licenses/gpl-2.0.txt)
 
 * [Sqlite](https://www.sqlite.org/index.html) is open source and in the [public domain](https://www.sqlite.org/copyright.html).
+
+* Diphone collection and synthesis Alan W. Black and Kevin Lenzo [2000](https://www.cs.cmu.edu/~awb/papers/ICSLP2000_diphone.pdf) with license found [here](https://github.com/hypnaceae/DiphoneSynth/blob/master/diphones_license.txt)
+
 
 * How to Install Budgie Desktop on Debian. See [here](https://www.linuxcapable.com/how-to-install-budgie-desktop-on-debian-linux/) and [here](https://packages.debian.org/bookworm/budgie-desktop).
