@@ -420,21 +420,22 @@ To check the installed version use the command below.
 sqlite3 --version
 ```
 
-### Building on Ubuntu and Debian Bookworm
+### Building on Debian Bookworm, Ubuntu and Raspberry Pi OS (64-bit)-
 
 With both  Debian Bookworm and Ubuntu and you need to install the following packages to compile Talk Calendar.
 
 ```
-apt install build-essential
-apt install libgtk-4-dev
-apt install libasound2-dev
+sudo apt install build-essential
+sudo apt install libgtk-4-dev
+sudo apt install libasound2-dev
+sudo apt install libnotify-dev
 ```
 
 The packages:
 
 ```
-apt install libglib2.0-dev
-apt install alsa-utils
+sudo apt install libglib2.0-dev
+sudo apt install alsa-utils
 ```
 
 are needed but should be installed by default.
