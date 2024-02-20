@@ -20127,17 +20127,18 @@ pair_t table[] = {
 {"frictional","f-r r-ih ih-k k-sh sh-ah ah-n n-ah ah-l"},
 {"frictionless","f-r r-ih ih-k k-sh sh-ah ah-n n-l l-ah ah-s"},
 {"frictions","f-r r-ih ih-k k-sh sh-ah ah-n n-z"},
-{"friday","f-r r-aa aa-iy iy-d d-iy"},
+
+{"friday","f-r r-aa aa-iy iy-d d-eh eh-iy"},
 {"fridays","f-r r-aa aa-iy iy-d d-iy iy-z"},
 {"fried","f-r r-aa aa-iy iy-d"},
 {"frieda","f-r r-iy iy-d d-ah"},
 {"friedland","f-r r-iy iy-d d-l l-ah ah-n n-d"},
 {"friedrich","f-r r-iy iy-d d-r r-ih ih-k"},
 {"friedrichshafen","f-r r-iy iy-d d-r r-ih ih-k k-sh sh-ah ah-f f-ah ah-n"},
-//s","f-r r-eh eh-n n-z"},
+
 {"friend","f-r r-eh eh-n n-d"},
-//","f-r r-eh eh-n"},
-//s","f-r r-eh eh-n n-d d-z"},
+
+
 {"friendless","f-r r-eh eh-n n-d d-l l-ah ah-s"},
 {"friendlessness","f-r r-eh eh-n n-d d-l l-ah ah-s s-n n-ah ah-s"},
 {"friendlier","f-r r-eh eh-n n-d d-l l-iy iy-uh uh-r"},
@@ -20146,12 +20147,12 @@ pair_t table[] = {
 {"friendly","f-r r-eh eh-n n-d d-l l-iy"},
 {"friends","f-r r-eh eh-n n-d d-z"},
 {"friendship","f-r r-eh eh-n n-d d-sh sh-ih ih-p"},
-//s","f-r r-eh eh-n n-d d-sh sh-ih ih-p p-s"},
+
 {"friendships","f-r r-eh eh-n n-d d-sh sh-ih ih-p p-s"},
 {"frieze","f-r r-iy iy-z"},
 {"friezes","f-r r-iy iy-z z-ih ih-z"},
 {"frigate","f-r r-ih ih-g g-ah ah-t"},
-//s","f-r r-ih ih-g g-ah ah-t t-s"},
+
 {"frigates","f-r r-ih ih-g g-ah ah-t t-s"},
 {"fright","f-r r-aa aa-iy iy-t"},
 {"frighted","f-r r-aa aa-iy iy-t t-ih ih-d"},
@@ -32558,7 +32559,13 @@ pair_t table[] = {
 {"monastery","m-aa aa-n n-ah ah-s s-t t-eh eh-r r-iy"},
 {"monastic","m-ah ah-n n-ae ae-s s-t t-ih ih-k"},
 {"monboddo","m-aa aa-n n-b b-aa aa-d d-ao ao-uh"},
-{"monday","m-ah ah-n n-d d-iy"},
+
+//{"day","d-eh eh-iy"},
+{"monday","m-m m-ah ah-n n-n n-d d-d d-eh ey-iy"},
+
+//{"mun","m-ah ah-n"},
+//{"monday","m-ao ao-uh uh-n n-d d-iy"},
+
 //s","m-ah ah-n n-d d-iy iy-z"},
 {"mondays","m-ah ah-n n-d d-iy iy-z"},
 {"monde","m-aa aa-n n-d"},
@@ -43702,11 +43709,12 @@ pair_t table[] = {
 {"saturated","s-ae ae-ch ch-uh uh-r r-eh eh-iy iy-t t-ah ah-d"},
 {"saturating","s-ae ae-ch ch-uh uh-r r-eh eh-iy iy-t t-ih ih-ng"},
 {"saturation","s-ae ae-ch ch-uh uh-r r-eh eh-iy iy-sh sh-ah ah-n"},
-{"saturday","s-ae ae-t t-uh uh-r r-d d-iy"},
-//s","s-ae ae-t t-uh uh-r r-d d-iy iy-z"},
+
+{"saturday","s-ae ae-t t-uh uh-r r-d d-eh eh-iy"},
+
 {"saturdays","s-ae ae-t t-uh uh-r r-d d-iy iy-z"},
 {"saturn","s-ae ae-t t-uh uh-r r-n"},
-//s","s-ae ae-t t-uh uh-r r-n n-z"},
+
 {"saturnalia","s-ae ae-t t-uh uh-r r-n n-eh eh-iy iy-l l-y y-ah"},
 {"saturnia","s-ae ae-t t-uh uh-r r-n n-iy iy-ah"},
 {"saturnian","s-ae ae-t t-uh uh-r r-uh uh-r r-n n-iy iy-ah ah-n"},
@@ -48792,13 +48800,14 @@ pair_t table[] = {
 {"sunburnt","s-ah ah-n n-b b-n n-t"},
 {"sunbury","s-ah ah-n n-b b-eh eh-r r-iy"},
 {"sunda","s-ah ah-n n-d d-ah"},
-{"sunday","s-ah ah-n n-d d-eh eh-iy"},
-//s","s-ah ah-n n-d d-eh eh-iy iy-z"},
+
+{"sunday","s-ah ah-n n-d d-eh d-eh eh-iy"},
+
 {"sundays","s-ah ah-n n-d d-eh eh-iy iy-z"},
 {"sunder","s-ah ah-n n-d d-uh uh-r"},
 {"sundered","s-ah ah-n n-d d-uh uh-r r-d"},
 {"sunderland","s-ah ah-n n-d d-uh uh-r r-l l-ah ah-n n-d"},
-//s","s-ah ah-n n-d d-uh uh-r r-l l-ah ah-n n-d d-z"},
+
 {"sundown","s-ah ah-n n-d d-aa aa-uh uh-n"},
 {"sundry","s-ah ah-n n-d d-r r-iy"},
 {"sunfish","s-ah ah-n n-f f-ih ih-sh"},
@@ -50628,14 +50637,16 @@ pair_t table[] = {
 {"thunderstorms","th-ah ah-n n-d d-uh uh-r r-s s-t t-ao ao-r r-m m-z"},
 {"thunderstruck","th-ah ah-n n-d d-uh uh-r r-s s-t t-r r-ah ah-k"},
 {"thur","dh-uh uh-r"},
-//s","th-uh uh-r r-z"},
+
 {"thurians","th-uh uh-r r-iy iy-ah ah-n n-z"},
 {"thuringians","th-uh uh-r r-ih ih-ng ng-g g-iy iy-ah ah-n n-z"},
-{"thursday","th-uh uh-r r-z z-d d-eh eh-iy"},
-//s","th-uh uh-r r-z z-d d-iy iy-z"},
+
+
+{"thursday","th-uh uh-r r-z z-d d-eh d-eh eh-iy"},
+
 {"thursdays","th-uh uh-r r-z z-d d-eh eh-iy iy-z"},
 {"thurston","th-uh uh-r r-s s-t t-ah ah-n"},
-//s","th-uh uh-r r-s s-t t-ah ah-n n-z"},
+
 {"thus","dh-ah ah-s"},
 {"thuvia","th-uw uw-v v-iy iy-ah"},
 {"thwackum","th-w w-ao ao-k k-ah ah-m"},
@@ -51916,8 +51927,11 @@ pair_t table[] = {
 {"tudor","t-uw uw-d d-uh uh-r"},
 {"tudors","t-uw uw-d d-uh uh-r r-z"},
 {"tuebingen","t-uh uh-b b-ih ih-ng ng-ah ah-n"},
-{"tuesday","t-uw uw-z z-d d-iy"},
-//s","t-uw uw-z z-d d-iy iy-z"},
+
+//{"day","d-eh eh-iy"},
+
+{"tuesday","t-uw uw-z z-d d-eh eh-iy"},
+
 {"tuesdays","t-uw uw-z z-d d-eh eh-iy iy-z"},
 {"tuft","t-ah ah-f f-t"},
 {"tufted","t-ah ah-f f-t t-ah ah-d"},
@@ -55153,7 +55167,9 @@ pair_t table[] = {
 {"wedges","w-eh eh-jh jh-ah ah-z"},
 {"wedging","w-eh eh-jh jh-ih ih-ng"},
 {"wedlock","w-eh eh-d d-l l-aa aa-k"},
-{"wednesday","w-eh eh-n n-z z-d d-iy"},
+
+//{"day","d-eh eh-iy"},
+{"wednesday","w-eh eh-n n-z z-d d-eh eh-iy"},
 //s","w-eh eh-n n-z z-d d-iy iy-z"},
 {"wednesdays","w-eh eh-n n-z z-d d-eh eh-iy iy-z"},
 {"wee","w-iy"},
