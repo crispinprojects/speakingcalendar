@@ -349,6 +349,7 @@ Talk options can be changed.
 ## Talking
 
 * Press spacebar to speak event details.
+* Press t key to speak time
 
 ### Information
 
