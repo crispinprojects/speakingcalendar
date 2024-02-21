@@ -28,8 +28,8 @@
 #include "diphone.h"
 #include "dictionary.h"
 
-#define CONFIG_DIRNAME "talkcal-gtk4-020"
-#define CONFIG_FILENAME "talkcal-config-020"
+#define CONFIG_DIRNAME "talkcal-gtk4-022"
+#define CONFIG_FILENAME "talkcal-config-022"
 
 static GMutex lock;
 
@@ -127,11 +127,6 @@ static char* remove_punctuations(const char *text);
 static char* replace_hypens(const char *text);
 static char* replace_newlines(const char *text);
 
-//static char* remove_semicolons (const char *text);
-//static char* remove_punctuations(const char *text);
-//static char *remove_commas(const char *text);
-//static char *lower_case(const char *text);
-
 static GListStore *m_store=NULL;   //m_store is a Gio GListStore store (not GktListStore which is being depreciated)
 static int m_id_selection=-1;
 static int m_row_index=-1; //listbox row index
@@ -186,10 +181,10 @@ static int m_notification=0;
 static int m_has_reminder=0; //plumbing for future updates
 static int m_reminder_min=0; //plumbing for future updates
 
-static const char* m_todaycolour="red";
-static const char* m_eventcolour="brown";
-static const char* m_holidaycolour="blue";
-
+static const char* m_todaycolour="lightblue";
+static const char* m_eventcolour="lightpink";
+static const char* m_holidaycolour="lightseagreen";
+static gboolean m_frame=FALSE;
 
 CalendarEvent *selected_evt; 
 
@@ -228,9 +223,10 @@ static void config_load_default()
 	m_holidays=1;
 	m_window_width=500;
 	m_window_height=400;
-	m_todaycolour="red";
-    m_eventcolour="brown";
-    m_holidaycolour="blue";	
+	m_todaycolour="lightblue";
+	m_eventcolour="lightpink";
+	m_holidaycolour="lightseagreen";
+	m_frame=FALSE;
 }
 
 static void config_read()
@@ -251,9 +247,10 @@ static void config_read()
 	m_holidays=1;
 	m_window_width=500;
 	m_window_height=400;
-	m_todaycolour="red";
-    m_eventcolour="brown";
-    m_holidaycolour="blue";
+	m_todaycolour="lightblue";
+	m_eventcolour="lightpink";
+    m_holidaycolour="lightseagreen";
+    m_frame=FALSE;
 	// Load keys from keyfile
 	GKeyFile * kf = g_key_file_new();
 	g_key_file_load_from_file(kf, m_config_file, G_KEY_FILE_NONE, NULL);
@@ -282,6 +279,8 @@ static void config_read()
 	m_todaycolour=g_key_file_get_string(kf, "calendar_settings", "todaycolour", NULL);
     m_eventcolour=g_key_file_get_string(kf, "calendar_settings", "eventcolour", NULL);
     m_holidaycolour=g_key_file_get_string(kf, "calendar_settings", "holidaycolour", NULL);
+    
+    m_frame=g_key_file_get_boolean(kf, "calendar_settings", "frame", NULL);
 	
 	g_key_file_free(kf);
 }
@@ -316,6 +315,8 @@ void config_write()
 	g_key_file_set_string(kf, "calendar_settings", "todaycolour", m_todaycolour);
 	g_key_file_set_string(kf, "calendar_settings", "eventcolour", m_eventcolour);
 	g_key_file_set_string(kf, "calendar_settings", "holidaycolour", m_holidaycolour);
+	
+	g_key_file_set_boolean(kf, "calendar_settings", "frame", m_frame);
 
 	gsize length;
 	gchar * data = g_key_file_to_data(kf, &length, NULL);
@@ -804,13 +805,13 @@ char* get_holiday_str(int day) {
 
 static void callbk_export(GSimpleAction *action, GVariant *parameter,  gpointer user_data)
 {
-	g_print("export csv called\n");
+	//g_print("export csv called\n");
 	export_csv_file();
 }
 
 static void callbk_import(GSimpleAction *action, GVariant *parameter,  gpointer user_data)
 {
-	g_print("import csv called\n");
+	//g_print("import csv called\n");
 	import_csv_file(user_data);
 }
 
@@ -1111,7 +1112,7 @@ void import_csv_file(gpointer user_data) {
 
 static void callbk_quit(GSimpleAction * action,	G_GNUC_UNUSED GVariant *parameter, gpointer user_data)
 {
-	g_print("quit callbk\n");	
+	//g_print("quit callbk\n");	
 	g_application_quit(G_APPLICATION(user_data));		
 }
 
@@ -1131,6 +1132,7 @@ static void callbk_set_preferences(GtkButton *button, gpointer  user_data){
 	GtkWidget *check_button_show_location= g_object_get_data(G_OBJECT(button), "check-button-show-location-key");
 
 	GtkWidget *check_button_holidays= g_object_get_data(G_OBJECT(button), "check-button-holidays-key");
+	GtkWidget *check_button_frame= g_object_get_data(G_OBJECT(button), "check-button-frame-key");
 
 	//talking
 	GtkWidget *check_button_talk= g_object_get_data(G_OBJECT(button), "check-button-talk-key");
@@ -1152,6 +1154,9 @@ static void callbk_set_preferences(GtkButton *button, gpointer  user_data){
 	m_show_location=gtk_check_button_get_active (GTK_CHECK_BUTTON(check_button_show_location));
 
 	m_holidays=gtk_check_button_get_active (GTK_CHECK_BUTTON(check_button_holidays));
+	m_frame=gtk_check_button_get_active (GTK_CHECK_BUTTON(check_button_frame));
+	
+	//g_print("Preferences: m_frame = %d\n",m_frame);
 
 	m_talk=gtk_check_button_get_active (GTK_CHECK_BUTTON(check_button_talk));
 	m_talk_at_startup=gtk_check_button_get_active (GTK_CHECK_BUTTON(check_button_talk_startup));
@@ -1173,6 +1178,7 @@ static void callbk_set_preferences(GtkButton *button, gpointer  user_data){
 	m_show_end_time=0;
 	m_show_location=1;
 	m_holidays=0;
+	m_frame=0;
 	m_talk_rate=16000;
 	m_talk = 1;
 	m_talk_at_startup=1;
@@ -1187,7 +1193,7 @@ static void callbk_set_preferences(GtkButton *button, gpointer  user_data){
 
 	//save preferences
 	config_write();	
-	
+	g_object_set(calendar, "frame", m_frame, NULL);	
 	custom_calendar_update(CUSTOM_CALENDAR(calendar));
 	update_label_date(CUSTOM_CALENDAR(calendar), label_date);
 		
@@ -1220,6 +1226,7 @@ static void callbk_preferences(GSimpleAction* action, GVariant *parameter,gpoint
 	GtkWidget *check_button_show_end_time;
 	GtkWidget *check_button_show_location;
 	GtkWidget *check_button_holidays;
+	GtkWidget *check_button_frame;
 	GtkWidget *check_button_reset_all;
 
 	GtkWidget *button_set;
@@ -1246,6 +1253,7 @@ static void callbk_preferences(GSimpleAction* action, GVariant *parameter,gpoint
 	check_button_show_location= gtk_check_button_new_with_label ("Show Location");
 
 	check_button_holidays = gtk_check_button_new_with_label ("Public Holidays");
+	check_button_frame = gtk_check_button_new_with_label ("Show Calendar Grid");
 
 	//talk
 	check_button_talk = gtk_check_button_new_with_label ("Talk");
@@ -1279,6 +1287,7 @@ static void callbk_preferences(GSimpleAction* action, GVariant *parameter,gpoint
 	gtk_check_button_set_active (GTK_CHECK_BUTTON(check_button_show_location), m_show_location);
 
 	gtk_check_button_set_active (GTK_CHECK_BUTTON(check_button_holidays),m_holidays);
+	gtk_check_button_set_active (GTK_CHECK_BUTTON(check_button_frame),m_frame);
 
 	//talk
 	gtk_check_button_set_active (GTK_CHECK_BUTTON(check_button_talk), m_talk);
@@ -1300,6 +1309,7 @@ static void callbk_preferences(GSimpleAction* action, GVariant *parameter,gpoint
 	g_object_set_data(G_OBJECT(button_set), "check-button-show-location-key",check_button_show_location);
 
 	g_object_set_data(G_OBJECT(button_set), "check-button-holidays-key",check_button_holidays);
+	g_object_set_data(G_OBJECT(button_set), "check-button-frame-key",check_button_frame);
 
 	g_object_set_data(G_OBJECT(button_set), "check-button-talk-key",check_button_talk);
 	g_object_set_data(G_OBJECT(button_set), "check-button-talk-startup-key",check_button_talk_startup);
@@ -1320,6 +1330,7 @@ static void callbk_preferences(GSimpleAction* action, GVariant *parameter,gpoint
 	gtk_box_append(GTK_BOX(box), check_button_show_end_time);
 	gtk_box_append(GTK_BOX(box), check_button_show_location);
 	gtk_box_append(GTK_BOX(box), check_button_holidays);
+	gtk_box_append(GTK_BOX(box), check_button_frame);
 
 	gtk_box_append(GTK_BOX(box), check_button_talk);
 	gtk_box_append(GTK_BOX(box), check_button_talk_startup);
@@ -1500,7 +1511,7 @@ static void callbk_add_event(GtkButton *button, gpointer user_data)
 static void callbk_new_event(GSimpleAction *action, GVariant *parameter,  gpointer user_data)
 //static void callbk_new_event(GtkButton *button, gpointer  user_data)
 {
-	g_print("New event callbk\n");
+	//g_print("New event callbk\n");
 	GtkWidget *window = user_data;
 
 	GtkWidget *dialog;
@@ -1792,7 +1803,7 @@ static void callbk_update_event(GtkButton *button, gpointer user_data)
 //static void callbk_edit_event(GtkButton *button, gpointer  user_data)
 static void callbk_edit_event(GSimpleAction *action, GVariant *parameter,  gpointer user_data)
 {
-	g_print("Edit event callbk\n");
+	//g_print("Edit event callbk\n");
 	if (m_id_selection == -1)
 		return;
 	
@@ -1899,7 +1910,7 @@ static void callbk_edit_event(GSimpleAction *action, GVariant *parameter,  gpoin
 	g_object_get(selected_evt, "isallday", &is_allday, NULL);
 	g_object_get(selected_evt, "ispriority", &is_priority, NULL);
 	g_object_get (selected_evt, "hasnotification", &has_notification, NULL);
-	g_print("hasnotification = %d\n",has_notification);
+	//g_print("hasnotification = %d\n",has_notification);
 	g_object_get (selected_evt, "hasreminder", &has_reminder, NULL);
 	g_object_get (selected_evt, "remindermin", &reminder_min, NULL);
 	
@@ -2049,7 +2060,7 @@ static void callbk_edit_event(GSimpleAction *action, GVariant *parameter,  gpoin
 //static void callbk_delete_selected(GtkButton *button, gpointer  user_data)
 static void callbk_delete_selected(GSimpleAction *action, GVariant *parameter,  gpointer user_data)
 {
-	g_print("Delete Selected callbk\n");
+	//g_print("Delete Selected callbk\n");
 	
 	GtkWindow *window =user_data;
 	GtkWidget *calendar =g_object_get_data(G_OBJECT(window), "window-calendar-key");
@@ -2263,10 +2274,7 @@ GArray*  get_upcoming_array(int upcoming_days)
 	    else {
 			next_month=month+1;
 		}
-	    
-	    g_print("next_month = %d\n", next_month);
-	    
-	    
+	    //g_print("next_month = %d\n", next_month);
 	    GArray *month2_arry;
 	    month2_arry= g_array_new(FALSE, FALSE, sizeof(CALENDAR_TYPE_EVENT)); 
 	    db_get_upcoming_events(month2_arry,year,next_month,1,day_diff); 
@@ -2839,15 +2847,9 @@ static void speak_events() {
 
 	if(m_talk==0) return;
 
-	// Check if diphone directory exists
-	
-	 int day_events_number=0;
-
-	
-	
+	int day_events_number=0;
 	GList *diphone_list=NULL;
 	
-
 	GList *weekday_list=convert_date_to_weekday_diphone_list(m_start_day, m_start_month, m_start_year);
 	GList *day_number_list =convert_day_number_to_diphone_list(m_start_day);
 	GList *month_list=convert_month_to_diphone_list(m_start_month);
@@ -3195,7 +3197,7 @@ static void speak_events() {
 	gpointer diphone_list_pointer;
 	gchar* diphone_str;		
 	gint diphone_number  =g_list_length(diphone_list);
-	g_print("diphone_number = %i\n", diphone_number);
+	//g_print("diphone_number = %i\n", diphone_number);
 	//create diphone array using list length
 	unsigned char *diphone_arrays[diphone_number]; 
 	unsigned int diphone_arrays_sizes[diphone_number];
@@ -3205,9 +3207,9 @@ static void speak_events() {
 	{
 		diphone_list_pointer=g_list_nth_data(diphone_list,i);
 		diphone_str=(gchar *)diphone_list_pointer;					
-		g_print("diphone = %s\n",diphone_str);		
+		//g_print("diphone = %s\n",diphone_str);		
 		diphone_arrays[i] = load_diphone_arry(diphone_str);
-		g_print("diphone length = %i\n",load_diphone_len(diphone_str));
+		//g_print("diphone length = %i\n",load_diphone_len(diphone_str));
 		diphone_arrays_sizes[i]=load_diphone_len(diphone_str);		
 	}	
 	
@@ -3313,9 +3315,9 @@ static void callbk_update_colours(GtkButton *button, gpointer user_data)
 	const gchar* holidaycolour = gtk_entry_buffer_get_text(buffer_holidaycolour);
 	m_holidaycolour=g_ascii_strdown(holidaycolour,-1);
 	
-	g_print("today colour = %s\n",m_todaycolour);
-	g_print("event colour = %s\n",m_eventcolour);
-	g_print("holiday colour = %s\n",m_holidaycolour);
+	//g_print("today colour = %s\n",m_todaycolour);
+	//g_print("event colour = %s\n",m_eventcolour);
+	//g_print("holiday colour = %s\n",m_holidaycolour);
 	
 	g_object_set(calendar, "todaycolour", m_todaycolour, NULL);
 	g_object_set(calendar, "eventcolour", m_eventcolour, NULL);
@@ -3403,7 +3405,7 @@ static void callbk_calendar_colour(GSimpleAction * action, GVariant *parameter, 
 //----------------------------------------------------------------------
 static void callbk_calendar_speaktime(GSimpleAction * action, GVariant *parameter, gpointer user_data)
 {
-	g_print("speak time callbk");
+	//g_print("speak time callbk");
 	GtkWidget *window = user_data;
 	
 	GDateTime *dt = g_date_time_new_now_local(); 
@@ -3411,7 +3413,7 @@ static void callbk_calendar_speaktime(GSimpleAction * action, GVariant *paramete
 	gint min= g_date_time_get_minute(dt);
 	
 	speak_time(hour,min);
-	g_print("time = %d:%d\n",hour,min);	
+	//g_print("time = %d:%d\n",hour,min);	
     g_date_time_unref (dt);
 }
 
@@ -3511,8 +3513,9 @@ GtkWidget *label_date = (GtkWidget *) user_data;
 	if ((m_holidays ==1) && (is_public_holiday(m_start_day)))
 	{
 		//date_str =g_strconcat(date_str,"#", NULL); //public holiday
-		gchar * holiday_str = get_holiday_str(m_start_day);	 	
-	 	date_str =g_strconcat(date_str," ",holiday_str, NULL);
+		gchar * holiday_str = get_holiday_str(m_start_day);	
+		date_str =g_strconcat(date_str," ",holiday_str, NULL); 	
+	 	//date_str =g_strconcat(date_str," ",holiday_str,"#", NULL);
 	}
 
 	
@@ -3533,6 +3536,8 @@ GtkWidget *label_date = (GtkWidget *) user_data;
 static void callbk_calendar_next_month(CustomCalendar *calendar, gpointer user_data) 
 {
 	GtkWidget *label_date = (GtkWidget *)user_data;
+	
+	
 	
 	m_start_day = custom_calendar_get_day(CUSTOM_CALENDAR(calendar));
 	m_start_month = custom_calendar_get_month(CUSTOM_CALENDAR(calendar));
@@ -3793,7 +3798,7 @@ static void callbk_about(GSimpleAction* action, GVariant *parameter, gpointer us
 	gtk_widget_set_size_request(about_dialog, 200,200);
     gtk_window_set_modal(GTK_WINDOW(about_dialog),TRUE);
 	gtk_about_dialog_set_program_name(GTK_ABOUT_DIALOG(about_dialog), "Talk Calendar");
-	gtk_about_dialog_set_version (GTK_ABOUT_DIALOG(about_dialog), "Version 0.2.1");
+	gtk_about_dialog_set_version (GTK_ABOUT_DIALOG(about_dialog), "Version 0.2.2");
 	gtk_about_dialog_set_copyright(GTK_ABOUT_DIALOG(about_dialog),"Copyright © 2024");
 	gtk_about_dialog_set_comments(GTK_ABOUT_DIALOG(about_dialog),"Talking calendar. Diphone voice. Sqlite backend.");
 	gtk_about_dialog_set_license_type (GTK_ABOUT_DIALOG(about_dialog), GTK_LICENSE_LGPL_2_1);
@@ -3829,7 +3834,7 @@ static void add_separator (GtkListBoxRow *row, GtkListBoxRow *before, gpointer d
 static void callbk_row_activated (GtkListBox *listbox,GtkListBoxRow *row, gpointer user_data)
 {
 	m_row_index = gtk_list_box_row_get_index (row);
-	g_print("m_row_index = %d\n",m_row_index);
+	//g_print("m_row_index = %d\n",m_row_index);
 	DisplayItem *obj = g_list_model_get_item (G_LIST_MODEL (m_store), m_row_index);
 	if(obj==NULL) return;
 	gint id_value;
@@ -3848,7 +3853,7 @@ static void callbk_row_activated (GtkListBox *listbox,GtkListBoxRow *row, gpoint
 	g_object_get (selected_evt, "eventid", &evt_id, NULL);
 	g_object_get (selected_evt, "summary", &summary_str, NULL);
 	g_object_get (selected_evt, "location", &location_str, NULL);	
-	g_print("selected event: id = %d summary = %s location = %s\n",evt_id, summary_str, location_str);		
+	//g_print("selected event: id = %d summary = %s location = %s\n",evt_id, summary_str, location_str);		
 }
 
 //-----------------------------------------------------------------
@@ -4168,7 +4173,7 @@ static void show_notifications(GArray *evt_arry){
 
 static void speak_time(gint hour, gint min) 
 {
-	g_print("speak time = %d:%d\n",hour,min);
+	//g_print("speak time = %d:%d\n",hour,min);
 			
 	GList *diphone_list=NULL;
 	GList* time_list=NULL;
@@ -4238,7 +4243,7 @@ static void speak_time(gint hour, gint min)
 	gpointer diphone_list_pointer;
 	gchar* diphone_str;		
 	gint diphone_number  =g_list_length(diphone_list);
-	g_print("diphone_number = %i\n", diphone_number);
+	//g_print("diphone_number = %i\n", diphone_number);
 	//create diphone array using list length
 	unsigned char *diphone_arrays[diphone_number]; 
 	unsigned int diphone_arrays_sizes[diphone_number];
@@ -4248,9 +4253,9 @@ static void speak_time(gint hour, gint min)
 	{
 		diphone_list_pointer=g_list_nth_data(diphone_list,i);
 		diphone_str=(gchar *)diphone_list_pointer;					
-		g_print("diphone = %s\n",diphone_str);		
+		//g_print("diphone = %s\n",diphone_str);		
 		diphone_arrays[i] = load_diphone_arry(diphone_str);
-		g_print("diphone length = %i\n",load_diphone_len(diphone_str));
+		//g_print("diphone length = %i\n",load_diphone_len(diphone_str));
 		diphone_arrays_sizes[i]=load_diphone_len(diphone_str);		
 	}	
 	
@@ -4373,14 +4378,14 @@ static GMenu *create_menu(const GtkApplication *app) {
 
 void callbk_shutdown(GtkWindow *window, gint response_id, gpointer user_data)
 {
-	g_print("shutdown called\n");
+	//g_print("shutdown called\n");
 	gtk_window_get_default_size(GTK_WINDOW(window), &m_window_width,&m_window_height);	
 	config_write(); 
 }
 
 static void startup(GtkApplication *app)
 {
-	 g_print("startup  called\n");
+	 //g_print("startup  called\n");
 	 config_initialize();	
 	 db_create_events_table(); //startup database 
 	 
@@ -4427,7 +4432,7 @@ static void activate (GtkApplication* app, gpointer user_data)
 	m_start_day = custom_calendar_get_day(CUSTOM_CALENDAR(calendar));
 	m_start_month = custom_calendar_get_month(CUSTOM_CALENDAR(calendar));
 	m_start_year = custom_calendar_get_year(CUSTOM_CALENDAR(calendar));
-	g_print("Custom Calendar Date: %d-%d-%d \n", m_start_day, m_start_month, m_start_year);	
+	//g_print("Custom Calendar Date: %d-%d-%d \n", m_start_day, m_start_month, m_start_year);	
 	update_label_date(CUSTOM_CALENDAR(calendar), label_date);
 			
 	g_signal_connect(CUSTOM_CALENDAR(calendar), "day-selected", G_CALLBACK(callbk_calendar_day_selected), label_date);
@@ -4573,6 +4578,9 @@ static void activate (GtkApplication* app, gpointer user_data)
 	g_object_set(calendar, "todaycolour", m_todaycolour, NULL);
 	g_object_set(calendar, "eventcolour", m_eventcolour, NULL);
 	g_object_set(calendar, "holidaycolour", m_holidaycolour, NULL);	
+	
+	//m_frame =FALSE;	
+	g_object_set(calendar, "frame", m_frame, NULL);	
 	
 	custom_calendar_update(CUSTOM_CALENDAR(calendar));
 	custom_calendar_goto_today(CUSTOM_CALENDAR(calendar));
