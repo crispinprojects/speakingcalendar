@@ -394,9 +394,12 @@ To run Talk Calendar from the terminal use
 With Fedora you need to install the following packages to compile Talk Calendar.
 
 ```
+sudo dnf install gcc make
 sudo dnf install gtk4-devel
 sudo dnf install gtk4-devel-docs
 sudo dnf install glib-devel
+sudo dnf install sqlite-devel
+sudo dnf install libnotify-devel
 sudo dnf install alsa-lib-devel
 ```
 
