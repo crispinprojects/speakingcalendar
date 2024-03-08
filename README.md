@@ -18,7 +18,7 @@ Talk Calendar is a personal desktop calendar for Linux which has some speech cap
 
 ### BASH Installer
 
-The easiest way to install Talk Calendar on GTK4 based distros is to use the bash script installer from the terminal. This can be downloaded from the bash installer directory. 
+The easiest way to install Talk Calendar on GTK4 based distributions (e.g. the latest Debian, Ubuntu and Solus distros) is to use the bash script installer from the terminal. This can be downloaded from the bash installer directory. 
 
 Extract the downloaded file, open a terminal, then run the command below and follow the on-screen instructions.
 
@@ -45,12 +45,12 @@ The bash script installer has been tested using Debian 12 Bookworm (GNOME, Budgi
 
 A 64-bit prebuilt binary of the latest version of Talk Calendar is available and can be downloaded from the binary directory and can be used for a local install of Talk Calendar in the user directory. 
 
-Extract the downloaded file which contains the Talk Calendar executable. Assuming that the GTK4 base libraries are installed the Talk Calendar binary can be run from the terminal using:
+Extract the downloaded file which contains the Talk Calendar binary executable. Assuming that the GTK4 base libraries are installed the Talk Calendar binary can be run from the terminal using:
 
 ```
 ./talkcalendar
 ```
-or double click on the "talkcalendar" file. Talk Calendar must have executable permissions to execute. Right click it and choose Properties->Permissions and tick allow "Executable as Program".
+or just double click on the "talkcalendar" file. Talk Calendar must have executable permissions to run. Right click it and choose Properties->Permissions and tick allow "Executable as Program".
 
 To add Talk Calendar to the system menu modify the "talkcalendar.desktop" file provided in the download using your user name and application location and copy it to the ***.local/share/applications/*** directory.
 
@@ -58,7 +58,7 @@ This way of installing Talk Calendar should be universal across distros.
 
 ## Calendar Usage
 
-If you have used a calendar app before then using Talk Calendar will be straight forward. 
+If you have used a calendar application before then using Talk Calendar will be straight forward. 
 
 ### Adding New Event
 

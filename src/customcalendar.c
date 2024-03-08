@@ -540,7 +540,8 @@ static void custom_calendar_init(CustomCalendar *calendar)
 		gtk_widget_set_hexpand(label, TRUE);
 		gtk_widget_set_vexpand(label, TRUE);			
 		
-		gtk_widget_add_css_class (GTK_WIDGET(label), "title-4");
+		//gtk_widget_add_css_class (GTK_WIDGET(label), "title-3");
+		gtk_widget_add_css_class (GTK_WIDGET(label), "heading");
 		
 		gtk_grid_attach(GTK_GRID(calendar->grid), label, i, 1, 1, 1);
 
@@ -644,7 +645,7 @@ static void custom_calendar_select_day(CustomCalendar *calendar, guint dday, gui
 	// week days
 	for (int i = 0; i < 7; i++)
 	{		
-		gtk_widget_add_css_class (GTK_WIDGET(calendar->day_name_labels[i]), "title-4");;
+		gtk_widget_add_css_class (GTK_WIDGET(calendar->day_name_labels[i]), "heading");;
 	}
 	
 	//g_print("CC select_day:calendar->frame = %d\n", calendar->frame);
@@ -678,19 +679,20 @@ static void custom_calendar_select_day(CustomCalendar *calendar, guint dday, gui
 	GtkCssProvider *provider_today; //today provider
 	provider_today = gtk_css_provider_new ();
 	gtk_css_provider_load_from_data (provider_today, today_provider_str,-1);
+	//gtk_css_provider_load_from_string(provider_today, today_provider_str); //gtk 4.14
 	gtk_style_context_add_provider_for_display (gdk_display_get_default (), GTK_STYLE_PROVIDER (provider_today), GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
 		
 	GtkCssProvider *provider_event; //event provider
 	provider_event = gtk_css_provider_new ();
 	gtk_css_provider_load_from_data (provider_event,event_provider_str,-1);
+	//gtk_css_provider_load_from_string (provider_event,event_provider_str);
 	gtk_style_context_add_provider_for_display (gdk_display_get_default (), GTK_STYLE_PROVIDER (provider_event), GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
 		
 	GtkCssProvider *provider_holiday; //holiday provider
 	provider_holiday = gtk_css_provider_new ();
 	gtk_css_provider_load_from_data (provider_holiday,holiday_provider_str,-1);	
+	//gtk_css_provider_load_from_string(provider_holiday,holiday_provider_str);	
 	gtk_style_context_add_provider_for_display (gdk_display_get_default (), GTK_STYLE_PROVIDER (provider_holiday), GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
-
-		
 	
 	// reset labels
 	for (int y = 0; y < 6; y++)
