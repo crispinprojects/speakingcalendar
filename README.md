@@ -6,19 +6,18 @@ Talk Calendar is a personal desktop calendar for Linux which has some speech cap
 
 ## Core Features
 
-* built with C and GTK 4.8.3 (Debian 12 Bookworm)
-* bespoke custom calendar which allows event dates and public holidays to be css colour marked 
+* built with C and GTK 4.8.3 (Debian 12)
+* bespoke custom calendar which allows dates with events to be marked (colour and audio)
 * event type, details, location, start and end time can be entered and edited
 * priority, is-yearly and notifications can be used
-* built-in diphone speech synthesizer
-* date, time and event reader
+* speech date reader, time reader, event type reader
 * Sqlite3 database used to store events
 
 ## Installing
 
 ### BASH Installer
 
-The easiest way to install Talk Calendar on GTK4 based distributions (e.g. the latest Debian, Ubuntu and Solus distros) is to use the bash script installer from the terminal. This can be downloaded from the bash installer directory. 
+The easiest way to install Talk Calendar on GTK4 based distributions (e.g. the latest Debian, Ubuntu and Solus distros) is to use the bash script installer from the terminal. This can be downloaded from the bash installer directory.
 
 Extract the downloaded file, open a terminal, then run the command below and follow the on-screen instructions.
 
@@ -26,7 +25,7 @@ Extract the downloaded file, open a terminal, then run the command below and fol
 ./install-talkcalendar.sh
 ```
 
-The installer assumes that you are a member of the sudo group and that the GTK4, SQLITE and the ALSA base libraries are installed which is the default for most modern GTK based distros. 
+The installer assumes that you are a member of the sudo group and that the GTK4, SQLITE and the ALSA base libraries are installed which is the default for most modern GTK based distros.
 
 To uninstall Talk Calendar use the command.
 
@@ -38,34 +37,32 @@ The BASH script installer places the Talk Calendar binary and calendar icon in t
 ```
 /usr/bin/talkcalendar
 ```
-
 The bash script installer has been tested using Debian 12 Bookworm (GNOME, Budgie and Xfce desktops), Solus 4.5 (Budgie), Ubuntu GNOME 22.04 and Ubuntu GNOME 23.10. See the "Installer Trouble Shooting" notes at the bottom of the page for more information if you have any issues using it. For example, with a Debian 12 (root password) standard install you may not be a member of the sudo group and the notes explain how to simply fix this.
 
 ### Local Install Using Prebuilt Binary
 
-A 64-bit prebuilt binary of the latest version of Talk Calendar is available and can be downloaded from the binary directory and can be used for a local install of Talk Calendar in the user directory. 
-
-Extract the downloaded file which contains the Talk Calendar binary executable. Assuming that the GTK4 base libraries are installed the Talk Calendar binary can be run from the terminal using:
+A 64-bit prebuilt binary for the latest version of Talk Calendar is available and can be downloaded from the binary directory. 
+Extract the downloaded file which contains the Talk Calendar executable. Assuming that the GTK4 base libraries are installed the Talk Calendar binary can be run from the terminal using:
 
 ```
 ./talkcalendar
 ```
-or just double click on the "talkcalendar" file. Talk Calendar must have executable permissions to run. Right click it and choose Properties->Permissions and tick allow "Executable as Program".
+or double click on the "talkcalendar" file. Talk Calendar must have executable permissions to execute. Right click it and choose Properties->Permissions and tick allow "Executable as Program".
 
 To add Talk Calendar to the system menu modify the "talkcalendar.desktop" file provided in the download using your user name and application location and copy it to the ***.local/share/applications/*** directory.
 
-This way of installing Talk Calendar should be universal across distros.
+This way of installing Talk Calendar should be universal across distros and has been tested using Debian 12 Bookworm (GNOME, Budgie and Xfce desktops), Solus 4.5 (Budgie), Ubuntu 22.04, Ubuntu 23.10 and Fedora.
 
 ## Calendar Usage
 
-If you have used a calendar application before then using Talk Calendar will be straight forward. 
+If you have used a calendar app before then using Talk Calendar will be straight forward. 
 
 ### Adding New Event
 
 * Select event date using the calendar
 * Select "Event->New Event" from the menu or press Ctrl+n to invoke the "New Event" window
-* Enter the event summary
-* Enter any further description (optional)
+* Select the event type using the drop down (e.g. meeting, birthday, anniversary, doctor, dentist etc.)
+* Enter the event details
 * Enter the location (optional)
 * Enter start and end times (or all day)
 * Events are sorted by start time when displayed
@@ -73,7 +70,7 @@ If you have used a calendar application before then using Talk Calendar will be 
 
 ![](talkcalendar-new-event.png)
 
-When a creating a new event you can check the "Send Notification" checkbox which will send a system notification when Talk Calendar is started on the day in which the event occurs.
+When a creating a new event you can check "Send Notification" which will send a system notification when Talk Calendar is started on the day in which the event occurs.
 
 ### Editing Existing Event
 
@@ -271,11 +268,7 @@ Note the American spelling of grey (gray).
 
 ![](talkcalendar-preferences.png)
 
-You can use 12 hour format. Event end-times can also be shown in the list view. 
-
-If public holidays is selected then the date label shows the public holiday (UK only) which is also spoken.
-
-A calendar grid can be used.
+You can use 12 hour format. Event end-times can also be shown in the list view. If public holidays is selected then the date label shows the public holiday (UK only) which is also spoken.
 
 Talk options can be changed.
 
@@ -283,7 +276,6 @@ Talk options can be changed.
 ## Talking
 
 * Press spacebar to speak event details.
-* Press t key to speak time
 
 ### Information
 
@@ -314,11 +306,7 @@ With GNOME based desktops use the GNOME "Tweak Tool" to add Talk Calendar to you
 
 ## How is Speech Generated?
 
-Words are formed as sequences of elementary speech units. A phoneme is the smallest unit of sound that distinguishes one word from another word and there are 44 phonemes in the English language. A diphone is a sound unit composed of two adjacent partial phonemes i.e. the second half of the first phoneme and the first half of the second phoneme. 
-
-This voice used by Talk Calendar is derivative work based on the diphone collection created by Alan W Black and Kevin Lenzo which is free for use for any purpose (commercial or otherwise) and subject to the pretty light restrictions detailed [here](https://github.com/hypnaceae/DiphoneSynth/blob/master/diphones_license.txt). I have used the same notation and licence for the voices that I have created. There is information about recording your own diphones [here](http://festvox.org/bsv/x2401.html) and in the speech synthesis lecture by Professor Alan W Black [here](https://www.youtube.com/watch?v=eDjtEsOvouM&t=1459s).
-
-The diphone speech synthesizer uses a small word-to-diphones dictionary of approximately 56,600 English words. If a word is not recognised by the dictionary it is skipped over. More words will be added in future updates.
+Talk Calendar incorporates a small word-based speech synthesizer used to concatenate and play-back pre-recorded English words using the computer speaker. The voice used by this version of Talk Calendar is based on my own recordings and so is subject to same license as the project. The voice will be improved and updated in future versions of the project.
 
 ### Events Database
 
@@ -334,34 +322,13 @@ I have not tested what will happen if you attempt to vacuum your database extern
 
 The C source code for the Talk Calendar application is provided in the src directory.
 
-[Geany](https://www.geany.org/) can be used as a source code editor for opening, viewing and then compiling the Talk Calendar C code. Geany is a lightweight source-code editor and has built-in integrated terminal for building the application.
-
-
-### Building on Debian Bookworm, Ubuntu 22.04 (onwards) and Raspberry Pi OS (64-bit)
+[Geany](https://www.geany.org/) can be used as a source code editor for opening, viewing and then compiling the Talk Calendar C code. Geany is lightweight and has an integrated terminal for building the application.
 
 You need the GTK4 development libraries and the gcc compiler. The code has been compiled using GTK 4.8.3 amd64 (Debian 12). To determine which version of GTK4 is running on a Linux system use the following terminal command.
 
 ```
 dpkg -l | grep libgtk*
 ```
-
-With both  Debian Bookworm and Ubuntu and you need to install the following packages to compile Talk Calendar.
-
-```
-sudo apt install build-essential
-sudo apt install libgtk-4-dev
-sudo apt install libasound2-dev
-sudo apt install libnotify-dev
-```
-
-The packages:
-
-```
-sudo apt install libglib2.0-dev
-sudo apt install alsa-utils
-```
-
-are needed but should be installed by default.
 
 To build Talk Calendar you also need the Sqlite3 development libraries. With Debian and Ubuntu you install these using the commands below.
 
@@ -376,6 +343,30 @@ To check the installed version use the command below.
 sqlite3 --version
 ```
 
+### Building on Ubuntu and Debian Bookworm
+
+With both  Debian Bookworm and Ubuntu and you need to install the following packages to compile Talk Calendar.
+
+```
+apt install build-essential
+apt install libgtk-4-dev
+apt install libasound2-dev
+```
+
+The packages:
+
+```
+apt install libglib2.0-dev
+apt install alsa-utils
+```
+
+are needed but should be installed by default.
+
+With Ubuntu 22.04 the base GTK4 libraries are installed by default. With other Ubuntu based distributions (spins) you may have to install these using the command below.
+
+```
+sudo apt install libgtk-4-1
+```
 
 Use the MAKEFILE to compile. 
 
@@ -394,18 +385,15 @@ To run Talk Calendar from the terminal use
 With Fedora you need to install the following packages to compile Talk Calendar.
 
 ```
-sudo dnf install gcc make
 sudo dnf install gtk4-devel
 sudo dnf install gtk4-devel-docs
 sudo dnf install glib-devel
-sudo dnf install sqlite-devel
-sudo dnf install libnotify-devel
 sudo dnf install alsa-lib-devel
 ```
 
 ### Building on Solus Linux
 
-To build Talk Calendar on Solus Linux (tested with Solus 4.5 Budgie) you need to install the development packages below. Solus is an independent Linux distribution not based on either Debian, Ubuntu or Fedora and has its own package manager called "eopkg".
+To build Talk Calendar on Solus Linux (tested with Solus 4.5 Budgie) you need to install the development packages below. Solus is an independent Linux distribution not based on either Debian or Fedora and has its own package manager called "eopkg".
 
 ```
 sudo eopkg install -c system.devel
@@ -448,7 +436,8 @@ Talk Calendar is licensed under LGPL v2.1. GTK is released under the terms of th
 
 Active.
 
-## BASH Installer Troubleshooting (Debian 12 Bookworm)
+
+## BASH Installer Troubleshooting (Debian)
 
 In most cases the BASH script installer will just run as the required libraries will be installed by default and the user will be a member of the sudo group. The installer must have executable permissions. To make the installer script executable use the command below.
 
@@ -522,6 +511,7 @@ To check what packages are installed on your system use the command below.
 apt list --installed | more
 ```
 
+
 ## Acknowledgements
 
 * [GTK](https://www.gtk.org/)
@@ -540,14 +530,8 @@ apt list --installed | more
 
 * [Sqlite](https://www.sqlite.org/index.html) is open source and in the [public domain](https://www.sqlite.org/copyright.html).
 
-* Diphone collection and synthesis Alan W. Black and Kevin Lenzo [2000](https://www.cs.cmu.edu/~awb/papers/ICSLP2000_diphone.pdf) with license found [here](https://github.com/hypnaceae/DiphoneSynth/blob/master/diphones_license.txt)
+* How to Install Budgie Desktop on Debian. See [here](https://www.linuxcapable.com/how-to-install-budgie-desktop-on-debian-linux/) and [here](https://packages.debian.org/bookworm/budgie-desktop).
 
 * [Debian](https://www.debian.org/)
 
-* [Ubuntu](https://ubuntu.com/download/desktop)
-
-* [Solus](https://getsol.us/)
-
-* [Fedora](https://fedoraproject.org/workstation/)
-
-* How to Install Budgie Desktop on Debian. See [here](https://www.linuxcapable.com/how-to-install-budgie-desktop-on-debian-linux/) and [here](https://packages.debian.org/bookworm/budgie-desktop).
+* [Fedora](https://fedoraproject.org/)

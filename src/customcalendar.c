@@ -14,27 +14,54 @@
  *   You should have received a copy of the GNU General Public License     *
  *   along with this program.  If not, see <http://www.gnu.org/licenses/>. *
  ***************************************************************************/
+ 
+// This calendar is a customised version of the original GtkCalendar code 
+// with credits below. It can be used inconjunction with my CalendarEvent class.
+
+/* GTK - The GIMP Toolkit
+ * Copyright (C) 1995-1997 Peter Mattis, Spencer Kimball and Josh MacDonald
+ *
+ * GTK Calendar Widget
+ * Copyright (C) 1998 Cesar Miquel, Shawn T. Amundson and Mattias Groenlund
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library. If not, see <http://www.gnu.org/licenses/>.
+ */
 
 /*
-This calendar is a customised version (derivative work) of the original 
-GtkCalendar code the latest version of which is found at
-https://gitlab.gnome.org/GNOME/gtk/-/blob/main/gtk/gtkcalendar.c with the
-original author credits. As this is derivative work I have used the same 
-licence LGPL-2.1. GTK4 Custom Calendar allows events and holidays 
-to be colour marked on the calendar and a grid can be used.
+ * Modified by the GTK+ Team and others 1997-2000.  See the AUTHORS
+ * file for a list of people on the GTK+ Team.  See the ChangeLog
+ * files for a list of changes.  These files are distributed with
+ * GTK+ at ftp://ftp.gtk.org/pub/gtk/.
+ */
 
-GTK4 Custom Calendar uses a grid of day labels for each month. Buttons 
-were used in a previous version but I could not get this to work 
-successfully. The latest version now uses platform specific (e.g. libadwaita) 
-style classes such as “title-1” and "title-2" etc. which can be
-used by GTK4 applications with the gtk_widget_add_css_class() function.
 
-GTK4 Custom Calendar can be used inconjunction with my CalendarEvent 
-class. Please note that this Calendar has been developed using 
-gtk 4.8 (Debian 12) and so does include functions that I know are going 
-to be depreciated in 4.12 and beyond. One such example is 
-gtk_css_provider_load_from_data which is being depreciated and replaced 
-with gtk_css_provider_load_from_string.
+/*
+GTK4 Simple Calendar uses a grid of day labels for each month. Buttons were
+used in a previous version but I could not get this to work successfully. 
+In previous versions I used gtk_widget_get_style_context() but in this version
+all code which used gtk_style_context_add_provider() and 
+gtk_color_chooser_get_rgba() has been removed as these are being 
+depreciated in gtk4.10. Also it does not use an application-specific 
+styling css file (e.g. styles.css) in case this approach is depreciated 
+further down the line.
+
+Custom Calendar now uses Pango attributes and markup for adding some 
+style and colour to the calendar. Pango is the text layout system used 
+by GDK and GTK. Please note that this calendar does not use platform 
+specific (e.g. libadwaita) style classes such as “title-1”, "title-2",
+and “dim-label” etc. which can be used by GTK4 applications with the 
+gtk_widget_add_css_class() function. 
 */
 
 #include "customcalendar.h"
@@ -44,6 +71,7 @@ static char *dayname[7];
 static char *monthname[12];
 
 // declarations
+static void custom_calendar_select_day(CustomCalendar *calendar, guint dday, guint month, guint year);
 static void custom_calendar_button_press(GtkGestureClick *gesture, int n_press, double x, double y, gpointer user_data);
 
 // signals
@@ -56,6 +84,7 @@ enum
 	NEXT_YEAR_SIGNAL,
 	LAST_SIGNAL
 };
+
 
 static guint custom_calendar_signals[LAST_SIGNAL] = {0};
 
@@ -86,8 +115,7 @@ struct _CustomCalendar
 	int marked_holiday[32];
 	const gchar* today_colour;
 	const gchar* event_colour;
-	const gchar* holiday_colour;
-	gboolean frame;
+	const gchar* holiday_colour;	
 };
 
 struct _CustomCalendarClass
@@ -109,8 +137,7 @@ enum {
     PROP_0,
     PROP_TODAYCOLOUR, 
     PROP_EVENTCOLOUR, 
-    PROP_HOLIDAYCOLOUR,
-    PROP_FRAME,   
+    PROP_HOLIDAYCOLOUR,   
     LAST_PROP
 };
 
@@ -135,12 +162,6 @@ static void custom_calendar_set_property(GObject *object,
         case PROP_HOLIDAYCOLOUR:
             custom_calendar_set_holiday_colour(self, g_value_get_string(value));
             break;
-      case PROP_FRAME:
-            custom_calendar_set_frame(self, g_value_get_boolean(value));
-            break;
-      default:
-      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
-      break;
 	}
 }
 
@@ -161,13 +182,6 @@ static void custom_calendar_get_property(GObject *object,
       break;
     case PROP_HOLIDAYCOLOUR:
       g_value_set_string(value, custom_calendar_get_holiday_colour(self));
-      break;
-     case PROP_FRAME:
-      //g_value_set_boolean (value, calendar->frame);
-      g_value_set_boolean  (value, custom_calendar_get_frame(self));
-      break;
-      default:
-      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
   }
 }
@@ -194,38 +208,37 @@ static void custom_calendar_class_init(CustomCalendarClass *klass)
 	object_class->set_property = custom_calendar_set_property;
 	object_class->get_property = custom_calendar_get_property;
 	
+	//GParamSpec* g_param_spec_string (
+		  //const gchar* name,
+		  //const gchar* nick,
+		  //const gchar* blurb,
+		  //const gchar* default_value,
+		  //GParamFlags flags
+		//)
 	
 	//properties
     properties[PROP_TODAYCOLOUR] =
     g_param_spec_string("todaycolour",
                         "todaycolour",
                         "HTML colour name for today",
-                        "lightblue",
+                        "red",
                         (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
-                        
-   
                         
     properties[PROP_EVENTCOLOUR] =
     g_param_spec_string("eventcolour",
                         "eventcolour",
                         "HTML colour name for an event",
-                        "lightpink",
+                        "brown",
                         (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
      
     properties[PROP_HOLIDAYCOLOUR] =
     g_param_spec_string("holidaycolour",
                         "holidaycolour",
                         "HTML colour name for a holiday",
-                        "lightseagreen",
+                        "blue",
                         (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
      
-    properties[PROP_FRAME] =
-    g_param_spec_boolean("frame",
-                     "frame",
-                     "calendar frame or not",
-                     FALSE, 
-                     (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
-      
+     
      g_object_class_install_properties(object_class, LAST_PROP, properties);                  
 	
 	
@@ -281,7 +294,7 @@ static void custom_calendar_class_init(CustomCalendarClass *klass)
 
 
 GtkWidget *custom_calendar_new(void)
-{	
+{
 	return g_object_new(CUSTOM_TYPE_CALENDAR, NULL);
 }
 
@@ -474,25 +487,12 @@ static void custom_calendar_init(CustomCalendar *calendar)
 	calendar->day = 0;
 	calendar->month = 0;
 	calendar->year = 0;
-		
+	
 	gtk_widget_set_focusable(widget, TRUE);	
 	setup_dayname();
 	setup_monthname();
 	custom_calendar_reset_marks(calendar);
-	
-	//calendar->frame =custom_calendar_get_frame(calendar);
-	
-	//Set defaults to prevent theme parser error
-	calendar->frame =0;
-	calendar->today_colour="lightblue";
-	calendar->event_colour="lightpink";
-	calendar->holiday_colour="lightseagreen";
-	
-	//g_print("CC init: property: calendar->frame = %d\n", calendar->frame);
-	//g_print("CC init: property: calendar->today colour = %s\n",calendar->today_colour);
-	//g_print("CC init: property: calendar->event colour = %s\n",calendar->event_colour);
-	//g_print("CC init: property: calendar->holiday colour = %s\n",calendar->holiday_colour);
-	
+
 	int week_start = 0; // local
 
 	int n_cols = 7;
@@ -540,8 +540,12 @@ static void custom_calendar_init(CustomCalendar *calendar)
 		gtk_widget_set_hexpand(label, TRUE);
 		gtk_widget_set_vexpand(label, TRUE);			
 		
-		//gtk_widget_add_css_class (GTK_WIDGET(label), "title-3");
-		gtk_widget_add_css_class (GTK_WIDGET(label), "heading");
+		PangoAttrList *attr;
+		attr = pango_attr_list_new();
+		pango_attr_list_insert(attr, pango_attr_weight_new(PANGO_WEIGHT_BOLD));
+		pango_attr_list_insert(attr, pango_attr_underline_new(PANGO_UNDERLINE_SINGLE));	
+		gtk_label_set_attributes(GTK_LABEL(label), attr);
+		pango_attr_list_unref(attr);
 		
 		gtk_grid_attach(GTK_GRID(calendar->grid), label, i, 1, 1, 1);
 
@@ -570,11 +574,7 @@ static void custom_calendar_init(CustomCalendar *calendar)
 		{
 			GtkWidget *label = gtk_label_new("");
 			
-			gtk_label_set_use_markup(GTK_LABEL(label), TRUE);	
-			
-			//if (calendar->frame){			
-			//gtk_widget_add_css_class (GTK_WIDGET (label), "frame");
-			//}		
+			gtk_label_set_use_markup(GTK_LABEL(label), TRUE);			
 
 			gtk_widget_set_hexpand(label, TRUE);
 			gtk_widget_set_vexpand(label, TRUE);			
@@ -615,6 +615,25 @@ int custom_calendar_get_year(CustomCalendar *calendar)
 
 static void custom_calendar_select_day(CustomCalendar *calendar, guint dday, guint month, guint year)
 {
+	
+	const gchar* today_colour_str=calendar->today_colour;
+	const gchar* event_colour_str=calendar->event_colour;
+	const gchar* holiday_colour_str=calendar->holiday_colour;
+	
+	gchar* today_markup_str="<span foreground=";	
+	today_markup_str= g_strconcat(today_markup_str,"\"",today_colour_str,"\""," weight=\"bold\">%s</span>", NULL);	
+	//g_print("today_markup_str = %s", today_markup_str);
+	
+	gchar* event_markup_str="<span foreground=";	
+	event_markup_str= g_strconcat(event_markup_str,"\"",event_colour_str,"\""," weight=\"bold\">%s</span>", NULL);	
+	//g_print("event_markup_str = %s", event_markup_str);
+	
+	gchar* holiday_markup_str="<span foreground=";	
+	holiday_markup_str= g_strconcat(holiday_markup_str,"\"",holiday_colour_str,"\""," weight=\"bold\">%s</span>", NULL);	
+	//g_print("holiday_markup_str = %s", holiday_markup_str);
+	
+	//gchar* today_markup_str ="<span foreground=\"red\" weight=\"bold\">%s</span>";
+	
 	int aday = 0;
 	int first_day_month = first_day_of_month(calendar->month, calendar->year);
 	int week_start = 1; // start week on a Monday
@@ -641,85 +660,37 @@ static void custom_calendar_select_day(CustomCalendar *calendar, guint dday, gui
 	int today_month = g_date_get_month(today_date);
 	int today_year = g_date_get_year(today_date);
 	g_date_free(today_date); // freeit quick before it leaks
-	
-	// week days
-	for (int i = 0; i < 7; i++)
-	{		
-		gtk_widget_add_css_class (GTK_WIDGET(calendar->day_name_labels[i]), "heading");;
-	}
-	
-	//g_print("CC select_day:calendar->frame = %d\n", calendar->frame);
-	//g_print("CC select_day:calendar->today colour = %s\n",calendar->today_colour);
-	//g_print("CC select_day: calendar->event colour = %s\n",calendar->event_colour);
-	//g_print("CC select_day: calendar->holiday colour = %s\n",calendar->holiday_colour);
-	
-	
-	
-	//providers	
-	const gchar* today_colour_str=calendar->today_colour;
-	const gchar* event_colour_str=calendar->event_colour;
-	const gchar* holiday_colour_str=calendar->holiday_colour;
-	
-	//g_print("today_colour_str = %s\n", today_colour_str);
-	//g_print("event_colour_str = %s\n", event_colour_str);
-	//g_print("holiday_colour_str = %s\n", holiday_colour_str);
-	
-	gchar* today_provider_str="label.today {background-image: none; background-color: ";	
-	today_provider_str= g_strconcat(today_provider_str,today_colour_str,";}", NULL);	
-	//g_print("today_provider_str = %s\n", today_provider_str);
-	
-	gchar* event_provider_str="label.event {background-image: none; background-color: ";	
-	event_provider_str= g_strconcat(event_provider_str,event_colour_str,";}", NULL);	
-	//g_print("event_provider_str = %s\n", event_provider_str);
-	
-	gchar* holiday_provider_str="label.holiday {background-image: none; background-color: ";	
-	holiday_provider_str= g_strconcat(holiday_provider_str,holiday_colour_str,";}", NULL);	
-	//g_print("holiday_provider_str = %s\n", holiday_provider_str);
-	
-	GtkCssProvider *provider_today; //today provider
-	provider_today = gtk_css_provider_new ();
-	gtk_css_provider_load_from_data (provider_today, today_provider_str,-1);
-	//gtk_css_provider_load_from_string(provider_today, today_provider_str); //gtk 4.14
-	gtk_style_context_add_provider_for_display (gdk_display_get_default (), GTK_STYLE_PROVIDER (provider_today), GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
-		
-	GtkCssProvider *provider_event; //event provider
-	provider_event = gtk_css_provider_new ();
-	gtk_css_provider_load_from_data (provider_event,event_provider_str,-1);
-	//gtk_css_provider_load_from_string (provider_event,event_provider_str);
-	gtk_style_context_add_provider_for_display (gdk_display_get_default (), GTK_STYLE_PROVIDER (provider_event), GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
-		
-	GtkCssProvider *provider_holiday; //holiday provider
-	provider_holiday = gtk_css_provider_new ();
-	gtk_css_provider_load_from_data (provider_holiday,holiday_provider_str,-1);	
-	//gtk_css_provider_load_from_string(provider_holiday,holiday_provider_str);	
-	gtk_style_context_add_provider_for_display (gdk_display_get_default (), GTK_STYLE_PROVIDER (provider_holiday), GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
-	
+
 	// reset labels
 	for (int y = 0; y < 6; y++)
 		for (int x = 0; x < 7; x++)
 		{
-			gtk_label_set_label(GTK_LABEL(calendar->day_number_labels[y][x]), "");		
-			gtk_widget_remove_css_class (GTK_WIDGET(calendar->day_number_labels[y][x]), "today");
-			gtk_widget_remove_css_class (GTK_WIDGET(calendar->day_number_labels[y][x]), "event");
-			gtk_widget_remove_css_class (GTK_WIDGET(calendar->day_number_labels[y][x]), "holiday");			
-			if (calendar->frame) gtk_widget_add_css_class (GTK_WIDGET(calendar->day_number_labels[y][x]), "frame");	
-			else gtk_widget_remove_css_class (GTK_WIDGET(calendar->day_number_labels[y][x]), "frame");	
+			gtk_label_set_label(GTK_LABEL(calendar->day_number_labels[y][x]), "");
 		}
+
+	// scale week days
+	for (int i = 0; i < 7; i++)
+	{
 		
+		PangoAttrList *attr;
+		attr = pango_attr_list_new();	
+		pango_attr_list_insert(attr, pango_attr_weight_new(PANGO_WEIGHT_BOLD));
+		pango_attr_list_insert(attr, pango_attr_underline_new(PANGO_UNDERLINE_SINGLE));
+		gtk_label_set_attributes(GTK_LABEL(calendar->day_name_labels[i]), attr);
+		pango_attr_list_unref(attr);
+	}
+	
 	gchar *aday_str = "";
 	// update day labels
 	for (int y = 0; y < 6; y++)
 	{
 		for (int x = 0; x < 7; x++)
 		{
+			
 			if (aday > 0 && aday <= days_in_month)
 			{
-				//gtk_widget_remove_css_class (GTK_WIDGET(calendar->day_number_labels[y][x]), "today");
-				//gtk_widget_remove_css_class (GTK_WIDGET(calendar->day_number_labels[y][x]), "event");
-				//gtk_widget_remove_css_class (GTK_WIDGET(calendar->day_number_labels[y][x]), "holiday");
-				
 				calendar->days[y][x] = aday;
-				
+				gchar buffer[512];
 				
 				// add mark color
 				if (calendar->marked_day[aday])
@@ -729,73 +700,61 @@ static void custom_calendar_select_day(CustomCalendar *calendar, guint dday, gui
 					if (aday == today_day && calendar->month == today_month && calendar->year == today_year)
 					{
 						//today and marked
-						gchar *marked_day_str ="<b>";
-						marked_day_str = g_strconcat(marked_day_str,"[",g_strdup_printf("%i", aday),"]","</b>",NULL);
-						aday_str = g_strdup_printf("%s%s", marked_day_str, "*");
-						gtk_label_set_label(GTK_LABEL(calendar->day_number_labels[y][x]), aday_str);
-						gtk_widget_add_css_class (GTK_WIDGET(calendar->day_number_labels[y][x]), "today");	
-					} //if today
+						gchar *today_str ="";
+						today_str = g_strdup_printf("%s%s", g_strdup_printf("%i", aday), "*");	
+						g_snprintf(buffer, sizeof(buffer),today_markup_str, today_str);
+					
+					}
 					else
 					{
 						//normal day marked												
-						//aday_str = g_strdup_printf("%s%s", g_strdup_printf("%i", aday), "<b>*</b>");
+						aday_str = g_strdup_printf("%s%s", g_strdup_printf("%i", aday), "<b>*</b>");
 						
 						if (calendar->marked_holiday[aday])
 						{
-						//markup holidays 							
-						gchar *marked_day_str ="<b>";
-						marked_day_str = g_strconcat(marked_day_str,g_strdup_printf("%i", aday),"</b>",NULL);						
-						aday_str = g_strdup_printf("%s%s", marked_day_str, "<b>#*</b>");
-						gtk_label_set_label(GTK_LABEL(calendar->day_number_labels[y][x]), aday_str);
-						gtk_widget_add_css_class (GTK_WIDGET(calendar->day_number_labels[y][x]), "holiday");
-						
+							//mark holidays 							
+							g_snprintf(buffer, sizeof(buffer),holiday_markup_str, aday_str);
 						}
 						else {							
-						//markup events
-						gchar *marked_day_str ="<b>";
-						marked_day_str = g_strconcat(marked_day_str,g_strdup_printf("%i", aday),"</b>",NULL);						
-						aday_str = g_strdup_printf("%s%s", marked_day_str, "<b>*</b>");
-						gtk_label_set_label(GTK_LABEL(calendar->day_number_labels[y][x]), aday_str);
-						gtk_widget_add_css_class (GTK_WIDGET(calendar->day_number_labels[y][x]), "event");						
-						}	
-					}//else					
-				} //if marked day
-				else //not event marked
-				{
-				
-				if (aday == today_day && calendar->month == today_month && calendar->year == today_year)
-				{				
-				//today 
-				gchar *today_str ="<b>";
-				today_str = g_strconcat(today_str,g_strdup_printf("%i", aday),"</b>",NULL);
-				aday_str = g_strdup_printf("%s%s%s", "<b>[</b>", today_str , "<b>]</b>");				
-				gtk_label_set_label(GTK_LABEL(calendar->day_number_labels[y][x]), aday_str);				
-				gtk_widget_add_css_class (GTK_WIDGET(calendar->day_number_labels[y][x]), "today");
-				} //if today
+							g_snprintf(buffer, sizeof(buffer),event_markup_str, aday_str);
+						}				
+						
+					}
+
+					gtk_label_set_label(GTK_LABEL(calendar->day_number_labels[y][x]), buffer);
+				}
 				else
 				{
-				//normal days
-				if (calendar->marked_holiday[aday])
-				{							
-				//normal no event day but holiday 
-				gchar *marked_day_str ="<b>";
-				marked_day_str = g_strconcat(marked_day_str,g_strdup_printf("%i", aday),"</b>",NULL);						
-				aday_str = g_strdup_printf("%s%s", marked_day_str, "<b>#</b>");	
-				gtk_label_set_label(GTK_LABEL(calendar->day_number_labels[y][x]), aday_str);
-				gtk_widget_add_css_class (GTK_WIDGET(calendar->day_number_labels[y][x]), "holiday");					
-				}
-				else {
-				aday_str = g_strdup_printf("%d", aday);
-				gtk_label_set_label(GTK_LABEL(calendar->day_number_labels[y][x]), aday_str);
-				}						
-				} //else
-				
-			 }	//else not marked
-			}//if days in month
-			
+					if (aday == today_day && calendar->month == today_month && calendar->year == today_year)
+					{
+												
+						//today 
+						gchar *today_str ="";						
+						today_str = g_strconcat(today_str,g_strdup_printf("%i", aday),NULL);						
+						g_snprintf(buffer, sizeof(buffer),today_markup_str, today_str);
+						gtk_label_set_label(GTK_LABEL(calendar->day_number_labels[y][x]), buffer);											
+					
+					}
+					else
+					{
+						//normal days
+						if (calendar->marked_holiday[aday])
+						{							
+							//normal no event day but mark holidays 
+							aday_str = g_strdup_printf("%s%s", g_strdup_printf("%i", aday), "");
+							g_snprintf(buffer, sizeof(buffer),holiday_markup_str, aday_str);							
+							gtk_label_set_label(GTK_LABEL(calendar->day_number_labels[y][x]), buffer);						
+						}
+						else {
+							aday_str = g_strdup_printf("%d", aday);
+							gtk_label_set_label(GTK_LABEL(calendar->day_number_labels[y][x]), aday_str);
+						}						
+					}
+				}	
+			}
 			aday = aday + 1;
-		} //for x
-	} //for y	
+		}
+	}	
 }
 
 
@@ -867,34 +826,55 @@ static void custom_calendar_button_press(GtkGestureClick *gesture, int n_press, 
 	int ix, iy;
 	int day_month;
 	int aday;
-
-	label = gtk_widget_pick(widget, x, y, GTK_PICK_DEFAULT);
-	for (iy = 0; iy < 6; iy++)
+	
+	int days_in_month = g_date_get_days_in_month(calendar->month, calendar->year);			
+	int first_day_month = first_day_of_month(calendar->month, calendar->year);
+	
+	int week_start = 1; // start week on a Monday
+	int remainder = (first_day_of_month(calendar->month, calendar->year) - week_start + 7) % 7;
+	
+	aday = 1 - remainder; // day with offset	
+	//g_print("aday = %d\n",aday);
+	//g_print("calendar month = %d\n", calendar->month);
+	//g_print("calendar year = %d\n", calendar->year);
+	//g_print("days in month = %d\n", days_in_month);
+	//g_print("first day in month = %d\n", first_day_month);
+	
+	
+	label = gtk_widget_pick(widget, x, y, GTK_PICK_DEFAULT); //create label as pick widget
+	
+	
+	for (iy = 0; iy < 6; iy++) {
 		for (ix = 0; ix < 7; ix++)
 		{
-			if (label == calendar->day_number_labels[iy][ix])
-			{
+			if (aday > 0 && aday <= days_in_month)	{				
+			if (label == calendar->day_number_labels[iy][ix]){
 				row = iy;
 				col = ix;
-			}
-		}
+			} //picker label			
+		    } //if aday	
+		    aday = aday + 1;
+		}//ix
 		
-	//check for valid days(to do!)
-	//critical g_date_time_get_day_of_week: assertion 'datetime != NULL' failed	
+	}//iy
+		
+	// aday range should prevent critical assertion error
+	// critical g_date_time_get_day_of_week: assertion 'datetime != NULL' failed	
 
-	if (row == -1 || col == -1)
-		return;
+	if (row == -1 || col == -1) return; //something is wrong return
 
 	day_month = calendar->day_month[row][col];
-	aday = calendar->days[row][col];
-	
+	aday = calendar->days[row][col];	
 	calendar->day = aday;	
-	//printf("day = %d\n",aday);
+	//g_print("day = %d\n",aday);
 
 	if (!gtk_widget_has_focus(widget))
 		gtk_widget_grab_focus(widget);
 
 
+	//final check to see that day is in a valid range before calling select day	
+    if((calendar->day<1) || (calendar->day>days_in_month)) calendar->day=1;
+    
 	custom_calendar_select_day(calendar, calendar->day, calendar->month, calendar->year);	
 	g_signal_emit(calendar, custom_calendar_signals[DAY_SELECTED_SIGNAL], 0);
 }
@@ -902,9 +882,7 @@ static void custom_calendar_button_press(GtkGestureClick *gesture, int n_press, 
 void custom_calendar_update(CustomCalendar *calendar)
 {
 	g_return_if_fail(CUSTOM_IS_CALENDAR(calendar));
-	//custom_calendar_set_frame(calendar, calendar->frame);
 	custom_calendar_select_day(calendar, calendar->day, calendar->month, calendar->year);
-	
 }
 
 
@@ -914,7 +892,7 @@ void custom_calendar_update(CustomCalendar *calendar)
 void custom_calendar_set_today_colour(CustomCalendar *self, const gchar* colourname)
 {
 	self->today_colour =colourname;	
-	//g_print("CC: setting today colour = %s\n",self->today_colour);
+	//g_print("setting today colour = %s\n",self->today_colour);
 }
 const gchar* custom_calendar_get_today_colour(CustomCalendar *self){
 	
@@ -925,7 +903,7 @@ const gchar* custom_calendar_get_today_colour(CustomCalendar *self){
 void custom_calendar_set_event_colour(CustomCalendar *self, const gchar* colourname)
 {
 	self->event_colour =colourname;	
-	//g_print("CC: setting event colour = %s\n",self->event_colour);
+	//g_print("setting event colour = %s\n",self->event_colour);
 }
 
 const gchar* custom_calendar_get_event_colour(CustomCalendar *self){
@@ -937,23 +915,11 @@ const gchar* custom_calendar_get_event_colour(CustomCalendar *self){
 void custom_calendar_set_holiday_colour(CustomCalendar *self, const gchar* colourname)
 {
 	self->holiday_colour =colourname;	
-	//g_print("CC:setting holiday colour = %s\n",self->holiday_colour);
+	//g_print("setting holiday colour = %s\n",self->holiday_colour);
 }
 
 const gchar* custom_calendar_get_holiday_colour(CustomCalendar *self){
 	
 	return self->holiday_colour;
-}
-//----------------------------------------------------------------------
-
-void custom_calendar_set_frame(CustomCalendar *self, gboolean value)
-{
-	self->frame =value;	
-	//g_print("CC: setting calendar frame = %d\n",self->frame);
-}
-
-gboolean  custom_calendar_get_frame(CustomCalendar *self){
-	
-	return self->frame;
 }
 //----------------------------------------------------------------------

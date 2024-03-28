@@ -21,6 +21,35 @@
 
 #define CONFIG_DIRNAME "dbtest-gtk"
 
+/*
+SQLite creates its database file with 0644 permissions by default. 
+This can be changed by redefining SQLITE_DEFAULT_FILE_PERMISSIONS 
+during compilation. SQLITE_DEFAULT_FILE_PERMISSIONS=N
+
+The default numeric file permissions for newly created database files under unix. 
+If not specified, the default is 0644 which means that the files is globally 
+readable but only writable by the creator.
+
+0644 = rw-r--r--
+
+    r (read): 4
+    w (write): 2
+    x (execute): 1
+
+set so that all users can read and write but cannot execute the db
+
+    Owner: rwx = 4+2+0 = 6
+    Group: r-- = 4+2+0 = 6
+    Others: r-- = 4+2+0 = 6
+ 0666 = rw-rw-rw-
+
+*/
+
+#define SQLITE_DEFAULT_FILE_PERMISSIONS = 0666 //does not work
+
+//use chmod 666 calendar.db if issues
+
+
 static int callback(void *NotUsed, int argc, char **argv, char **azColName) {
    int i;
    for(i = 0; i < argc; i++) {
@@ -95,7 +124,7 @@ char *sql;
         "REMINDERMINS		INT);" ;
         
       
-   printf("Execute sql to create tables\n"); 
+   //printf("Execute sql to create tables\n"); 
    
 /* Execute SQL statement */
    rc = sqlite3_exec(db, sql, callback, 0, &zErrMsg);
@@ -116,6 +145,8 @@ char *sql;
 //---------------------------------------------------------------------
  
 int db_insert_event(CalendarEvent *evt) {
+	
+	printf("dbmanger: inserting event\n");
 	
 	gint evt_id=0;
 	gchar *summary_str="";
@@ -164,18 +195,6 @@ int db_insert_event(CalendarEvent *evt) {
 	g_object_get (evt, "hasreminder", &has_reminder, NULL);
 	g_object_get (evt, "remindermin", &reminder_min, NULL);
 
-//remove_apostrophes(title); //clean to prevent sql crash
-//remove_apostrophes(description);
-
-//printf("dbInsert: summary = %s\n",summary_str);
-//printf("dbInsert: location = %s\n",location_str);
-
-//printf("dbInsert: start_year = %d\n",start_year);
-//printf("dbInsert: start_month = %d\n", start_month);
-//printf("dbInsert: start_day = %d\n",start_day);
-//printf("dbInsert: start_hour = %d\n", start_hour);
-//printf("dbInsert: start_min = %d\n",start_min);
- 
 sqlite3 *db;
 int rc=0;
 char sql_query[2048] = ""; //string on the stack (not heap)
@@ -191,7 +210,7 @@ sqlite3_stmt *stmt;
       printf("Can't open database: %s\n", sqlite3_errmsg(db));
       return(0);
    } else {
-      printf("Opened database successfully\n");
+      //printf("Opened database successfully\n");
    }
 
 sprintf(sql_query, "INSERT INTO EVENTS (SUMMARY,LOCATION,DESCRIPTION,\
@@ -203,19 +222,19 @@ VALUES  ('%s','%s','%s', %d,%d,%d,%d,%d, %d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d);",
         end_year, end_month, end_day, end_hour,end_min,\
         is_yearly,is_allday, is_priority,has_notification, has_reminder,reminder_min);
 
-printf("sql = %s\n",sql_query);
-printf("Length of sql_query =%ld\n",strlen(sql_query));
+//printf("sql = %s\n",sql_query);
+//printf("Length of sql_query =%ld\n",strlen(sql_query));
 
 // Prepare the query
-printf("Preparing the insert query..\n");
+//printf("Preparing the insert query..\n");
 if (sqlite3_prepare_v2(db, sql_query, -1, &stmt, NULL) != SQLITE_OK){
-     printf("SQL get events prepare error: %s\n", sqlite3_errmsg(db));
+     //printf("SQL get events prepare error: %s\n", sqlite3_errmsg(db));
 }
 
 rc = sqlite3_step(stmt); // execute (step) insert
 sqlite3_finalize(stmt);  // finialize insert query
 int insert_id = sqlite3_last_insert_rowid(db);
-printf("insert id = %d\n",insert_id);
+//printf("insert id = %d\n",insert_id);
 sqlite3_close(db); //close db
 return insert_id;
 }  
@@ -293,7 +312,7 @@ char query[2048] = "";
       printf("Can't open database: %s\n", sqlite3_errmsg(db));
       return;
    } else {
-      printf("Opened database successfully\n");
+      //printf("Opened database successfully\n");
    }
 
 
@@ -340,7 +359,7 @@ void db_get_event(int index, CalendarEvent *evt){
 	printf("Can't open database: %s\n", sqlite3_errmsg(db));
 	return;
 	} else {
-	printf("Opened database successfully\n");
+	//printf("Opened database successfully\n");
 	}
 
 
@@ -422,7 +441,7 @@ int db_get_number_of_rows_all() {
 	printf("Can't open database: %s\n", sqlite3_errmsg(db));
 	return 0;
 	} else {
-	printf("Opened database successfully\n");
+	//printf("Opened database successfully\n");
 	}
 	
 	sprintf(sql, "SELECT Count(*) FROM EVENTS"); 
@@ -465,7 +484,7 @@ if(rc) {
 printf("Can't open database: %s\n", sqlite3_errmsg(db));
 return 0;
 } else {
-printf("Opened database successfully\n");
+//printf("Opened database successfully\n");
 }
 
 sprintf(sql, "SELECT Count(*) FROM EVENTS WHERE STARTYEAR = '%i' AND STARTMONTH = '%i'", year, month); 
@@ -507,7 +526,7 @@ int db_get_number_of_rows_year_month_day(int year, int month, int day) {
 	printf("Can't open database: %s\n", sqlite3_errmsg(db));
 	return(0);
 	} else {
-	printf("Opened database successfully\n");
+	//printf("Opened database successfully\n");
 	}
 	
 	sprintf(sql, "SELECT Count(*) FROM EVENTS WHERE STARTYEAR = '%i' AND STARTMONTH = '%i' AND STARTDAY = '%i'", year, month, day); 
@@ -546,11 +565,11 @@ int db_get_number_of_isyearly_events_month(int month) {
 	printf("Can't open database: %s\n", sqlite3_errmsg(db));
 	return  0;
 	} else {
-	printf("Opened database successfully\n");
+	//printf("Opened database successfully\n");
 	}
 	
 	sprintf(sql, "SELECT Count(*) FROM EVENTS WHERE STARTMONTH = '%i' AND ISYEARLY = '%i'", month,1); 
-	printf("sql = %s\n",sql);
+	//printf("sql = %s\n",sql);
 	
 	rc = sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
 	if (rc != SQLITE_OK) {  
@@ -586,7 +605,7 @@ void db_get_all_events(GArray *evt_arry) {
 	printf("Can't open database: %s\n", sqlite3_errmsg(db));
 	return;
 	} else {
-	printf("Opened database successfully\n");
+	//printf("Opened database successfully\n");
 	}
 	
 	sprintf(sql, "SELECT * FROM EVENTS");
@@ -647,7 +666,7 @@ void db_get_all_events_year_month(GArray *evt_arry, int year, int month)
 	printf("Can't open database: %s\n", sqlite3_errmsg(db));
 	return;
 	} else {
-	printf("Opened database successfully\n");
+	//printf("Opened database successfully\n");
 	}
 	
 	sprintf(sql, "SELECT * FROM EVENTS WHERE (STARTYEAR = '%i' OR ISYEARLY = '%i') AND STARTMONTH = '%i'", year, 1, month);
@@ -697,14 +716,14 @@ void db_get_all_events_year_month_day(GArray *evt_arry, int year, int month, int
 	int rc=0;
 	sqlite3_stmt *stmt;
 	char sql[2048] = "";
-	/* Open database */
+	// Open database 
 	const char *path=get_db_path();
 	rc = sqlite3_open(path, &db); 
 	if(rc) {
 	printf("Can't open database: %s\n", sqlite3_errmsg(db));
 	return;
 	} else {
-	printf("Opened database successfully\n");
+	//printf("Opened database successfully\n");
 	}
 		
 	sprintf(sql, "SELECT * FROM EVENTS WHERE (STARTYEAR = '%i' OR ISYEARLY = '%i') AND STARTMONTH = '%i' AND STARTDAY = '%i' ORDER BY STARTHOUR, STARTMIN asc", year, 1, month, day);	
@@ -760,7 +779,7 @@ void db_get_isyearly_events_day(GArray *evt_arry, int month, int day)
 	printf("Can't open database: %s\n", sqlite3_errmsg(db));
 	return;
 	} else {
-	printf("Opened database successfully\n");
+	//printf("Opened database successfully\n");
 	}
 	
 	sprintf(sql, "SELECT * FROM EVENTS WHERE STARTMONTH = '%i' AND STARTDAY = '%i' AND ISYEARLY = '%i'",month,day,1);
@@ -821,7 +840,7 @@ void db_get_isyearly_events_month(GArray *evt_arry, int month)
 	printf("Can't open database: %s\n", sqlite3_errmsg(db));
 	return;
 	} else {
-	printf("Opened database successfully\n");
+	//printf("Opened database successfully\n");
 	}
 	
 	sprintf(sql, "SELECT * FROM EVENTS WHERE STARTMONTH = '%i' AND ISYEARLY = '%i'", month, 1);
@@ -871,14 +890,14 @@ void db_get_upcoming_events(GArray *evt_arry, int year, int month, int from ,int
 	int rc=0;
 	sqlite3_stmt *stmt;
 	char sql[2048] = "";
-	/* Open database */
+	//Open database 
 	const char *path=get_db_path();
 	rc = sqlite3_open(path, &db); 
 	if(rc) {
 	printf("Can't open database: %s\n", sqlite3_errmsg(db));
 	return;
 	} else {
-	printf("Opened database successfully\n");
+	//printf("Opened database successfully\n");
 	}
 	
 	
@@ -924,8 +943,7 @@ void db_get_upcoming_events(GArray *evt_arry, int year, int month, int from ,int
 //-------------------------------------------------------------------		
 void db_delete_row(int id){
 	
-	printf("Delete row  %d\n", id);
-	
+	//printf("Delete row  %d\n", id);	
 	sqlite3 *db;
 	int rc=0;
 	sqlite3_stmt *stmt;
@@ -938,7 +956,7 @@ void db_delete_row(int id){
 	printf("Can't open database: %s\n", sqlite3_errmsg(db));
 	return;
 	} else {
-	printf("Opened database successfully\n");
+	//printf("Opened database successfully\n");
 	}
 	
 	sprintf(sql, "DELETE FROM EVENTS WHERE ID=%i", id);
@@ -961,16 +979,15 @@ void db_delete_all(){
 	sqlite3_stmt *stmt;
 	char sql[2048] = "";
 	
-	/* Open database */
+	// Open database 
 	const char *path=get_db_path();
 	rc = sqlite3_open(path, &db); 
 	if(rc) {
 	printf("Can't open database: %s\n", sqlite3_errmsg(db));
 	return;
 	} else {
-	printf("Opened database successfully\n");
-	}
-	
+	//printf("Opened database successfully\n");
+	}	
 	sprintf(sql, "DELETE FROM EVENTS");	
 	
 	if (sqlite3_prepare_v2(db, sql, -1, &stmt, NULL) != SQLITE_OK){
@@ -993,14 +1010,14 @@ void db_reset_sequence(){
 	sqlite3_stmt *stmt;
 	char sql[2048] = "";
 	
-	/* Open database */
+	//Open database
 	const char *path=get_db_path();
 	rc = sqlite3_open(path, &db);	
 	if(rc) {
 	printf("Can't open database: %s\n", sqlite3_errmsg(db));
 	return;
 	} else {
-	printf("Opened database successfully\n");
+	//printf("Opened database successfully\n");
 	}
 	
 	sprintf(sql, "DELETE FROM SQLITE_SEQUENCE WHERE NAME= 'EVENTS'");
