@@ -6398,6 +6398,7 @@ pair_t table[] = {
 {"bruited","b-r r-uw uw-t t-ih ih-d"},
 {"brummagem","b-r r-ah ah-m m-ih ih-jh jh-ah ah-m"},
 {"brummel","b-r r-ah ah-m m-ah ah-l"},
+{"brunch","b-r r-r r-ah ah-n n-n n-ch ch-ch"},
 {"brundusium","b-r r-ah ah-n n-d d-uw uw-z z-iy iy-ah ah-m"},
 {"brunette","b-r r-uw uw-n n-eh eh-t"},
 {"brunettes","b-r r-uw uw-n n-eh eh-t t-s"},
@@ -30087,7 +30088,9 @@ pair_t table[] = {
 {"lunatic","l-uw uw-n n-ah ah-t t-ih ih-k"},
 //s","l-uw uw-n n-ah ah-t t-ih ih-k k-s"},
 {"lunatics","l-uw uw-n n-ah ah-t t-ih ih-k k-s"},
-{"lunch","l-ah ah-n n-ch"},
+
+{"lunch","l-l l-ah ah-n n-n n-ch ch-ch"},
+
 {"lunched","l-ah ah-n n-ch ch-t"},
 {"luncheon","l-ah ah-n n-ch ch-ah ah-n"},
 {"luncheons","l-ah ah-n n-ch ch-ah ah-n n-z"},
