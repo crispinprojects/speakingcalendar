@@ -39,8 +39,10 @@
 #include "voice2.h"
 
 #define CONFIG_DIRNAME "talkcal-gtk4-010"
-#define CONFIG_FILENAME "talkcal-config-071"
+#define CONFIG_FILENAME "talkcal-config-013"
 
+//threads
+static GMutex lock;
 
 //Declarations
 //File Callbks
@@ -92,7 +94,9 @@ static void set_holidays_on_calendar(CustomCalendar *calendar);
 static void speak_events();
 static void speak_time(gint hour, gint min);
 static void callbk_speak(GSimpleAction* action, GVariant *parameter,gpointer user_data);
-//static gpointer thread_playwav(gpointer user_data);
+
+static gpointer thread_playraw(gpointer user_data);
+
 static char* get_cardinal_string(int number);
 static char* get_day_number_ordinal_string(int day);
 static char* get_day_of_week(int day, int month, int year);
@@ -225,9 +229,9 @@ const GActionEntry app_actions[] = {
   { "quit", callbk_quit}
 };
 
-//--------------------------------------------------------------------
+//======================================================================
 //Helpers
-//--------------------------------------------------------------------
+//======================================================================
 //---------------------------------------------------------------------
 // GlistStore helper functions (Debugging)
 //---------------------------------------------------------------------
@@ -267,10 +271,10 @@ int get_gliststore_number(GListStore *store) {
 	return n_items;
 
 }
-//---------------------------------------------------------------------
-//-------------------------------------------------------------------------------
+
+//======================================================================
 // Save load config file
-//-------------------------------------------------------------------------------
+//======================================================================
 
 static void config_load_default()
 {
@@ -294,7 +298,7 @@ static void config_load_default()
     m_eventcolour="brown";
     m_holidaycolour="blue";	
 }
-
+//======================================================================
 static void config_read()
 {
 	// Clean up previously loaded configuration values	
@@ -343,14 +347,11 @@ static void config_read()
 	
 	g_key_file_free(kf);
 }
-
+//======================================================================
 void config_write()
 {
-
 	GKeyFile * kf = g_key_file_new();
-
-	//talk
-		
+	//talk		
 	g_key_file_set_integer(kf, "calendar_settings", "talk", m_talk);
 	g_key_file_set_integer(kf, "calendar_settings", "talk_startup", m_talk_at_startup);
 	g_key_file_set_integer(kf, "calendar_settings", "talk_upcoming", m_talk_upcoming);
@@ -367,7 +368,6 @@ void config_write()
 	g_key_file_set_integer(kf, "calendar_settings", "window_width", m_window_width);
 	g_key_file_set_integer(kf, "calendar_settings", "window_height", m_window_height);
 	
-
 	g_key_file_set_string(kf, "calendar_settings", "todaycolour", m_todaycolour);
 	g_key_file_set_string(kf, "calendar_settings", "eventcolour", m_eventcolour);
 	g_key_file_set_string(kf, "calendar_settings", "holidaycolour", m_holidaycolour);
@@ -377,9 +377,8 @@ void config_write()
 	g_file_set_contents(m_config_file, data, -1, NULL);
 	g_free(data);
 	g_key_file_free(kf);
-
 }
-
+//======================================================================
 void config_initialize()
 {
 	gchar *config_dir = g_build_filename(g_get_user_config_dir(), CONFIG_DIRNAME, NULL);
@@ -403,9 +402,9 @@ void config_initialize()
 	g_free(config_dir);
 }
 
-//--------------------------------------------------------------------
+//======================================================================
 // Remove unwanted characters
-//--------------------------------------------------------------------
+//======================================================================
 
 static char *remove_commas(const char *text)
 {
@@ -424,7 +423,7 @@ static char *remove_commas(const char *text)
 	}
 	return g_string_free(str, FALSE);
 }
-
+//======================================================================
 static char* remove_semicolons (const char *text)
 {
 	GString *str;
@@ -441,7 +440,7 @@ static char* remove_semicolons (const char *text)
 	}
 	return g_string_free (str, FALSE);
 }
-
+//======================================================================
 static char* remove_punctuations(const char *text)
 {
 	GString *str;
@@ -458,29 +457,29 @@ static char* remove_punctuations(const char *text)
 	}
 	return g_string_free (str, FALSE);
 }
-
-//----------------------------------------------------------------------
+//======================================================================
 // Number of day events
-//----------------------------------------------------------------------
+//======================================================================
 
 int  get_number_of_day_events(){
 	int event_count=db_get_number_of_rows_year_month_day(m_start_year, m_start_month, m_start_day);	
 	return event_count;
 }
 
+//======================================================================
 int  get_total_number_of_events(){
 
 	return db_get_number_of_rows_all();
 }
 
 
-//---------------------------------------------------------------------
+//======================================================================
 // Public holidays
-//----------------------------------------------------------------------
+//======================================================================
 
-//---------------------------------------------------------------------
+//======================================================================
 // calculate easter
-//---------------------------------------------------------------------
+//======================================================================
 
 GDate* calculate_easter(gint year) {
 
@@ -505,9 +504,9 @@ GDate* calculate_easter(gint year) {
 
 	return edate;
 }
-//--------------------------------------------------------------------
+//======================================================================
 // public holidays
-//---------------------------------------------------------------------
+//======================================================================
 gboolean is_public_holiday(int day) {
 
 // UK public holidays
@@ -757,22 +756,22 @@ char* get_holiday_str(int day) {
 	return "";
 }
 
-//----------------------------------------------------------------------
+//======================================================================
 //Implementation of file menu callbks
-//----------------------------------------------------------------------
+//======================================================================
 
 static void callbk_export(GSimpleAction *action, GVariant *parameter,  gpointer user_data)
 {
 	
 	export_csv_file();
 }
-
+//======================================================================
 static void callbk_import(GSimpleAction *action, GVariant *parameter,  gpointer user_data)
 {
 	
 	import_csv_file(user_data);
 }
-
+//======================================================================
 void export_csv_file() 
 {	
 	GFile *file;
@@ -906,7 +905,7 @@ void export_csv_file()
 	g_object_unref(file);
 	
 }
-
+//======================================================================
 int break_fields(char *s, char **data, int n)
 {
 	// n = number of fields
@@ -944,8 +943,7 @@ int break_fields(char *s, char **data, int n)
 	}
 	return fields;
 }
-
-
+//======================================================================
 void import_csv_file(gpointer user_data) {
 	
 	GtkWidget *window = user_data;
@@ -1060,18 +1058,18 @@ void import_csv_file(gpointer user_data) {
 	g_object_unref(file_stream);
 	g_object_unref(file);	
 }
+//======================================================================
 
-
-//---------------------------------------------------------------------
+//======================================================================
 
 static void callbk_quit(GSimpleAction * action,	G_GNUC_UNUSED GVariant *parameter, gpointer user_data)
 {
 	g_application_quit(G_APPLICATION(user_data));		
 }
-
-//----------------------------------------------------------------------
+//======================================================================
+//======================================================================
 //Implementation of Edit menu callbks
-//----------------------------------------------------------------------
+//======================================================================
 static void callbk_set_preferences(GtkButton *button, gpointer  user_data){
 
 	GtkWidget *window = user_data;
@@ -1161,8 +1159,7 @@ static void callbk_set_preferences(GtkButton *button, gpointer  user_data){
 	
 	gtk_window_destroy(GTK_WINDOW(dialog));
 }
-
-//----------------------------------------------------------------------
+//======================================================================
 static void callbk_preferences(GSimpleAction* action, GVariant *parameter,gpointer user_data)
 {	
 	GtkWidget *window =user_data;
@@ -1280,11 +1277,9 @@ static void callbk_preferences(GSimpleAction* action, GVariant *parameter,gpoint
 	gtk_window_present (GTK_WINDOW (dialog));
 	
 }
-
-
-//----------------------------------------------------------------------
+//======================================================================
 //Implementation of event menu callbks
-//----------------------------------------------------------------------
+//======================================================================
 
 static void callbk_check_button_allday_toggled(GtkCheckButton *check_button, gpointer user_data)
 {
@@ -1306,12 +1301,12 @@ static void callbk_check_button_allday_toggled(GtkCheckButton *check_button, gpo
 		gtk_widget_set_sensitive(spin_button_end_time, TRUE);
 	}
 }
-
+//======================================================================
 static void callbk_dropdown(GtkDropDown* self, gpointer user_data)
 {	
 	m_summary = gtk_string_object_get_string (GTK_STRING_OBJECT (gtk_drop_down_get_selected_item (self)));	
 }
-
+//======================================================================
 static void callbk_add_event(GtkButton *button, gpointer user_data)
 {
 
@@ -1426,9 +1421,8 @@ static void callbk_add_event(GtkButton *button, gpointer user_data)
 	g_array_free(evt_arry_day, FALSE); //clear the array 
 	
 	gtk_window_destroy(GTK_WINDOW(dialog));
-
 }
-
+//======================================================================
 static void callbk_new_event(GSimpleAction *action, GVariant *parameter,  gpointer user_data)
 {	
 	GtkWidget *window = user_data;
@@ -1579,7 +1573,7 @@ static void callbk_new_event(GSimpleAction *action, GVariant *parameter,  gpoint
 	gtk_window_present(GTK_WINDOW(dialog));
 	
 }
-//---------------------------------------------------------------------
+//======================================================================
 
 static void callbk_update_event(GtkButton *button, gpointer user_data)
 {
@@ -1700,32 +1694,7 @@ static void callbk_update_event(GtkButton *button, gpointer user_data)
 	gtk_window_destroy(GTK_WINDOW(dialog));
 	
 }
-
-
-/*
-const char * const events[] = { 
-	"Activity",	
-	"Anniversary",	
-	"Appointment",
-	"Birthday",
-	"Cabbie", 
-	"Car", 
-	"Dentist", 
-	"Doctor", 
-	"Family", 	
-	"Holiday",
-	"Hospital",	
-	"Meeting", 
-	"Meetup", 
-	"Payment",
-	"Reminder", 
-	"Restaurant", 
-	"Task", 		
-	"Travel",  
-	"Visit",
-	"Work",  
-	NULL };
-*/
+//======================================================================
 
 static guint get_dropdown_position(const gchar* summary)
 {
@@ -1802,7 +1771,7 @@ static guint get_dropdown_position(const gchar* summary)
 	
 	return position;
 }
-
+//======================================================================
 static void callbk_edit_event(GSimpleAction *action, GVariant *parameter,  gpointer user_data)
 {	
 	if (m_id_selection == -1)
@@ -2058,8 +2027,8 @@ static void callbk_edit_event(GSimpleAction *action, GVariant *parameter,  gpoin
 
 	gtk_window_present(GTK_WINDOW(dialog));
 }
+//======================================================================
 
-//---------------------------------------------------------------------
 static void callbk_delete_selected(GSimpleAction *action, GVariant *parameter,  gpointer user_data)
 {
 	GtkWindow *window =user_data;
@@ -2096,7 +2065,7 @@ static void callbk_delete_selected(GSimpleAction *action, GVariant *parameter,  
 	custom_calendar_update(CUSTOM_CALENDAR(calendar));	
 }
 
-//----------------------------------------------------------------------
+//======================================================================
 static void callbk_confirm_delete_all(GtkButton *button, gpointer  user_data)
 {	
 	GtkWindow *window =user_data;	
@@ -2113,11 +2082,9 @@ static void callbk_confirm_delete_all(GtkButton *button, gpointer  user_data)
 	custom_calendar_reset_marks(CUSTOM_CALENDAR(calendar));		
 			
 	custom_calendar_update(CUSTOM_CALENDAR(calendar));
-	gtk_window_destroy(GTK_WINDOW(dialog));
-	
-	
+	gtk_window_destroy(GTK_WINDOW(dialog));		
 }
-
+//======================================================================
 static void callbk_delete_all(GSimpleAction *action, GVariant *parameter,  gpointer user_data)
 {
 	GtkWidget *window =user_data;
@@ -2148,9 +2115,9 @@ static void callbk_delete_all(GSimpleAction *action, GVariant *parameter,  gpoin
 	
 }
 
-//--------------------------------------------------------------------
+//======================================================================
 // calendar functions
-//--------------------------------------------------------------------
+//======================================================================
 
 static void set_holidays_on_calendar(CustomCalendar *calendar){
 	
@@ -2168,13 +2135,13 @@ static void set_holidays_on_calendar(CustomCalendar *calendar){
 }
 
 
-//----------------------------------------------------------------------
+//======================================================================
 //Implementation of Calendar menu callbks
-//----------------------------------------------------------------------
+//======================================================================
 
-//----------------------------------------------------------------
+//======================================================================
 // Callback home (go to current date)
-//-----------------------------------------------------------------
+//======================================================================
 static void callbk_calendar_home(GSimpleAction * action, GVariant *parameter, gpointer user_data)
 {
 	GtkWindow *window =user_data;	
@@ -2214,8 +2181,7 @@ static void callbk_calendar_home(GSimpleAction * action, GVariant *parameter, gp
 	
 	custom_calendar_update(CUSTOM_CALENDAR(calendar));		
 }
-
-//---------------------------------------------------------------------
+//======================================================================
 
 gboolean is_colour_name(gchar* colour_name)
 {
@@ -2390,7 +2356,7 @@ gboolean is_colour_name(gchar* colour_name)
 	g_list_free(list);
 	return found;
 }
-
+//======================================================================
 
 static void callbk_update_colours(GtkButton *button, gpointer user_data)
 {
@@ -2434,7 +2400,7 @@ static void callbk_update_colours(GtkButton *button, gpointer user_data)
 		
 	gtk_window_destroy(GTK_WINDOW(dialog));
 }
-
+//======================================================================
 static void callbk_calendar_colour(GSimpleAction * action, GVariant *parameter, gpointer user_data)
 {	
 	GtkWidget *window =user_data;
@@ -2505,10 +2471,10 @@ static void callbk_calendar_colour(GSimpleAction * action, GVariant *parameter, 
 	gtk_window_present(GTK_WINDOW(dialog));	
 	
 }
-
-//---------------------------------------------------------------------
+//======================================================================
+//======================================================================
 // Update Date Label
-//----------------------------------------------------------------------
+//======================================================================
 
 static void update_label_date(CustomCalendar *calendar, gpointer user_data)
 {
@@ -2614,9 +2580,9 @@ GtkWidget *label_date = (GtkWidget *) user_data;
 	
 	 
 }
-//----------------------------------------------------------------------
+//======================================================================
 // Calendar callbks
-//----------------------------------------------------------------------
+//======================================================================
 
 static void callbk_calendar_next_month(CustomCalendar *calendar, gpointer user_data) 
 {
@@ -2641,7 +2607,7 @@ static void callbk_calendar_next_month(CustomCalendar *calendar, gpointer user_d
 	
 	custom_calendar_update(CUSTOM_CALENDAR(calendar));	
 }
-
+//======================================================================
 static void callbk_calendar_prev_month(CustomCalendar *calendar, gpointer user_data) 
 {
 	
@@ -2665,7 +2631,7 @@ static void callbk_calendar_prev_month(CustomCalendar *calendar, gpointer user_d
 		
 	custom_calendar_update(CUSTOM_CALENDAR(calendar));
 }
-
+//======================================================================
 static void callbk_calendar_next_year(CustomCalendar *calendar, gpointer user_data) 
 {
 	GtkWidget *label_date = (GtkWidget *)user_data;
@@ -2689,7 +2655,7 @@ static void callbk_calendar_next_year(CustomCalendar *calendar, gpointer user_da
 	custom_calendar_update(CUSTOM_CALENDAR(calendar));
 	
 }
-
+//======================================================================
 static void callbk_calendar_prev_year(CustomCalendar *calendar, gpointer user_data) 
 {
 	GtkWidget *label_date = (GtkWidget *)user_data;
@@ -2713,7 +2679,7 @@ static void callbk_calendar_prev_year(CustomCalendar *calendar, gpointer user_da
 	
 	custom_calendar_update(CUSTOM_CALENDAR(calendar));	
 }
-
+//======================================================================
 
 static void callbk_calendar_day_selected(CustomCalendar *calendar, gpointer user_data)
 {
@@ -2739,11 +2705,9 @@ static void callbk_calendar_day_selected(CustomCalendar *calendar, gpointer user
 	custom_calendar_update(CUSTOM_CALENDAR(calendar));				
 }
 
-
-
-//--------------------------------------------------------------------
+//======================================================================
 // calendar functions
-//--------------------------------------------------------------------
+//======================================================================
 
 static void set_marks_on_calendar(CustomCalendar *calendar, GArray *arry) 
 {	
@@ -2756,13 +2720,10 @@ static void set_marks_on_calendar(CustomCalendar *calendar, GArray *arry)
 		custom_calendar_mark_day(CUSTOM_CALENDAR(calendar), start_day);	
 	} //for evt_arry_month
 }
-
-
-//----------------------------------------------------------------------
-
-//----------------------------------------------------------------------
+//======================================================================
+//======================================================================
 //Implementation of Help menu callbks
-//----------------------------------------------------------------------
+//======================================================================
 
 static void callbk_info(GSimpleAction *action, GVariant *parameter,  gpointer user_data)
 {	
@@ -2863,9 +2824,9 @@ static void callbk_info(GSimpleAction *action, GVariant *parameter,  gpointer us
 	gtk_box_append(GTK_BOX(box),label_gnome_text_scale);
 		
 	pango_attr_list_unref(attrs);
-	gtk_window_present (GTK_WINDOW (dialog));
-	
+	gtk_window_present (GTK_WINDOW (dialog));	
 }
+//======================================================================
 static void callbk_about(GSimpleAction* action, GVariant *parameter, gpointer user_data)
 {
 	GtkWidget *window = user_data;
@@ -2876,7 +2837,7 @@ static void callbk_about(GSimpleAction* action, GVariant *parameter, gpointer us
 	gtk_widget_set_size_request(about_dialog, 200,200);
     gtk_window_set_modal(GTK_WINDOW(about_dialog),TRUE);
 	gtk_about_dialog_set_program_name(GTK_ABOUT_DIALOG(about_dialog), "Talk Calendar");
-	gtk_about_dialog_set_version (GTK_ABOUT_DIALOG(about_dialog), "0.1.2");
+	gtk_about_dialog_set_version (GTK_ABOUT_DIALOG(about_dialog), "0.1.3");
 	gtk_about_dialog_set_copyright(GTK_ABOUT_DIALOG(about_dialog),"Copyright © 2024");
 	gtk_about_dialog_set_comments(GTK_ABOUT_DIALOG(about_dialog),"Personal calendar");
 	gtk_about_dialog_set_license_type (GTK_ABOUT_DIALOG(about_dialog), GTK_LICENSE_LGPL_2_1);
@@ -2886,12 +2847,11 @@ static void callbk_about(GSimpleAction* action, GVariant *parameter, gpointer us
 	gtk_about_dialog_set_logo_icon_name(GTK_ABOUT_DIALOG(about_dialog), "x-office-calendar");
 	gtk_widget_set_visible (about_dialog, TRUE);	
 }
+//======================================================================-
 
-//----------------------------------------------------------------------
-
-//----------------------------------------------------------------------
+//======================================================================
 // LISTBOX functions and callbks
-//----------------------------------------------------------------------
+//======================================================================
 
 static GtkWidget *create_widget (gpointer item, gpointer user_data)
 {
@@ -2905,13 +2865,13 @@ static GtkWidget *create_widget (gpointer item, gpointer user_data)
   g_object_bind_property (obj, "label", label, "label", G_BINDING_SYNC_CREATE);
   return label;
 }
-
+//======================================================================
 static void add_separator (GtkListBoxRow *row, GtkListBoxRow *before, gpointer data)
 {	
   if (!before) return;
   gtk_list_box_row_set_header (row, gtk_separator_new (GTK_ORIENTATION_HORIZONTAL));
 }
-
+//======================================================================
 static void callbk_row_activated (GtkListBox *listbox,GtkListBoxRow *row, gpointer user_data)
 {
 	m_row_index = gtk_list_box_row_get_index (row);	
@@ -2933,10 +2893,9 @@ static void callbk_row_activated (GtkListBox *listbox,GtkListBoxRow *row, gpoint
 	g_object_get (selected_evt, "location", &location_str, NULL);	
 		
 }
-
-//-----------------------------------------------------------------
+//======================================================================
 // Display events (time order)
-//-----------------------------------------------------------------
+//======================================================================
 
 static void display_event_array(GArray *evt_arry) {
 	
@@ -3131,9 +3090,8 @@ static void display_event_array(GArray *evt_arry) {
 		}//evt_arry loop
 }
 
-//----------------------------------------------------------------------
+//======================================================================
 
-//-----------------------------------------------------------------------
 static GMenu *create_menu(const GtkApplication *app) {
 	
 		
@@ -3222,21 +3180,26 @@ static GMenu *create_menu(const GtkApplication *app) {
     
     return menu;
 }
+//=====================================================================
+//thread playraw
+//======================================================================
 
-
-//-----------------------------------------------------------------
-// Speak functions and callbks
-//------------------------------------------------------------------
-void  playraw(gpointer user_data)
-{   
+static gpointer thread_playraw(gpointer user_data)
+{  
     gchar *raw_file =user_data;       
     gchar *m_sample_rate_str = g_strdup_printf("%i", m_talk_rate); 
     gchar *sample_rate_str ="-r ";    
     sample_rate_str= g_strconcat(sample_rate_str,m_sample_rate_str, NULL);     
-    gchar * command_str ="aplay -c 1 -f U8";
+    //gchar * command_str ="aplay -c 1 -f S16_LE";
+    //gchar * command_str ="aplay -c 1 -f U8";
+     gchar * command_str ="aplay -c 1 -f U8";
     command_str =g_strconcat(command_str," ",sample_rate_str, " ", raw_file, NULL); 
     system(command_str); 
+           
+    g_mutex_unlock (&lock); //thread mutex unlock 
+    return NULL; 
 }
+//======================================================================
 
 unsigned char *rawcat(unsigned char *arrys[], unsigned int arry_size[], int arry_count) {
 		
@@ -3263,7 +3226,7 @@ unsigned char *rawcat(unsigned char *arrys[], unsigned int arry_size[], int arry
 	}//k kount
 	return data;
 }
-
+//======================================================================
 unsigned int get_merge_size(unsigned int sizes_arry[], int arry_size){
 	
 	unsigned int total_samples=0;
@@ -3274,15 +3237,12 @@ unsigned int get_merge_size(unsigned int sizes_arry[], int arry_size){
     }
 	return total_samples;
 }
-
-
-
+//======================================================================
 static void callbk_speak(GSimpleAction* action, GVariant *parameter,gpointer user_data){
 		
 	speak_events();
 }
-
-//--------------------------------------------------------------------
+//======================================================================
 
 static char* get_day_of_week(int day, int month, int year) 
 {
@@ -3321,7 +3281,7 @@ static char* get_day_of_week(int day, int month, int year)
 
 	return weekday_str;
 }
-//---------------------------------------------------------------------
+//======================================================================
 static char* get_day_number_ordinal_string(int day) 
 {
 
@@ -3429,7 +3389,7 @@ static char* get_day_number_ordinal_string(int day)
 	  } //day switch
 	return day_str;
 }
-
+//======================================================================
 char* get_month_string(int month) {
 
 	char* result ="";
@@ -3476,7 +3436,7 @@ char* get_month_string(int month) {
 	}
 	return result;
 }
-//--------------------------------------------------------------------
+//======================================================================
 
 static char* get_event_title_word(char* word) 
 {
@@ -3560,8 +3520,7 @@ char* result="";
 
 return result;
 }
-
-//----------------------------------------------------------------------
+//======================================================================
 static char* get_cardinal_string(int number)
 {
 
@@ -3754,7 +3713,7 @@ static char* get_cardinal_string(int number)
 	return result;
 
 }
-//---------------------------------------------------------------------
+//======================================================================
 GArray*  get_upcoming_array(int upcoming_days) 
 {
 	if(upcoming_days > 7) upcoming_days=7; //clamp
@@ -3856,9 +3815,7 @@ GArray*  get_upcoming_array(int upcoming_days)
 	
 return NULL; //should never get here but if it does return NULL
 }
-
-
-//---------------------------------------------------------------------
+//======================================================================
 
 static void speak_events() {
 	
@@ -4998,8 +4955,7 @@ static void speak_events() {
 		word_arrays_sizes[i]=upcoming_raw_len;
 	    }	
 	    
-	    //V words
-	    
+	    //V words	    
 	    if (g_strcmp0(word_str_lower,"visit")==0) {
 		word_arrays[i] = (unsigned char*)malloc(visit_raw_len * sizeof(unsigned char));
 		word_arrays[i] = visit_raw;
@@ -5028,12 +4984,17 @@ static void speak_events() {
     fwrite(data, data_len, 1, f);
     fclose(f);
   
-    playraw(raw_file);
+    //playraw(raw_file);
+    
+    GThread *thread_audio; 
+	g_mutex_lock (&lock);
+    thread_audio = g_thread_new(NULL, thread_playraw, raw_file);  
+	g_thread_unref (thread_audio);
    		
 	free(data);	
 	
 }
-//---------------------------------------------------------------------
+//======================================================================
 static void speak_time(gint hour, gint min) 
 {
 	gchar* hour_str="";
@@ -5095,8 +5056,7 @@ static void speak_time(gint hour, gint min)
 	gchar* word_str;
 	gchar* word_str_lower;	
 	gint word_number  =g_list_length(speak_word_list);
-	
-	
+		
 	//create word array using list size
 	unsigned char *word_arrays[word_number]; 
 	unsigned int word_arrays_sizes[word_number];
@@ -5426,7 +5386,6 @@ static void speak_time(gint hour, gint min)
 	}		
 	} //for words
 	
-	
 	//concatenate using raw cat
 	unsigned char *data = rawcat(word_arrays, word_arrays_sizes, word_number);	
 	unsigned int data_len = get_merge_size(word_arrays_sizes,word_number);
@@ -5435,13 +5394,17 @@ static void speak_time(gint hour, gint min)
 	FILE* f = fopen(raw_file, "w");
     fwrite(data, data_len, 1, f);
     fclose(f);     
-    playraw(raw_file);   		
+    //playraw(raw_file); 
+    
+    GThread *thread_audio; 
+	g_mutex_lock (&lock);
+    thread_audio = g_thread_new(NULL, thread_playraw, raw_file);  
+	g_thread_unref (thread_audio);
+      		
 	free(data);	
 	
 }
-
-
-//----------------------------------------------------------------------
+//======================================================================
 static void callbk_calendar_speaktime(GSimpleAction * action, GVariant *parameter, gpointer user_data)
 {	
 	GtkWidget *window = user_data;
@@ -5455,7 +5418,7 @@ static void callbk_calendar_speaktime(GSimpleAction * action, GVariant *paramete
 	
     g_date_time_unref (dt);
 }
-//----------------------------------------------------------------------
+//======================================================================
 static void show_notifications(GArray *evt_arry){
 	
 	gint evt_id;
@@ -5577,10 +5540,7 @@ static void show_notifications(GArray *evt_arry){
 	} //if notification
 	} //for i events
 }
-
-
-
-//----------------------------------------------------------------------
+//======================================================================
 
 void callbk_shutdown(GtkWindow *window, gint response_id, gpointer user_data)
 {
@@ -5588,7 +5548,7 @@ void callbk_shutdown(GtkWindow *window, gint response_id, gpointer user_data)
 	config_write();	
 	
 }
-
+//======================================================================
 static void startup(GtkApplication *app)
 {
 	 //STARTUP		  	
@@ -5596,7 +5556,7 @@ static void startup(GtkApplication *app)
 	 //g_print("starting database\n");	 	
 	 db_create_events_table(); //startup database 
 }
-
+//======================================================================
 static void activate (GtkApplication* app, gpointer user_data)
 {
 	GtkWidget *window;	
@@ -5741,7 +5701,6 @@ static void activate (GtkApplication* app, gpointer user_data)
 	menu=create_menu(app);	
 	gtk_application_set_menubar (app,G_MENU_MODEL(menu));
     gtk_application_window_set_show_menubar(GTK_APPLICATION_WINDOW(window), TRUE);
-
 	
 	// connect keyboard accelerators	
 	gtk_application_set_accels_for_action(GTK_APPLICATION(app),"app.home", home_accels);
@@ -5754,7 +5713,6 @@ static void activate (GtkApplication* app, gpointer user_data)
 	gtk_application_set_accels_for_action(GTK_APPLICATION(app),"app.preferences", preferences_accels);
 	gtk_application_set_accels_for_action(GTK_APPLICATION(app),"app.quit", quit_accels);
 		
-	
 	//setup key-value pairs
 	g_object_set_data(G_OBJECT(window), "window-calendar-key",calendar);
 	g_object_set_data(G_OBJECT(window), "window-label-date-key",label_date);
@@ -5803,10 +5761,9 @@ static void activate (GtkApplication* app, gpointer user_data)
 	
 	if(m_talk && m_talk_at_startup) {
 		speak_events();		
-	}
-			
+	}			
 }
-
+//======================================================================
 int main (int argc, char **argv)
 {
       
@@ -5820,3 +5777,4 @@ int main (int argc, char **argv)
 
   return status;
 }
+//======================================================================

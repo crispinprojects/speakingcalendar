@@ -14,55 +14,29 @@
  *   You should have received a copy of the GNU General Public License     *
  *   along with this program.  If not, see <http://www.gnu.org/licenses/>. *
  ***************************************************************************/
- 
-// This calendar is a customised version of the original GtkCalendar code 
-// with credits below. It can be used inconjunction with my CalendarEvent class.
-
-/* GTK - The GIMP Toolkit
- * Copyright (C) 1995-1997 Peter Mattis, Spencer Kimball and Josh MacDonald
- *
- * GTK Calendar Widget
- * Copyright (C) 1998 Cesar Miquel, Shawn T. Amundson and Mattias Groenlund
- *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library. If not, see <http://www.gnu.org/licenses/>.
- */
 
 /*
- * Modified by the GTK+ Team and others 1997-2000.  See the AUTHORS
- * file for a list of people on the GTK+ Team.  See the ChangeLog
- * files for a list of changes.  These files are distributed with
- * GTK+ at ftp://ftp.gtk.org/pub/gtk/.
- */
+This calendar is a customised version (derivative work) of the original 
+GtkCalendar code the latest version of which is found at
+https://gitlab.gnome.org/GNOME/gtk/-/blob/main/gtk/gtkcalendar.c with the
+original author credits. As this is derivative work I have used the same 
+licence LGPL-2.1. GTK4 Custom Calendar allows events and holidays 
+to be colour marked on the calendar and a grid can be used.
 
+GTK4 Custom Calendar uses a grid of day labels for each month. Buttons 
+were used in a previous version but I could not get this to work 
+successfully. The latest version now uses platform specific (e.g. libadwaita) 
+style classes such as “title-1” and "title-2" etc. which can be
+used by GTK4 applications with the gtk_widget_add_css_class() function.
 
-/*
-GTK4 Simple Calendar uses a grid of day labels for each month. Buttons were
-used in a previous version but I could not get this to work successfully. 
-In previous versions I used gtk_widget_get_style_context() but in this version
-all code which used gtk_style_context_add_provider() and 
-gtk_color_chooser_get_rgba() has been removed as these are being 
-depreciated in gtk4.10. Also it does not use an application-specific 
-styling css file (e.g. styles.css) in case this approach is depreciated 
-further down the line.
-
-Custom Calendar now uses Pango attributes and markup for adding some 
-style and colour to the calendar. Pango is the text layout system used 
-by GDK and GTK. Please note that this calendar does not use platform 
-specific (e.g. libadwaita) style classes such as “title-1”, "title-2",
-and “dim-label” etc. which can be used by GTK4 applications with the 
-gtk_widget_add_css_class() function. 
+GTK4 Custom Calendar can be used inconjunction with my CalendarEvent 
+class. Please note that this Calendar has been developed using 
+gtk 4.8 (Debian 12) and so does include functions that I know are going 
+to be depreciated in 4.12 and beyond. One such example is 
+gtk_css_provider_load_from_data which is being depreciated and replaced 
+with gtk_css_provider_load_from_string.
 */
+
 
 #include "customcalendar.h"
 
