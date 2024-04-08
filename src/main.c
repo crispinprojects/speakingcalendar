@@ -36,7 +36,8 @@
 #include "dbmanager.h"
 
 //voice 2024
-#include "voice2.h"
+
+#include "voice3.h"
 
 #define CONFIG_DIRNAME "talkcal-gtk4-010"
 #define CONFIG_FILENAME "talkcal-config-013"
@@ -121,9 +122,12 @@ GArray*  get_upcoming_array(int upcoming_days);
 static char * m_config_file = NULL;
 
 //public holidays UK
-gboolean is_public_holiday(int day);
-char* get_holiday_str(int day);
+gboolean is_notable_date(int day);
+char* get_notable_date_str(int day);
 GDate* calculate_easter(gint year);
+//GDate* calculate_bst_start(gint year);
+GDate* calculate_bst_start();
+GDate* calculate_bst_end();
 
 //int get_number_of_events();
 int  get_total_number_of_events();
@@ -192,18 +196,20 @@ const char * const events[] = {
 	"Activity",	
 	"Anniversary",	
 	"Appointment",
-	"Birthday",
-	"Cabbie",
+	"Birthday",	
 	"Cafe",  
 	"Car", 
 	"Dentist", 
 	"Doctor", 
+	"Driver",
 	"Family", 
-	"Funeral",	
+	"Funeral",
+	"Garden",	
 	"Holiday",
 	"Hospital",	
 	"Meeting", 
 	"Meetup", 
+	"Party", 
 	"Payment",
 	"Reminder", 
 	"Restaurant", 
@@ -478,6 +484,57 @@ int  get_total_number_of_events(){
 //======================================================================
 
 //======================================================================
+// calculate BST
+//======================================================================
+GDate* calculate_bst_start()
+{
+	GDate *bst_date;	
+	gint month =3;
+	gint year=m_start_year;	
+	
+	GDate *last_sunday_march_date;
+	guint8 days_in_march =g_date_get_days_in_month(month,year);
+	
+	//g_print("calculate_bst_start: month = %i\n",month);
+	//g_print("calculate_bst_start: year = %i\n",year);
+	//g_print("calculate_bst_start: days in march = %i\n",days_in_march);
+    last_sunday_march_date = g_date_new_dmy(days_in_march, month, year);
+
+     while (g_date_get_weekday(last_sunday_march_date) != G_DATE_SUNDAY)
+       g_date_subtract_days(last_sunday_march_date,1);
+
+    int last_sunday = g_date_get_day(last_sunday_march_date);
+	//g_print("calculate_bst_start: last sunday = %i\n",last_sunday);
+	bst_date = g_date_new_dmy(last_sunday, month, year);
+	return bst_date;
+}
+
+GDate* calculate_bst_end()
+{
+	GDate *bst_date;	
+	gint month =10;
+	gint year=m_start_year;	
+	
+	GDate *last_sunday_october_date;
+	guint8 days_in_october =g_date_get_days_in_month(month,year);
+	
+	//g_print("calculate_bst_end: month = %i\n",month);
+	//g_print("calculate_bst_end: year = %i\n",year);
+	//g_print("calculate_bst_end: days in october= %i\n",days_in_october);
+    last_sunday_october_date = g_date_new_dmy(days_in_october, month, year);
+
+     while (g_date_get_weekday(last_sunday_october_date) != G_DATE_SUNDAY)
+       g_date_subtract_days(last_sunday_october_date,1);
+
+    int last_sunday = g_date_get_day(last_sunday_october_date);
+	//g_print("calculate_bst_end: last sunday = %i\n",last_sunday);
+	bst_date = g_date_new_dmy(last_sunday, month, year);
+	return bst_date;
+	
+}
+
+
+//======================================================================
 // calculate easter
 //======================================================================
 
@@ -507,7 +564,7 @@ GDate* calculate_easter(gint year) {
 //======================================================================
 // public holidays
 //======================================================================
-gboolean is_public_holiday(int day) {
+gboolean is_notable_date(int day) {
 
 // UK public holidays
 // New Year's Day: 1 January (DONE)
@@ -535,10 +592,43 @@ gboolean is_public_holiday(int day) {
 	return TRUE;
 	}
 	
-	//if (m_start_month==2 && day==14) {
-	////valentine day
-	//return TRUE;
-	//}
+	if (m_start_month==2 && day==14) {
+	//valentine day
+	return TRUE;
+	}
+	
+	GDate *bst_start_date =calculate_bst_start();
+	GDate *bst_end_date =calculate_bst_end();
+	
+	int bst_start_day = g_date_get_day(bst_start_date);
+	int bst_start_month =g_date_get_month(bst_start_date);
+	
+	if(m_start_month==bst_start_month && day == bst_start_day)
+	{
+	//bst starts
+	return TRUE;
+	}
+	
+	int bst_end_day = g_date_get_day(bst_end_date);
+	int bst_end_month =g_date_get_month(bst_end_date);
+	
+	if(m_start_month==bst_end_month && day == bst_end_day)
+	{
+	//bst ends
+	return TRUE;
+	}
+	
+	//int bst_start_day = g_date_get_day(bst_start_date);
+	//int bst_start_month =g_date_get_month(bst_start_date);
+	//int bst_start_year =g_date_get_year(bst_start_date);
+	//g_print("bst_start_date = %d-%d-%d\n",bst_start_day,bst_start_month,bst_start_year);
+	
+	//int bst_end_day = g_date_get_day(bst_end_date);
+	//int bst_end_month =g_date_get_month(bst_end_date);
+	//int bst_end_year =g_date_get_year(bst_end_date);
+	//g_print("bst_end_date = %d-%d-%d\n",bst_end_day,bst_end_month,bst_end_year);
+	
+	
 
 	if (m_start_month == 5) {
      //May complicated
@@ -634,7 +724,7 @@ gboolean is_public_holiday(int day) {
 	return FALSE;
 }
 
-char* get_holiday_str(int day) {
+char* get_notable_date_str(int day) {
 
 // UK public holidays
 // New Year's Day: 1 January (DONE)
@@ -646,19 +736,25 @@ char* get_holiday_str(int day) {
 // Christmas Day: 25 December (DONE)
 // Boxing day: 26 December (DONE)
 
+char *date_str="";
+
 	//markup public holidays
 	if (m_start_month==1 && day ==1) {
-	return " New Year ";
+	//return " New Year ";
+	date_str =g_strconcat(date_str," New Year ", NULL); 
+	//return " New Year ";
 	}
 
 	if (m_start_month==12 && day==25) {
 	//christmas day
-	return " Christmas Day ";
+	//return " Christmas Day ";
+	date_str =g_strconcat(date_str," Christmas Day ", NULL);
 	}
 
 	if (m_start_month==12 && day==26) {
 	//boxing day
-	return " Boxing Day ";
+	//date_str=" Boxing Day ";
+	date_str =g_strconcat(date_str," Boxing Day ", NULL);
 	}
 
 	if (m_start_month == 5) {
@@ -672,7 +768,9 @@ char* get_holiday_str(int day) {
 
      int may_day = g_date_get_day(first_monday_may);
 
-     if( day==may_day) return "Bank Holiday "; //may bank holiday
+     if( day==may_day) 
+     //return "Bank Holiday "; //may bank holiday
+     date_str =g_strconcat(date_str," Bank Holiday ", NULL);
 
      int days_in_may =g_date_get_days_in_month (m_start_month, m_start_year);
 
@@ -688,10 +786,16 @@ char* get_holiday_str(int day) {
      g_date_add_days(spring_bank,plus_days);
      int spring_bank_day = g_date_get_day(spring_bank);
      if (g_date_valid_dmy (spring_bank_day,m_start_month,m_start_year) && day ==spring_bank_day)
-     return " Spring Bank Holiday ";   //spring bank holiday
+     date_str= " Spring Bank Holiday ";   //spring bank holiday
 
 	} //m_start_month ==5 (May)
-
+	
+	if (m_start_month==2 && day==14) {
+	//valentine day
+	//date_str= "Valentine Day ";
+	date_str =g_strconcat(date_str," Valentine Day ", NULL);
+	}
+		
 	GDate *easter_date =calculate_easter(m_start_year);
 	int easter_day = g_date_get_day(easter_date);
 	int easter_month =g_date_get_month(easter_date);
@@ -699,7 +803,8 @@ char* get_holiday_str(int day) {
 	if(m_start_month==easter_month && day == easter_day)
 	{
 	//easter day
-	return " Easter Day ";
+	//return " Easter Day ";
+	date_str =g_strconcat(date_str," Easter Day", NULL);
 	}
 
 	g_date_subtract_days(easter_date,2);
@@ -709,7 +814,8 @@ char* get_holiday_str(int day) {
 	if(m_start_month==easter_friday_month && day ==easter_friday)
 	{
 	//easter friday
-	return " Easter Friday ";
+	//return " Easter Friday ";
+	date_str =g_strconcat(date_str,"Easter Friday ", NULL);
 	}
 
 	g_date_add_days(easter_date,3);
@@ -719,9 +825,22 @@ char* get_holiday_str(int day) {
 	if(m_start_month==easter_monday_month && day ==easter_monday)
 	{
 	//easter monday
-	return " Easter Monday ";
+	//return " Easter Monday ";
+	date_str =g_strconcat(date_str," Easter Monday", NULL);
 	}
 
+	GDate *bst_start_date =calculate_bst_start();
+	int bst_start_day = g_date_get_day(bst_start_date);
+	int bst_start_month =g_date_get_month(bst_start_date);
+	
+	if(m_start_month==bst_start_month && day == bst_start_day)
+	{
+	//bst starts
+	//date_str= "BST Starts Clock Forward";
+	date_str =g_strconcat(date_str," BST Begins Clocks Forward ", NULL);
+	}
+		
+	
 	if (m_start_month == 8) {
       //August complicated
     GDate *first_monday_august;
@@ -749,11 +868,25 @@ char* get_holiday_str(int day) {
      int august_bank_day = g_date_get_day(august_bank);
 
      if (g_date_valid_dmy (august_bank_day,m_start_month,m_start_year) && day ==august_bank_day)
-     return " Bank Holiday ";   //august bank holiday
+     //return " Bank Holiday ";   //august bank holiday
+     date_str =g_strconcat(date_str," Bank Holiday ", NULL);
 
     } //m_start_month==8
+    
+    
+    GDate *bst_end_date =calculate_bst_end();
+    int bst_end_day = g_date_get_day(bst_end_date);
+	int bst_end_month =g_date_get_month(bst_end_date);
+	
+	if(m_start_month==bst_end_month && day == bst_end_day)
+	{
+	//bst ends
+	//date_str= "BST Ends Clocks Back";
+	date_str =g_strconcat(date_str," BST Ends Clocks Back", NULL);
+	}
 
-	return "";
+	//return "";
+	return date_str;
 }
 
 //======================================================================
@@ -1203,7 +1336,7 @@ static void callbk_preferences(GSimpleAction* action, GVariant *parameter,gpoint
 	check_button_hour_format = gtk_check_button_new_with_label ("12 Hour Format");
 	check_button_show_end_time= gtk_check_button_new_with_label ("Show End Time");
 	check_button_show_location= gtk_check_button_new_with_label ("Show Location");
-	check_button_holidays = gtk_check_button_new_with_label ("Public Holidays");
+	check_button_holidays = gtk_check_button_new_with_label ("Notable Dates");
 	//talk
 	check_button_talk = gtk_check_button_new_with_label ("Talk");
 	check_button_talk_startup = gtk_check_button_new_with_label ("Talk At Startup");
@@ -1714,59 +1847,66 @@ static guint get_dropdown_position(const gchar* summary)
 	if (g_strcmp0(summary_lower,"birthday")==0) {
 	position=3;
 	}
-	if (g_strcmp0(summary_lower,"cabbie")==0) {
+		if (g_strcmp0(summary_lower,"cafe")==0) {
 	position=4;
 	}
-	if (g_strcmp0(summary_lower,"cafe")==0) {
+	if (g_strcmp0(summary_lower,"car")==0) {
 	position=5;
 	}
-	if (g_strcmp0(summary_lower,"car")==0) {
+	if (g_strcmp0(summary_lower,"dentist")==0) {
 	position=6;
 	}
-	if (g_strcmp0(summary_lower,"dentist")==0) {
+	if (g_strcmp0(summary_lower,"doctor")==0) {
 	position=7;
 	}
-	if (g_strcmp0(summary_lower,"doctor")==0) {
+	if (g_strcmp0(summary_lower,"driver")==0) {
 	position=8;
 	}
 	if (g_strcmp0(summary_lower,"family")==0) {
 	position=9;
-	}
+	}	
 	if (g_strcmp0(summary_lower,"funeral")==0) {
 	position=10;
-	}
-	if (g_strcmp0(summary_lower,"holiday")==0) {
+	}	
+	if (g_strcmp0(summary_lower,"garden")==0) {
 	position=11;
+	}
+	
+	if (g_strcmp0(summary_lower,"holiday")==0) {
+	position=12;
 	}			
 	if (g_strcmp0(summary_lower,"hospital")==0) {
-	position=12;
+	position=13;
 	}	
 	if (g_strcmp0(summary_lower,"meeting")==0) {
-	position=13;
-	}
-	if (g_strcmp0(summary_lower,"meetup")==0) {
 	position=14;
 	}
-	if (g_strcmp0(summary_lower,"payment")==0) {
+	if (g_strcmp0(summary_lower,"meetup")==0) {
 	position=15;
 	}
-	if (g_strcmp0(summary_lower,"reminder")==0) {
+	if (g_strcmp0(summary_lower,"party")==0) {
 	position=16;
 	}
-	if (g_strcmp0(summary_lower,"restaurant")==0) {
+	if (g_strcmp0(summary_lower,"payment")==0) {
 	position=17;
 	}
-	if (g_strcmp0(summary_lower,"task")==0) {
+	if (g_strcmp0(summary_lower,"reminder")==0) {
 	position=18;
 	}
-	if (g_strcmp0(summary_lower,"travel")==0) {
+	if (g_strcmp0(summary_lower,"restaurant")==0) {
 	position=19;
 	}
-	if (g_strcmp0(summary_lower,"visit")==0) {
+	if (g_strcmp0(summary_lower,"task")==0) {
 	position=20;
+	}
+	if (g_strcmp0(summary_lower,"travel")==0) {
+	position=21;
+	}
+	if (g_strcmp0(summary_lower,"visit")==0) {
+	position=22;
 	}	
 	if (g_strcmp0(summary_lower,"work")==0) {
-	position=21;
+	position=23;
 	}
 	
 	return position;
@@ -2127,7 +2267,7 @@ static void set_holidays_on_calendar(CustomCalendar *calendar){
 		
 	for (int day=1; day<=month_days; day++)
 	{
-		if (is_public_holiday(day))
+		if (is_notable_date(day))
 		{
 			custom_calendar_mark_holiday(CUSTOM_CALENDAR(calendar),day);
 		}
@@ -2562,10 +2702,10 @@ GtkWidget *label_date = (GtkWidget *) user_data;
 	 		date_str =g_strconcat(date_str,"Unknown ",year_str, NULL);
 	 }
 		
-	if ((m_holidays ==1) && (is_public_holiday(m_start_day)))
+	if ((m_holidays ==1) && (is_notable_date(m_start_day)))
 	{
 		
-		gchar * holiday_str = get_holiday_str(m_start_day);	 	
+		gchar * holiday_str = get_notable_date_str(m_start_day);	 	
 	 	date_str =g_strconcat(date_str," ",holiday_str, NULL);
 	}
 
@@ -2727,6 +2867,10 @@ static void set_marks_on_calendar(CustomCalendar *calendar, GArray *arry)
 
 static void callbk_info(GSimpleAction *action, GVariant *parameter,  gpointer user_data)
 {	
+	
+	
+
+	
 	GtkWidget *window =user_data;
 	GtkWidget *dialog;
 	GtkWidget *box;
@@ -2837,7 +2981,7 @@ static void callbk_about(GSimpleAction* action, GVariant *parameter, gpointer us
 	gtk_widget_set_size_request(about_dialog, 200,200);
     gtk_window_set_modal(GTK_WINDOW(about_dialog),TRUE);
 	gtk_about_dialog_set_program_name(GTK_ABOUT_DIALOG(about_dialog), "Talk Calendar");
-	gtk_about_dialog_set_version (GTK_ABOUT_DIALOG(about_dialog), "0.1.3");
+	gtk_about_dialog_set_version (GTK_ABOUT_DIALOG(about_dialog), "0.1.4");
 	gtk_about_dialog_set_copyright(GTK_ABOUT_DIALOG(about_dialog),"Copyright © 2024");
 	gtk_about_dialog_set_comments(GTK_ABOUT_DIALOG(about_dialog),"Personal calendar");
 	gtk_about_dialog_set_license_type (GTK_ABOUT_DIALOG(about_dialog), GTK_LICENSE_LGPL_2_1);
@@ -2970,7 +3114,8 @@ static void display_event_array(GArray *evt_arry) {
 					ampm_str = "pm ";
 					starthour_str = g_strdup_printf("%d", shour);					
 				}
-				else
+				//else
+				if(start_hour >=1 && start_hour<12)
 				{
 					ampm_str = "am ";
 					starthour_str = g_strdup_printf("%d", start_hour);
@@ -3190,9 +3335,9 @@ static gpointer thread_playraw(gpointer user_data)
     gchar *m_sample_rate_str = g_strdup_printf("%i", m_talk_rate); 
     gchar *sample_rate_str ="-r ";    
     sample_rate_str= g_strconcat(sample_rate_str,m_sample_rate_str, NULL);     
-    //gchar * command_str ="aplay -c 1 -f S16_LE";
+    gchar * command_str ="aplay -c 1 -f S16_LE";
     //gchar * command_str ="aplay -c 1 -f U8";
-     gchar * command_str ="aplay -c 1 -f U8";
+     //gchar * command_str ="aplay -c 1 -f U8";
     command_str =g_strconcat(command_str," ",sample_rate_str, " ", raw_file, NULL); 
     system(command_str); 
            
@@ -3454,10 +3599,7 @@ char* result="";
 	}	
 	if (g_strcmp0(word,"birthday")==0) {
 	result="birthday";
-	}
-	if (g_strcmp0(word,"cabbie")==0) {
-	result="cabbie";
-	}
+	}	
 	if (g_strcmp0(word,"cafe")==0) {
 	result="cafe";
 	}
@@ -3471,12 +3613,18 @@ char* result="";
 	if (g_strcmp0(word,"doctor")==0) {
 	result="doctor";
 	}
+	if (g_strcmp0(word,"driver")==0) {
+	result="driver";
+	}
 	//f words
 	if (g_strcmp0(word,"family")==0) {
 	result ="family";
 	}
 	if (g_strcmp0(word,"funeral")==0) {
 	result ="funeral";
+	}
+	if (g_strcmp0(word,"garden")==0) {
+	result="garden";
 	}		
 	if (g_strcmp0(word,"holiday")==0) {
 	result="holiday";
@@ -3492,6 +3640,9 @@ char* result="";
 	result="meetup";
 	}
 	//pwords
+	if (g_strcmp0(word,"party")==0) {
+	result="party";
+	}
 	if (g_strcmp0(word,"payment")==0) {
 	result="payment";
 	}
@@ -3836,7 +3987,7 @@ static void speak_events() {
 	
 	//Check for public holidays and special days (Christmas, Easter, Fathers etc,.)
 	//---------------------------------------------------------------
-	if ((m_holidays ==1) && (is_public_holiday(m_start_day)))		
+	if ((m_holidays ==1) && (is_notable_date(m_start_day)))		
 	//if (m_holidays ==1)
 	{
 		//markup public holidays
@@ -3856,6 +4007,13 @@ static void speak_events() {
 	speak_word_list = g_list_append(speak_word_list, "boxing");
 	speak_word_list = g_list_append(speak_word_list, "day");
 	}
+	
+	if (m_start_month==2 && m_start_day==14) {
+	//valentine day
+	speak_word_list = g_list_append(speak_word_list, "valentine");
+	speak_word_list = g_list_append(speak_word_list, "day");	
+	}
+		
 	//Easter		
 	GDate *easter_date =calculate_easter(m_start_year);
 	int easter_day = g_date_get_day(easter_date);
@@ -3887,7 +4045,27 @@ static void speak_events() {
 	//easter monday
 	speak_word_list = g_list_append(speak_word_list, "easter");
 	speak_word_list = g_list_append(speak_word_list, "monday");
-	}	
+	}
+	
+	//BST starts
+	GDate *bst_start_date =calculate_bst_start();
+	int bst_start_day = g_date_get_day(bst_start_date);
+	int bst_start_month =g_date_get_month(bst_start_date);
+	
+	if(m_start_month==bst_start_month && m_start_day == bst_start_day)
+	{
+	//bst starts
+	//date_str= "BST Starts Clock Forward";
+	//date_str =g_strconcat(date_str," BST Starts Clocks Forward ", NULL);
+	speak_word_list = g_list_append(speak_word_list, "bst");
+	speak_word_list = g_list_append(speak_word_list, "begins");
+	speak_word_list = g_list_append(speak_word_list, "clocks");
+	speak_word_list = g_list_append(speak_word_list, "forward");
+	speak_word_list = g_list_append(speak_word_list, "one");
+	speak_word_list = g_list_append(speak_word_list, "hour");
+	
+	}
+	
 	
 	//May complicated
 	if (m_start_month == 5) {
@@ -3958,6 +4136,23 @@ static void speak_events() {
 	}
 
     } //m_start_month==8 (august)
+    
+    
+    GDate *bst_end_date =calculate_bst_end();
+    int bst_end_day = g_date_get_day(bst_end_date);
+	int bst_end_month =g_date_get_month(bst_end_date);
+	
+	if(m_start_month==bst_end_month && m_start_day == bst_end_day)
+	{
+	//bst ends
+	//date_str= "BST Ends Clocks Back";
+	speak_word_list = g_list_append(speak_word_list, "bst");
+	speak_word_list = g_list_append(speak_word_list, "ends");
+	speak_word_list = g_list_append(speak_word_list, "clocks");
+	speak_word_list = g_list_append(speak_word_list, "back");
+	speak_word_list = g_list_append(speak_word_list, "one");
+	speak_word_list = g_list_append(speak_word_list, "hour");
+	}
 		
 	} //if public holidays 
 	
@@ -4028,13 +4223,14 @@ static void speak_events() {
 		
 		if(m_talk_time) {
 		
-		if(is_allday)
-		{
-		speak_word_list = g_list_append(speak_word_list, "all");
-		speak_word_list = g_list_append(speak_word_list, "day");
-		speak_word_list = g_list_append(speak_word_list, "event");
-		}		
-		else {		
+		//if(is_allday)
+		//{
+		//// no time
+		////speak_word_list = g_list_append(speak_word_list, "all");
+		////speak_word_list = g_list_append(speak_word_list, "day");
+		////speak_word_list = g_list_append(speak_word_list, "event");
+		//}		
+		if(!is_allday) {		
 		if(m_12hour_format) {
 		
 		if(start_hour >=1 && start_hour<12) {
@@ -4085,7 +4281,7 @@ static void speak_events() {
 		speak_word_list = g_list_append(speak_word_list, hour_str);
 		speak_word_list = g_list_append(speak_word_list, min_str);			    				
 		} //24 hour format	
-		} //else not all_day		
+		} // not all_day		
 		}//m_talk_time
 		
 		//now add event title
@@ -4717,7 +4913,7 @@ static void speak_events() {
 		word_arrays[i] = fiftyfour_raw;
 		word_arrays_sizes[i]=fiftyfour_raw_len;
 	    }
-	      if (g_strcmp0(word_str_lower,"fiftyfive")==0) {		
+	    if (g_strcmp0(word_str_lower,"fiftyfive")==0) {		
 		word_arrays[i] = (unsigned char*)malloc(fiftyfive_raw_len * sizeof(unsigned char));
 		word_arrays[i] = fiftyfive_raw;
 		word_arrays_sizes[i]=fiftyfive_raw_len;
@@ -4773,12 +4969,24 @@ static void speak_events() {
 	    }	
 	    
 	    //B words
-	     if (g_strcmp0(word_str_lower,"bank")==0) {		
+	    if (g_strcmp0(word_str_lower,"back")==0) {		
+		word_arrays[i] = (unsigned char*)malloc(back_raw_len * sizeof(unsigned char));
+		word_arrays[i] = back_raw;
+		word_arrays_sizes[i]=back_raw_len;	
+	    }
+	    
+	    if (g_strcmp0(word_str_lower,"bank")==0) {		
 		word_arrays[i] = (unsigned char*)malloc(bank_raw_len * sizeof(unsigned char));
 		word_arrays[i] = bank_raw;
 		word_arrays_sizes[i]=bank_raw_len;	
 	    }
-	     if (g_strcmp0(word_str_lower,"birthday")==0) {		
+	    if (g_strcmp0(word_str_lower,"begins")==0) {
+		word_arrays[i] = (unsigned char*)malloc(begins_raw_len * sizeof(unsigned char));
+		word_arrays[i] = begins_raw;
+		word_arrays_sizes[i]=begins_raw_len;
+		}	
+	    
+	    if (g_strcmp0(word_str_lower,"birthday")==0) {		
 		word_arrays[i] = (unsigned char*)malloc(birthday_raw_len * sizeof(unsigned char));
 		word_arrays[i] = birthday_raw;
 		word_arrays_sizes[i]=birthday_raw_len;	
@@ -4787,19 +4995,20 @@ static void speak_events() {
 		word_arrays[i] = (unsigned char*)malloc(boxing_raw_len * sizeof(unsigned char));
 		word_arrays[i] = boxing_raw;
 		word_arrays_sizes[i]=boxing_raw_len;	
+	    }
+	    if (g_strcmp0(word_str_lower,"bst")==0) {		
+		word_arrays[i] = (unsigned char*)malloc(bst_raw_len * sizeof(unsigned char));
+		word_arrays[i] = bst_raw;
+		word_arrays_sizes[i]=bst_raw_len;	
 	    }		
 	    //c-words
-	     if (g_strcmp0(word_str_lower,"cabbie")==0) {		
-		word_arrays[i] = (unsigned char*)malloc(cabbie_raw_len * sizeof(unsigned char));
-		word_arrays[i] = cabbie_raw;
-		word_arrays_sizes[i]=cabbie_raw_len;	
-	    }
-	     if (g_strcmp0(word_str_lower,"cafe")==0) {		
+	   
+	    if (g_strcmp0(word_str_lower,"cafe")==0) {		
 		word_arrays[i] = (unsigned char*)malloc(cafe_raw_len * sizeof(unsigned char));
 		word_arrays[i] = cafe_raw;
 		word_arrays_sizes[i]=cafe_raw_len;	
 	    }
-	     if (g_strcmp0(word_str_lower,"car")==0) {		
+	    if (g_strcmp0(word_str_lower,"car")==0) {		
 		word_arrays[i] = (unsigned char*)malloc(car_raw_len * sizeof(unsigned char));
 		word_arrays[i] = car_raw;
 		word_arrays_sizes[i]=car_raw_len;	
@@ -4808,7 +5017,12 @@ static void speak_events() {
 		word_arrays[i] = (unsigned char*)malloc(christmas_raw_len * sizeof(unsigned char));
 		word_arrays[i] = christmas_raw;
 		word_arrays_sizes[i]=christmas_raw_len;	
-	    }				
+	    }	
+	    if (g_strcmp0(word_str_lower,"clocks")==0) {		
+		word_arrays[i] = (unsigned char*)malloc(clocks_raw_len * sizeof(unsigned char));
+		word_arrays[i] = clocks_raw;
+		word_arrays_sizes[i]=clocks_raw_len;	
+	    }			
 	    
 	    //D words
 	    if (g_strcmp0(word_str_lower,"day")==0) {		
@@ -4827,11 +5041,22 @@ static void speak_events() {
 		word_arrays_sizes[i]=doctor_raw_len;	
 	    }
 	    
+	    if (g_strcmp0(word_str_lower,"driver")==0) {		
+		word_arrays[i] = (unsigned char*)malloc(driver_raw_len * sizeof(unsigned char));
+		word_arrays[i] = driver_raw;
+		word_arrays_sizes[i]=driver_raw_len;	
+	    }
+	    
 	    // E words
 	    if (g_strcmp0(word_str_lower,"easter")==0) {		
 		word_arrays[i] = (unsigned char*)malloc(easter_raw_len * sizeof(unsigned char));
 		word_arrays[i] = easter_raw;
 		word_arrays_sizes[i]=easter_raw_len;
+	    }
+	    if (g_strcmp0(word_str_lower,"ends")==0) {		
+		word_arrays[i] = (unsigned char*)malloc(ends_raw_len * sizeof(unsigned char));
+		word_arrays[i] = ends_raw;
+		word_arrays_sizes[i]=ends_raw_len;
 	    }
 	    if (g_strcmp0(word_str_lower,"event")==0) {		
 		word_arrays[i] = (unsigned char*)malloc(event_raw_len * sizeof(unsigned char));
@@ -4850,19 +5075,31 @@ static void speak_events() {
 		word_arrays[i] = family_raw;
 		word_arrays_sizes[i]=family_raw_len;	
 	    }
+	    if (g_strcmp0(word_str_lower,"forward")==0) {		
+		word_arrays[i] = (unsigned char*)malloc(forward_raw_len * sizeof(unsigned char));
+		word_arrays[i] = forward_raw;
+		word_arrays_sizes[i]=forward_raw_len;	
+	    }
 	    if (g_strcmp0(word_str_lower,"funeral")==0) {
 		g_print("funeral detected\n");		
 		word_arrays[i] = (unsigned char*)malloc(funeral_raw_len  * sizeof(unsigned char));
 		word_arrays[i] = funeral_raw;
-		word_arrays_sizes[i]=funeral_raw_len;	
-	    }			
+		word_arrays_sizes[i]=funeral_raw_len;			
+	    }	
+	    
+	    //G-words
+	    if (g_strcmp0(word_str_lower,"garden")==0) {		
+		word_arrays[i] = (unsigned char*)malloc(garden_raw_len * sizeof(unsigned char));
+		word_arrays[i] = garden_raw;
+		word_arrays_sizes[i]=garden_raw_len;	
+	    }		
 	    //H words
-	     if (g_strcmp0(word_str_lower,"high")==0) {
+	    if (g_strcmp0(word_str_lower,"high")==0) {
 		word_arrays[i] = (unsigned char*)malloc(high_raw_len * sizeof(unsigned char));
 		word_arrays[i] = high_raw;
 		word_arrays_sizes[i]=high_raw_len;	
 	    }	   
-	     if (g_strcmp0(word_str_lower,"holiday")==0) {
+	    if (g_strcmp0(word_str_lower,"holiday")==0) {
 		word_arrays[i] = (unsigned char*)malloc(holiday_raw_len * sizeof(unsigned char));
 		word_arrays[i] = holiday_raw;
 		word_arrays_sizes[i]=holiday_raw_len;	
@@ -4871,6 +5108,11 @@ static void speak_events() {
 		word_arrays[i] = (unsigned char*)malloc(hospital_raw_len * sizeof(unsigned char));
 		word_arrays[i] = hospital_raw;
 		word_arrays_sizes[i]=hospital_raw_len;	
+	    }
+	    if (g_strcmp0(word_str_lower,"hour")==0) {
+		word_arrays[i] = (unsigned char*)malloc(hour_raw_len * sizeof(unsigned char));
+		word_arrays[i] = hour_raw;
+		word_arrays_sizes[i]=hour_raw_len;	
 	    }
 	    //M words
 	     
@@ -4904,6 +5146,13 @@ static void speak_events() {
 		word_arrays[i] = payment_raw;
 		word_arrays_sizes[i]=payment_raw_len;	
 	    } 
+	    
+	    if (g_strcmp0(word_str_lower,"party")==0) {		
+		word_arrays[i] = (unsigned char*)malloc(party_raw_len * sizeof(unsigned char));
+		word_arrays[i] = party_raw;
+		word_arrays_sizes[i]=party_raw_len;	
+	    }
+	    
 	    if (g_strcmp0(word_str_lower,"pm")==0) {
 		word_arrays[i] = (unsigned char*)malloc(pm_raw_len * sizeof(unsigned char));
 		word_arrays[i] = pm_raw;
@@ -4926,11 +5175,12 @@ static void speak_events() {
 		word_arrays_sizes[i]=restaurant_raw_len;	
 	    }
 	    //S words
-	     if (g_strcmp0(word_str_lower,"spring")==0) {
+	    if (g_strcmp0(word_str_lower,"spring")==0) {
 		word_arrays[i] = (unsigned char*)malloc(spring_raw_len * sizeof(unsigned char));
 		word_arrays[i] = spring_raw;
 		word_arrays_sizes[i]=spring_raw_len;
-		}	
+		}
+			
 	    
 	    //T words
 	    if (g_strcmp0(word_str_lower,"task")==0) {
@@ -4960,6 +5210,11 @@ static void speak_events() {
 		word_arrays[i] = (unsigned char*)malloc(visit_raw_len * sizeof(unsigned char));
 		word_arrays[i] = visit_raw;
 		word_arrays_sizes[i]=visit_raw_len;	
+	    }
+	    if (g_strcmp0(word_str_lower,"valentine")==0) {
+		word_arrays[i] = (unsigned char*)malloc(valentine_raw_len * sizeof(unsigned char));
+		word_arrays[i] = valentine_raw;
+		word_arrays_sizes[i]=valentine_raw_len;	
 	    }
 	    //W words
 	    if (g_strcmp0(word_str_lower,"work")==0) {
@@ -5555,6 +5810,8 @@ static void startup(GtkApplication *app)
 	 config_initialize();
 	 //g_print("starting database\n");	 	
 	 db_create_events_table(); //startup database 
+	 //testing
+	 
 }
 //======================================================================
 static void activate (GtkApplication* app, gpointer user_data)
