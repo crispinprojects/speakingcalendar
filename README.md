@@ -93,7 +93,7 @@ A list of HTML colour names can be found [here](https://www.w3schools.com/tags/r
 
 ![](talkcalendar-preferences.png)
 
-You can use 12 hour format. Event end-times can also be shown in the list view. If public holidays is selected then the date label shows the public holiday (UK only) which is also spoken.
+You can use 12 hour format. Event end-times can also be shown in the list view. If notable dates is selected then the date label shows special calendar dates such as some UK public holidays and BST etc. These are also spoken.
 
 Talk options can be changed.
 
