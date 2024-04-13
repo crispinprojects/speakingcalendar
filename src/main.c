@@ -2981,7 +2981,7 @@ static void callbk_about(GSimpleAction* action, GVariant *parameter, gpointer us
 	gtk_widget_set_size_request(about_dialog, 200,200);
     gtk_window_set_modal(GTK_WINDOW(about_dialog),TRUE);
 	gtk_about_dialog_set_program_name(GTK_ABOUT_DIALOG(about_dialog), "Talk Calendar");
-	gtk_about_dialog_set_version (GTK_ABOUT_DIALOG(about_dialog), "0.1.4");
+	gtk_about_dialog_set_version (GTK_ABOUT_DIALOG(about_dialog), "0.1.5");
 	gtk_about_dialog_set_copyright(GTK_ABOUT_DIALOG(about_dialog),"Copyright © 2024");
 	gtk_about_dialog_set_comments(GTK_ABOUT_DIALOG(about_dialog),"Personal calendar");
 	gtk_about_dialog_set_license_type (GTK_ABOUT_DIALOG(about_dialog), GTK_LICENSE_LGPL_2_1);
@@ -5256,6 +5256,10 @@ static void speak_time(gint hour, gint min)
 	gchar* min_str="";
 	gchar* ampm_str="";
 	GList *speak_word_list = NULL;
+	
+	speak_word_list = g_list_append(speak_word_list, "the");
+	speak_word_list = g_list_append(speak_word_list, "time");
+	speak_word_list = g_list_append(speak_word_list, "is");
 		
 	if(m_12hour_format) {
 	
@@ -5266,11 +5270,24 @@ static void speak_time(gint hour, gint min)
 	ampm_str="am";
 	speak_word_list = g_list_append(speak_word_list, hour_str);
 	
-	if(min!=0){
-	min_str=get_cardinal_string(min);		    
+	if (min ==0)
+	{
+		speak_word_list = g_list_append(speak_word_list, ampm_str);	
 	}
+	else if(min >0 && min <=9)
+	{
+		min_str=get_cardinal_string(min);
+		speak_word_list = g_list_append(speak_word_list, "zero");
+		speak_word_list = g_list_append(speak_word_list, min_str);
+	    speak_word_list = g_list_append(speak_word_list, ampm_str);	
+	}	
+	else if(min>9)
+	{
+	min_str=get_cardinal_string(min);
 	speak_word_list = g_list_append(speak_word_list, min_str);
-	speak_word_list = g_list_append(speak_word_list, ampm_str);				
+	speak_word_list = g_list_append(speak_word_list, ampm_str);			    
+	}			
+	
 	}
 	else if(hour ==12) {
 	//PM
@@ -5279,11 +5296,24 @@ static void speak_time(gint hour, gint min)
 	ampm_str="pm";
 	speak_word_list = g_list_append(speak_word_list, hour_str);
 	
-	if(min!=0){
+	if (min ==0)
+	{
+		speak_word_list = g_list_append(speak_word_list, ampm_str);	
+	}
+	else if(min >0 && min <=9)
+	{
+		min_str=get_cardinal_string(min);
+		speak_word_list = g_list_append(speak_word_list, "zero");
+		speak_word_list = g_list_append(speak_word_list, min_str);
+	    speak_word_list = g_list_append(speak_word_list, ampm_str);	
+	}	
+	else if(min>9)
+	{
 	min_str=get_cardinal_string(min);
 	speak_word_list = g_list_append(speak_word_list, min_str);
-	}				
-	speak_word_list = g_list_append(speak_word_list, ampm_str);
+	speak_word_list = g_list_append(speak_word_list, ampm_str);			    
+	}			
+		
 	}
 	else if (hour >=13 && hour<=23) {
 	//PM
@@ -5292,12 +5322,28 @@ static void speak_time(gint hour, gint min)
 	//min_str=get_cardinal_string(min);
 	ampm_str="pm";
 	speak_word_list = g_list_append(speak_word_list, hour_str);
-	if(min!=0){
+	
+	if (min ==0)
+	{
+		speak_word_list = g_list_append(speak_word_list, ampm_str);	
+	}
+	else if(min >0 && min <=9)
+	{
+		
+		min_str=get_cardinal_string(min);
+		speak_word_list = g_list_append(speak_word_list, "zero");
+		speak_word_list = g_list_append(speak_word_list, min_str);
+	    speak_word_list = g_list_append(speak_word_list, ampm_str);	
+	}	
+	else if(min>9)
+	{
 	min_str=get_cardinal_string(min);
 	speak_word_list = g_list_append(speak_word_list, min_str);
-	}
-	speak_word_list = g_list_append(speak_word_list, ampm_str);				
-	}		
+	speak_word_list = g_list_append(speak_word_list, ampm_str);			    
+	}			
+				
+	} //hour 13 to 23
+			
 	} //12hour format
 	else
 	{				
@@ -5325,13 +5371,35 @@ static void speak_time(gint hour, gint min)
 	gchar* word_str_lower= g_ascii_strdown(word_str,-1);	//make sure lower	
 		
 	//load up arrays
-	//dummy empty
-	
+	//dummy empty	
 	word_arrays[i] = (unsigned char*)malloc(empty_raw_len * sizeof(unsigned char));
 	word_arrays[i] = empty_raw;
 	word_arrays_sizes[i]=empty_raw_len; 
 	
+	if (g_strcmp0(word_str_lower,"the")==0) {
+	word_arrays[i] = (unsigned char*)malloc(the_raw_len * sizeof(unsigned char));
+	word_arrays[i] = the_raw;
+	word_arrays_sizes[i]=the_raw_len;	
+	}
+	
+	if (g_strcmp0(word_str_lower,"time")==0) {
+	word_arrays[i] = (unsigned char*)malloc(time_raw_len * sizeof(unsigned char));
+	word_arrays[i] = time_raw;
+	word_arrays_sizes[i]=time_raw_len;	
+	}
+	
+	if (g_strcmp0(word_str_lower,"is")==0) {
+	word_arrays[i] = (unsigned char*)malloc(is_raw_len * sizeof(unsigned char));
+	word_arrays[i] = is_raw;
+	word_arrays_sizes[i]=is_raw_len;	
+	}
 	//cardinals
+	if (g_strcmp0(word_str_lower,"zero")==0) {
+	word_arrays[i] = (unsigned char*)malloc(zero_raw_len * sizeof(unsigned char));
+	word_arrays[i] = zero_raw;
+	word_arrays_sizes[i]=zero_raw_len;
+	}
+	
 	if (g_strcmp0(word_str_lower,"one")==0) {
 	word_arrays[i] = (unsigned char*)malloc(one_raw_len * sizeof(unsigned char));
 	word_arrays[i] = one_raw;
@@ -5667,8 +5735,9 @@ static void callbk_calendar_speaktime(GSimpleAction * action, GVariant *paramete
 	GDateTime *dt = g_date_time_new_now_local(); 
 	gint hour =g_date_time_get_hour(dt);	
 	gint min= g_date_time_get_minute(dt);	
-	//g_print("hour = %i\n",hour);
-	//g_print("min = %i\n",min);
+	g_print("hour = %i\n",hour);
+	g_print("min = %i\n",min);
+	g_print("calling speak time\n");
 	speak_time(hour,min);	
 	
     g_date_time_unref (dt);
