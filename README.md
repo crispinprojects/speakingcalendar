@@ -255,11 +255,13 @@ I have developed a small GTK4 notification tester app which can be found [here](
 
 ## License
 
-Talk Calendar is licensed under LGPL v2.1. GTK is released under the terms of the LGPL v2.1 license.
+GTK is released under the terms of the LGPL v2.1 license. Consequenty, Talk Calendar is licensed under LGPL v2.1.
+
+The espeak speech synthesizer is no longer used as parts of its license may not be compatible with the GTK LGPL v2.1 license. This is reason why I have reverted back to using my own speech synthesizer which although limited in scope (just reads out event categories) has good audibility.
 
 ## Project Status
 
-Active.
+Active and under development.
 
 
 ## BASH Installer Troubleshooting (Debian)
