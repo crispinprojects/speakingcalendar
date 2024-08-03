@@ -1,4 +1,4 @@
-# Talk Calendar (espeak version)
+# Talk Calendar
 
 Talk Calendar is a personal desktop calendar for Linux which has some speech capability using its own built-in text-to-speech synthesizer. It can read out current day events and upcoming events (if required) at start up.
 
