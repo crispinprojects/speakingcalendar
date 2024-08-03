@@ -4,8 +4,6 @@ Talk Calendar is a personal desktop calendar for Linux which has some speech cap
 
 It has been developed using C and [GTK4](https://docs.gtk.org/gtk4/). A screenshot is shown below.
 
-
-
 ![](talkcalendar.png)
 
 ## Core Features
@@ -100,7 +98,7 @@ A list of HTML colour names can be found [here](https://www.w3schools.com/tags/r
 
 ## Talking
 
-* Events are spoken when a date on the month view calendar is selected (assuming talk preferences selected).
+* Events are spoken when a date on the month view calendar is selected (assuming talk preferences checked).
 
 ### Information
 
@@ -232,13 +230,19 @@ I am now using Fedora 40 to develop the Talk Calendar application and not Debian
 
 Talk Calendar uses its own built-in diphone speech synthesizer.  Words are formed as sequences of elementary speech units. A phoneme is the smallest unit of sound that distinguishes one word from another word and there are 44 phonemes in the English language. A diphone is a sound unit composed of two adjacent partial phonemes i.e. the second half of the first phoneme and the first half of the second phoneme. The synthesizer uses a set of pre-recorded diphone sound samples and concatenates these to produce speech output for a given text input.
 
-This voice used by Talk Calendar is based on the diphone collection created by Alan W Black and Kevin Lenzo which is free for use for any purpose (commercial or otherwise) and subject to the pretty light restrictions [detailed here](https://github.com/hypnaceae/DiphoneSynth/blob/master/diphones_license.txt). I have used the same licence for the voice that I have created. There is information about recording your own diphones [here](http://festvox.org/bsv/x2401.html) and in the speech synthesis lecture by Professor Alan W Black [here](https://www.youtube.com/watch?v=eDjtEsOvouM&t=1459s).
+The voice used by Talk Calendar is based on the diphone collection created by Alan W Black and Kevin Lenzo which is free for use for any purpose (commercial or otherwise) and subject to the pretty light restrictions [detailed here](https://github.com/hypnaceae/DiphoneSynth/blob/master/diphones_license.txt). I have used the same licence for the voice that I have created. There is information about recording your own diphones [here](http://festvox.org/bsv/x2401.html) and in the speech synthesis lecture by Professor Alan W Black [here](https://www.youtube.com/watch?v=eDjtEsOvouM&t=1459s).
 
-My diphone speech synthesizer has a number of limitations. Firstly, it uses a small dictionary of approximately 56,600 English words. If a word is not recognised by the dictionary it is skipped over. Apostrophes and other special characters are not used as inserting these into the database can cause errors. There are two types of apostrophes. Apostrophes of possession and contraction. Possessive apostrophes indicate ownership of something, like in the following sentence: "Dog's birthday". Dog's is pronounced dogz. You have to enter the word name without an apostrophe e.g. dogs. Contraction apostrophes are used to shorten words. For example, "It's a nice day outside" which is expanded as "It is a nice day outside". Use the expanded version with this speech synthesizer. The pronunciation of some words is poor as there is very little information online on how to convert words to a diphone list (in many cases I have made an educated guess). More work is needed on the diphone speech synthesizer and word pronunciation but it works and it is all coded from scratch using C and GTK4. It is more versatile than my previous speech synthesizer which was based on concatenating and playing back pre-recorded English words.
+My diphone speech synthesizer has a number of limitations. 
 
-I have also been working on a formant speech syntheiszer details of which can be found [here](https://github.com/crispinprojects/formant-synthesizer). 
+1. It uses a small dictionary of approximately 56,600 English words. If a word is not recognised by the dictionary it is skipped over. 
 
-Talk Calendar ***does not use*** the [espeak](https://github.com/espeak-ng/espeak-ng) formant speech synthesizer because the license of some of its components may not be compatible with the GTK LGPL v2.1 license. Specifically this relates to the IEEE80 file [license](https://github.com/espeak-ng/espeak-ng/blob/c1d9341f86eee4b7a0da50712b627d8a76e92fea/src/libespeak-ng/ieee80.c) which says "Copyright (C) 1989-1991 Apple Computer, Inc." There is further discussed [here](https://opensource.stackexchange.com/questions/11545/possibilities-to-use-a-gpl-v3-licensed-library-in-a-closed-source-game). As this is a hobby project I would rather just use my own speech synthesizer coded from scratch to avoid any license compatibility issues. Obviously, my speech synthesizer although functional is not as  good as espeak.
+2. Apostrophes and other special characters are not used as inserting these into the database can cause errors. There are two types of apostrophes. Apostrophes of possession and contraction. Possessive apostrophes indicate ownership of something, like in the following sentence: "Dog's birthday". You have to enter the word name without an apostrophe e.g. dogs. Contraction apostrophes are used to shorten words. For example, "It's a nice day outside" which is expanded as "It is a nice day outside". Use the expanded version with the Talk Calendar diphone speech synthesizer. 
+
+3. The pronunciation of some words is poor as there is very little information online on how to convert words to a diphone list (in many cases I have made an educated guess). More work is needed on word pronunciation.
+
+My diphone speech synthesizer is functional and has been coded from scratch using C and GTK4. It is more versatile than my previous speech synthesizer which was based on concatenating and playing back pre-recorded English words. I have also been working on a formant speech syntheiszer details of which can be found [here](https://github.com/crispinprojects/formant-synthesizer). 
+
+Talk Calendar ***does not use*** the [espeak](https://github.com/espeak-ng/espeak-ng) formant speech synthesizer because the license of some of its components may not be compatible with the GTK LGPL v2.1 license. Specifically this relates to the IEEE80.c file [license](https://github.com/espeak-ng/espeak-ng/blob/c1d9341f86eee4b7a0da50712b627d8a76e92fea/src/libespeak-ng/ieee80.c) which says "Copyright (C) 1989-1991 Apple Computer, Inc." There is further discussed [here](https://opensource.stackexchange.com/questions/11545/possibilities-to-use-a-gpl-v3-licensed-library-in-a-closed-source-game). As this is a hobby project I would rather just use my own speech synthesizer coded from scratch to avoid any license compatibility issues. Obviously, my speech synthesizer although functional is not as good as espeak.
 
 ## Versioning
 
