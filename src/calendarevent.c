@@ -38,7 +38,7 @@ struct _CalendarEvent
     gint    endmin; //field
 
     gint    isyearly; //field
-    gint    isallday; //field
+    gint    isallday; //field    
     gint    ispriority; //field
     gint    hasnotification; //field
     gint    hasreminder; //field
@@ -65,7 +65,7 @@ enum {
     PROP_ENDHOUR,
     PROP_ENDMIN,
     PROP_ISYEARLY,
-    PROP_ISALLDAY,
+    PROP_ISALLDAY,  
     PROP_ISPRIORITY,
     PROP_HASNOTIFICATION,
     PROP_HASREMINDER,
@@ -137,7 +137,7 @@ static void calendar_event_get_property(GObject *object,
             break;
           case PROP_ISALLDAY:
              g_value_set_int(value, calendar_event_get_is_allday(self)); //boxing
-            break;
+            break;           
          case PROP_ISPRIORITY:
              g_value_set_int(value, calendar_event_get_is_priority(self)); //boxing
             break;
@@ -213,7 +213,7 @@ static void calendar_event_set_property(GObject *object,
             break;
           case PROP_ISALLDAY:
             calendar_event_set_is_allday(self, g_value_get_int(value));
-            break;
+            break;           
          case PROP_ISPRIORITY:
             calendar_event_set_is_priority(self, g_value_get_int(value));
             break;
@@ -359,7 +359,7 @@ static void calendar_event_class_init (CalendarEventClass *klass)
                      "This is an all day event",
                      0,G_MAXINT,0,
                      G_PARAM_READWRITE);
-
+		
     properties[PROP_ISPRIORITY] =
     g_param_spec_int("ispriority",
                      "ispriority",
@@ -568,6 +568,7 @@ void calendar_event_set_is_allday(CalendarEvent *self, gint is_allday)
 {
     self->isallday =is_allday;
 }
+
 
 gint calendar_event_get_is_priority(CalendarEvent *self){
     return self->ispriority;

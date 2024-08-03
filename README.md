@@ -1,57 +1,51 @@
-# Talk Calendar
+# Talk Calendar (espeak version)
 
-Talk Calendar is a personal desktop calendar for Linux which has some speech capability. It has been developed using C and [GTK4](https://docs.gtk.org/gtk4/). A screenshot is shown below.
+Talk Calendar is a personal desktop calendar for Linux which has some speech capability using its own built-in text-to-speech synthesizer. It can read out current day events and upcoming events (if required) at start up.
+
+It has been developed using C and [GTK4](https://docs.gtk.org/gtk4/). A screenshot is shown below.
+
+
 
 ![](talkcalendar.png)
 
 ## Core Features
 
-* built with C and GTK 4.8.3 (Debian 12)
-* bespoke custom calendar which allows dates with events to be marked (colour and audio)
-* event type, details, location, start and end time can be entered and edited
-* priority, is-yearly and notifications can be used
-* speech date reader, time reader, event type reader
+* built with C and GTK 4.14.4 (Fedora 40)
+* month view calendar 
+* event details, location, start and end time can be entered and edited
+* export and import iCalendar files (backup and restore)
 * Sqlite3 database used to store events
-
-## Installing
-
-### BASH Installer
-
-The easiest way to install Talk Calendar on GTK4 based distributions (e.g. the latest Debian, Ubuntu and Solus distros) is to use the bash script installer from the terminal. This can be downloaded from the bash installer directory.
-
-Extract the downloaded file, open a terminal, then run the command below and follow the on-screen instructions.
-
-```
-./install-talkcalendar.sh
-```
-
-The installer assumes that you are a member of the sudo group and that the GTK4, SQLITE and the ALSA base libraries are installed which is the default for most modern GTK based distros.
-
-To uninstall Talk Calendar use the command.
-
-```
-./uninstall-talkcalendar.sh
-```
-The BASH script installer places the Talk Calendar binary and calendar icon in the following location.
-
-```
-/usr/bin/talkcalendar
-```
-The bash script installer has been tested using Debian 12 Bookworm (GNOME, Budgie and Xfce desktops), Solus 4.5 (Budgie), Ubuntu GNOME 22.04 and Ubuntu GNOME 23.10. See the "Installer Trouble Shooting" notes at the bottom of the page for more information if you have any issues using it. For example, with a Debian 12 (root password) standard install you may not be a member of the sudo group and the notes explain how to simply fix this.
+* built-in diphone speech synthesizer
 
 ### Local Install Using Prebuilt Binary
 
-A 64-bit prebuilt binary for the latest version of Talk Calendar is available and can be downloaded from the binary directory. 
+A 64-bit prebuilt binary for the latest version of Talk Calendar is available and can be downloaded from the binary directory. This has been built using GTK 4.14 and tested with both Fedora 40 and Ubuntu 24.04 LTS. 
+
 Extract the downloaded file which contains the Talk Calendar executable. Assuming that the GTK4 base libraries are installed the Talk Calendar binary can be run from the terminal using:
 
 ```
 ./talkcalendar
 ```
+
 or double click on the "talkcalendar" file. Talk Calendar must have executable permissions to execute. Right click it and choose Properties->Permissions and tick allow "Executable as Program".
 
-To add Talk Calendar to the system menu modify the "talkcalendar.desktop" file provided in the download using your user name and application location and copy it to the ***.local/share/applications/*** directory.
+To add Talk Calendar to the system menu modify the "talkcalendar.desktop" template file provided in the download which is shown below.  Use your own user name and the  directory location for the Talk Calendar executable. The "Path" variable  defines where the Talk Calendar executable and  calendar database are located.
 
-This way of installing Talk Calendar should be universal across distros and has been tested using Debian 12 Bookworm (GNOME, Budgie and Xfce desktops), Solus 4.5 (Budgie), Ubuntu 22.04, Ubuntu 23.10 and Fedora.
+```
+[Desktop Entry]
+Version=0.1.1
+Type=Application
+Name=Talk Calendar
+Comment=Talking calendar (espeak version)
+Icon=/home/username/folder/talkcalendar/calendar.png
+Exec=/home/username/folder/talkcalendar/talkcalendar
+Path=/home/username/folder/talkcalendar
+X-GNOME-UsesNotifications=true
+Actions=
+Categories=Calendar;Office;
+```
+
+Copy the "talkcalendar.desktop" file to the ***~/.local/share/applications/*** directory. Create the ~/.local/share/applications/ directory if it does not already exist. This way of locally installing Talk Calendar should be universal across different Linux distributions.
 
 ## Calendar Usage
 
@@ -59,138 +53,130 @@ If you have used a calendar app before then using Talk Calendar will be straight
 
 ### Adding New Event
 
-* Select event date using the calendar
-* Select "Event->New Event" from the menu or press Ctrl+n to invoke the "New Event" window
-* Select the event type using the drop down (e.g. meeting, birthday, anniversary, doctor, dentist etc.)
-* Enter the event details
-* Enter the location (optional)
-* Enter start and end times (or all day)
+* Click on the new event button in the header bar or press Ctrl+n to invoke the "New Event" window
+* Enter the event summary (e.g. birthday)
+* Enter description 
+* Enter the location
+* Enter the start date by setting the day, month and year values 
+* Enter start and end times (or tick the all day check box)
 * Events are sorted by start time when displayed
-* Navigate through the year using the calendar to add events
+* Check the "Is Yearly" check box if the event repeats every year (e.g. birthdays)
+
+Screenshots of the new event dialog are shown below.
 
 ![](talkcalendar-new-event.png)
 
-When a creating a new event you can check "Send Notification" which will send a system notification when Talk Calendar is started on the day in which the event occurs.
+![](talkcalendar-new-event2.png)
 
-### Editing Existing Event
+### Display and Speak Events
 
-* Select the event in the list view and either select "Event->Edit Selected Event" from the menu or press Ctrl+e
-* Change details as appropriate
+* Select a date on the month view calendar which has events and this will invoke the day events list view as shown below.
 
-### Changing Calendar Colours
+![](talkcalendar-day-events.png)
 
-* Select the calendar colour window using Calendar->Colours from the menu
-* Enter the HTML colour name for changing the today, event and holiday calendar colour marks
+* Event details are spoken when the day events list view is invoked (assuming that talking is selected in the preferences).
 
-![](talkcalendar-colours.png)
+* The day events list view allows individual events to be selected so that they can be edited or deleted (make sure you click on the event before selecting either the "Edit Event" or "Delete Event button)
 
-A list of HTML colour names can be found [here](https://www.w3schools.com/tags/ref_colornames.asp). Most of the major colour names have been implemented (see attached colour name list) which should be sufficient if using either a light or dark legacy desktop colour theme.
+### Searching For Events
+
+* Select "Event->Search from the hamburger menu .
+* Enter a search term or location.
+
+![](talkcalendar-search.png)
+
+![](talkcalendar-search-results.png)
 
 ### Preferences
 
-* Select Calendar->Preferences from the menu or use Ctrl+Alt+p to invoke the preferences window (see screenshot below)
-* Change options as required
+* Select Calendar->Preferences from the hamburger menu or use Ctrl+Alt+p to invoke the preferences window (see screenshot below).
+* Change options as required.
 
 ![](talkcalendar-preferences.png)
 
-You can use 12 hour format. Event end-times can also be shown in the list view. If notable dates is selected then the date label shows special calendar dates such as some UK public holidays and BST etc. These are also spoken.
+* Use HTML colour names for changing the today and event day calendar colours.
 
-Talk options can be changed.
-
+A list of HTML colour names can be found [here](https://www.w3schools.com/tags/ref_colornames.asp). Most of the major colour names have been implemented (see the HTML colour name list). 
 
 ## Talking
 
-* Press spacebar to speak event details.
+* Events are spoken when a date on the month view calendar is selected (assuming talk preferences selected).
 
 ### Information
 
-* Select "Help->Information from the menu or press F1
+* Select "Information"  from the hamburger menu or press F1
 * the information window shows the keyboard shoutcuts, how many records are in the database, the Sqlite version being used on the system, the desktop font and scale factor.
 
 ![](talkcalendar-information.png)
 
 * Use the About dialog to display current version.
 
-### Keyboard Shortcuts
-
-```
-Ctrl+n			New Event
-Ctrl+e			Edit Selected Event
-Delete			Delete Selected Event
-Ctrl_Alt+p		Preferences window
-Spacebar		Speak
-t			Speak Time
-F1			Information
-```
+![](talkcalendar-about.png)
 
 ## Startup Applications
 
-Add Talk Calendar to your start-up programs to read out the date and any event details when the computer is switched on.
-
-With GNOME based desktops use the GNOME "Tweak Tool" to add Talk Calendar to your startup applications if required.
-
-## How is Speech Generated?
-
-Talk Calendar incorporates a small word-based speech synthesizer used to concatenate and play-back pre-recorded English words using the computer speaker. The voice used by this version of Talk Calendar is based on my own recordings and so is subject to same license as the project. The voice will be improved and updated in future versions of the project.
+With GNOME based desktops you can use the GNOME "Tweak Tool" to add Talk Calendar to your startup applications. Talk Calendar will then read out the current date and days events and any future upcoming events (see preferences settings) when the computer is switched on.
 
 ### Events Database
 
 Events are stored in an [Sqlite](https://www.sqlite.org/index.html) database. SQLite is a small, fast and full-featured SQL database engine written in C. 
 
-### Backup Restore Events Database
+### Export and Import iCalendar Files
 
-A first attempt of a backup and restore system has been implemented in case the Sqlite events database becomes corrupted (e.g. by using another external program to open it or by attempting to vacuum it). You should backup your events by using the export to CSV file menu item which will create an "events.csv" file in the working directory (keep this safe and make another copy if necessary). If you then corrupt your database, you can clear all events from the Sqlite database and then use the import from  CSV restore option which assumes that the "events.csv" file is in the current working directory. If you completely corrupt your Sqlite database called calendar.db then rename it and restart Talk Calendar which will create a new empty database and restore into this. 
+Talk Calendar allows a personal calendar to be exported as an iCalendar file. These typically use the file extension ".ical" or ".ics". The [iCalendar standard](https://icalendar.org/) is an open standard for exchanging calendar and scheduling information between users and computers.  An icalendar file is a plain text file and so can be modified using a standard text editor. 
 
-I have not tested what will happen if you attempt to vacuum your database externally and then restart Talk Calendar with this.
+The export to icalendar file does not currently support time zones and so the DTSTART and DTEND properties contain dates with local time and have no reference to a time zone. For example, the following represents an event starting on January, 1st, 2024 at 11.30am and ending at 2pm.
+
+```
+DTSTART:20240101T113000
+DTEND:20240101T140000
+```
+
+A file chooser dialog is used to allow the save directory location to be chosen by the user as shown below.
+
+![](talkcalendar-export-ical.png)
+
+The icalendar import parser allows the date and local time to be imported and checks if a time zone has been specified using the [TZID](https://icalendar.org/iCalendar-RFC-5545/3-2-19-time-zone-identifier.html) property. A file chooser dialog is used to allow the file to be chosen by the user as shown below. File filters can be used.
+
+![](talkcalendar-import-ical.png)
+
+The parser will be updated with new features in future releases.
+
+### Recurring Events
+
+The only recurring event type that is currently supported by Talk Calendar is yearly. This is required for events such as birthdays and anniversaries. The parser uses icalendar [RRULE](https://icalendar.org/iCalendar-RFC-5545/3-8-5-3-recurrence-rule.html) to determine if an event is yearly (e.g. birthday).
 
 ## Build From Source
 
-The C source code for the Talk Calendar application is provided in the src directory.
+The C source code for the Talk Calendar application is provided in the src directory. Fedora 40 has been used to compile the project. Fedora 40 uses GTK 4.14.
 
 [Geany](https://www.geany.org/) can be used as a source code editor for opening, viewing and then compiling the Talk Calendar C code. Geany is lightweight and has an integrated terminal for building the application.
 
-You need the GTK4 development libraries and the gcc compiler. The code has been compiled using GTK 4.8.3 amd64 (Debian 12). To determine which version of GTK4 is running on a Linux system use the following terminal command.
+To build Talk Calendar from source you need the gcc compiler, GTK4, GLIB and SQLITE  development libraries. 
+
+### Building on Fedora 40
+
+With Fedora you need to install the following packages to compile Talk Calendar.
 
 ```
-dpkg -l | grep libgtk*
+sudo dnf install gcc make
+sudo dnf install gtk4-devel
+sudo dnf install gtk4-devel-docs
+sudo dnf install glib-devel
+sudo dnf install alsa-lib-devel
+sudo dnf install sqlite-devel
 ```
 
-To build Talk Calendar you also need the Sqlite3 development libraries. With Debian and Ubuntu you install these using the commands below.
-
-```
-sudo apt install sqlite3
-sudo apt install libsqlite3-dev
-```
-
-To check the installed version use the command below.
+To check the installed Sqlite 3 version use the command below.
 
 ```
 sqlite3 --version
 ```
 
-### Building on Ubuntu and Debian Bookworm
-
-With both  Debian Bookworm and Ubuntu and you need to install the following packages to compile Talk Calendar.
+To check the installed version of the GTK4 development libraries use the command below.
 
 ```
-apt install build-essential
-apt install libgtk-4-dev
-apt install libasound2-dev
-```
-
-The packages:
-
-```
-apt install libglib2.0-dev
-apt install alsa-utils
-```
-
-are needed but should be installed by default.
-
-With Ubuntu 22.04 the base GTK4 libraries are installed by default. With other Ubuntu based distributions (spins) you may have to install these using the command below.
-
-```
-sudo apt install libgtk-4-1
+dnf list gtk4-devel
 ```
 
 Use the MAKEFILE to compile. 
@@ -205,45 +191,54 @@ To run Talk Calendar from the terminal use
 ./talkcalendar
 ```
 
-### Building on Fedora
+### Building on Ubuntu 24.04 LTS
 
-With Fedora you need to install the following packages to compile Talk Calendar.
-
-```
-sudo dnf install gtk4-devel
-sudo dnf install gtk4-devel-docs
-sudo dnf install glib-devel
-sudo dnf install alsa-lib-devel
-```
-
-### Building on Solus Linux
-
-To build Talk Calendar on Solus Linux (tested with Solus 4.5 Budgie) you need to install the development packages below. Solus is an independent Linux distribution not based on either Debian or Fedora and has its own package manager called "eopkg".
+With Ubuntu and you need to install the following packages to compile Talk Calendar.
 
 ```
-sudo eopkg install -c system.devel
-sudo eopkg install libgtk-4-devel
-sudo eopkg install sqlite3-devel
-sudo eopkg install libnotify-devel
-sudo eopkg install alsa-lib-devel
+sudo apt install build-essential
+sudo apt install libgtk-4-dev
+sudo apt install libasound2-dev
+sudo apt install sqlite3
+sudo apt install libsqlite3-dev
 ```
 
-To install development tools on Solus linux including gcc you need to [install the system.devel package](https://techviewleo.com/install-development-tools-on-solus-linux/). You also have to install the GTK4, SQLite3, libnotify and the ALSA development libraries. Use the Makefile to build Talk Calendar as shown below.
+The packages:
 
 ```
-make
-```
-To run Talk Calendar use the following.
-
-```
-./talkcalendar
+apt install libglib2.0-dev
+apt install alsa-utils
 ```
 
-### Notifications
+are needed but should be installed by default. 
 
-Startup day event notifications have now been implemented using [libnotify](https://gitlab.gnome.org/GNOME/libnotify). This library is an implementation of the [Desktop Notifications Specification](https://specifications.freedesktop.org/notification-spec/notification-spec-latest.html) which provides support for GTK and Qt applications and is ***desktop independent***. 
+You may need to use the [Ubuntu snap store](https://snapcraft.io/) to install things like Geany.
 
-I have developed a small GTK4 notification tester app which can be found [here](https://github.com/crispinprojects/notification-tester) with screenshots and notes for Debian GNOME (Wayland) and Debian Budgie (X11) testing. I found that GNotification code works on Debian Budgie (X11) but not on Debian GNOME (Wayland). Consequently, I am currently using libnotify for implementing notifications in Talk Calendar.
+### Building on Debian 12 Bookworm
+
+Debian 12 Bookworm uses GTK4.8 . The Talk Calendar source code has been developed using GTK4.14 (Fedora 40) and so will not compile using GTK4.8 without making a number of changes (see code notes below). Debian testing (Trixie) is the current development state of the next stable Debian distribution. According to the [Debian GTK4 tracker](https://tracker.debian.org/pkg/gtk4) Trixie currently has GTK4.12 in its repositories. Debian experimental is using GTK4.14. Talk Calendar code will most likley compile using Debian testing and experimental but I have not tried this.
+
+To determine which version of GTK4 is running on a Debian system use the following terminal command.
+
+```
+dpkg -l | grep libgtk*
+```
+
+## Code Notes
+
+I am now using Fedora 40 to develop the Talk Calendar application and not Debian 12 Bookworm. Fedora 40 uses GTK4.14 as opposed to the older GTK 4.8 used by Debian 12 Bookworm. This mean that the code will not compile with Debian 12 Bookworm without making changes to the source code. These include things like replacing "gtk_css_provider_load_from_string" with "gtk_css_provider_load_from_data" as the function gtk_css_provider_load_from_data was depreciated in GTK 4.12. A bigger change is that the GtkFileDialog API is no longer signal based. With GTK4.12 and above it is callback based which should match a GAsyncReadyCallback function (async/await). With Debian 12  (GTK4.8) I used the function "gtk_file_chooser_dialog_new" with a response callback but this approach has been depreciated.
+
+## Speech Synthesis
+
+Talk Calendar uses its own built-in diphone speech synthesizer.  Words are formed as sequences of elementary speech units. A phoneme is the smallest unit of sound that distinguishes one word from another word and there are 44 phonemes in the English language. A diphone is a sound unit composed of two adjacent partial phonemes i.e. the second half of the first phoneme and the first half of the second phoneme. The synthesizer uses a set of pre-recorded diphone sound samples and concatenates these to produce speech output for a given text input.
+
+This voice used by Talk Calendar is based on the diphone collection created by Alan W Black and Kevin Lenzo which is free for use for any purpose (commercial or otherwise) and subject to the pretty light restrictions [detailed here](https://github.com/hypnaceae/DiphoneSynth/blob/master/diphones_license.txt). I have used the same licence for the voice that I have created. There is information about recording your own diphones [here](http://festvox.org/bsv/x2401.html) and in the speech synthesis lecture by Professor Alan W Black [here](https://www.youtube.com/watch?v=eDjtEsOvouM&t=1459s).
+
+My diphone speech synthesizer has a number of limitations. Firstly, it uses a small dictionary of approximately 56,600 English words. If a word is not recognised by the dictionary it is skipped over. Apostrophes and other special characters are not used as inserting these into the database can cause errors. There are two types of apostrophes. Apostrophes of possession and contraction. Possessive apostrophes indicate ownership of something, like in the following sentence: "Dog's birthday". Dog's is pronounced dogz. You have to enter the word name without an apostrophe e.g. dogs. Contraction apostrophes are used to shorten words. For example, "It's a nice day outside" which is expanded as "It is a nice day outside". Use the expanded version with this speech synthesizer. The pronunciation of some words is poor as there is very little information online on how to convert words to a diphone list (in many cases I have made an educated guess). More work is needed on the diphone speech synthesizer and word pronunciation but it works and it is all coded from scratch using C and GTK4. It is more versatile than my previous speech synthesizer which was based on concatenating and playing back pre-recorded English words.
+
+I have also been working on a formant speech syntheiszer details of which can be found [here](https://github.com/crispinprojects/formant-synthesizer). 
+
+Talk Calendar ***does not use*** the [espeak](https://github.com/espeak-ng/espeak-ng) formant speech synthesizer because the license of some of its components may not be compatible with the GTK LGPL v2.1 license. Specifically this relates to the IEEE80 file [license](https://github.com/espeak-ng/espeak-ng/blob/c1d9341f86eee4b7a0da50712b627d8a76e92fea/src/libespeak-ng/ieee80.c) which says "Copyright (C) 1989-1991 Apple Computer, Inc." There is further discussed [here](https://opensource.stackexchange.com/questions/11545/possibilities-to-use-a-gpl-v3-licensed-library-in-a-closed-source-game). As this is a hobby project I would rather just use my own speech synthesizer coded from scratch to avoid any license compatibility issues. Obviously, my speech synthesizer although functional is not as  good as espeak.
 
 ## Versioning
 
@@ -253,91 +248,13 @@ I have developed a small GTK4 notification tester app which can be found [here](
 
 * **Alan Crispin** [Github](https://github.com/crispinprojects)
 
-## License
-
-GTK is released under the terms of the LGPL v2.1 license. Consequenty, Talk Calendar is licensed under LGPL v2.1.
-
-The espeak speech synthesizer is no longer used as parts of its license may not be compatible with the GTK LGPL v2.1 license. This is reason why I have reverted back to using my own speech synthesizer which although limited in scope (just reads out event categories) has good audibility.
-
 ## Project Status
 
 Active and under development.
 
+## License
 
-## BASH Installer Troubleshooting (Debian)
-
-In most cases the BASH script installer will just run as the required libraries will be installed by default and the user will be a member of the sudo group. The installer must have executable permissions. To make the installer script executable use the command below.
-
-```
-chmod +x install-talkcalendar.sh 
-
-```
-See notes below for other issues. 
-
-#### Not a member of the sudo group
-
-The BASH installer assumes that you are a member of the sudo group. If you have installed Debian 12 with a root password then you will have to add yourself to the sudo group. The commands below show how to do this.
-
-```
-su -
-adduser your-user-name sudo
-```
-
-Then restart.
-
-#### No GTK4 libraries
-
-The BASH installer assumes that the GTK4 libraries are installed. These are installed by default on Debian GNOME and Ubuntu but sometimes are not installed on some spins or if creating a desktop from a Debian base install. To install them use the command below.
-
-```
-sudo apt install libgtk-4-1
-```
-
-If you intend to build from source then you need the following development libraries.
-
-```
-sudo apt install build-essential
-sudo apt install libgtk-4-dev
-sudo apt install libglib2.0-dev
-sudo apt install libasound2-dev
-```
-
-#### No ALSA library
-
-The BASH installer assumes that the Advanced Linux Sound Architecture (ALSA) library is installed. This provides audio and MIDI functionality to the Linux operating system and is installed by default in Debian and Ubuntu distros. However if building a desktop from a Debian base install you will need to install ALSA as shown below.
-
-```
-sudo apt install alsa-utils
-```
-
-#### No SQLite libraries
-
-The BASH installer assumes that the SQLite library is installed as an Sqlite3 database is used for storing events. This is installed by default on most Linux distros. With Debian (Ubuntu) based distributions you can check the version of Sqlite installed on your system using the terminal command below.
-
-```
-apt policy sqlite3
-```
-
-If sqlite3 is not installed then use the following command.
-
-```
-sudo apt install sqlite3
-```
-
-If compiling from source you will need to install the development library.
-
-```
-sudo apt install libsqlite3-dev
-```
-
-#### Check installed packages
-
-To check what packages are installed on your system use the command below.
-
-```
-apt list --installed | more
-```
-
+GTK is released under the terms of the [GNU Lesser General Public License version 2.1](https://www.gnu.org/licenses/old-licenses/lgpl-2.1.html). Consequenty, Talk Calendar is licensed under the same LGPL v2.1 license.
 
 ## Acknowledgements
 
@@ -357,8 +274,12 @@ apt list --installed | more
 
 * [Sqlite](https://www.sqlite.org/index.html) is open source and in the [public domain](https://www.sqlite.org/copyright.html).
 
-* How to Install Budgie Desktop on Debian. See [here](https://www.linuxcapable.com/how-to-install-budgie-desktop-on-debian-linux/) and [here](https://packages.debian.org/bookworm/budgie-desktop).
+* [Diphone License](https://github.com/hypnaceae/DiphoneSynth/blob/master/diphones_license.txt)
 
-* [Debian](https://www.debian.org/)
+* Diphone collection and synthesis Alan W. Black and Kevin Lenzo [2000](https://www.cs.cmu.edu/~awb/papers/ICSLP2000_diphone.pdf)
 
 * [Fedora](https://fedoraproject.org/)
+
+* [Ubuntu](https://ubuntu.com/download/desktop)
+
+* [Debian](https://www.debian.org/)

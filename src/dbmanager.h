@@ -47,6 +47,9 @@ void db_get_all_events(GArray *evt_arry);
 
 void db_get_all_events_year_month(GArray *evt_arry, int year, int month);
 
+//void db_get_all_multiday_events_year_month(GArray *evt_arry, int year, int month);
+void db_get_all_enddate_events_year_month(GArray *evt_arry, int year, int month);
+
 void db_get_upcoming_events(GArray *evt_arry, int year, int month, int from ,int to);
 
 void db_get_all_events_year_month_day(GArray *evt_arry, int year, int month, int day);
