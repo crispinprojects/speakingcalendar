@@ -43,11 +43,11 @@ Actions=
 Categories=Calendar;Office;
 ```
 
-Copy the "talkcalendar.desktop" file to the ***~/.local/share/applications/*** directory. Create the ~/.local/share/applications/ directory if it does not already exist. This way of locally installing Talk Calendar should be universal across different Linux distributions.
+Copy the "talkcalendar.desktop" file to the ***~/.local/share/applications/*** directory. Create the ~/.local/share/applications/ directory if it does not already exist. Files in ./local take precedence over those in system directories. This way of locally installing Talk Calendar should be universal across different Linux distributions.
 
 ## Calendar Usage
 
-If you have used a calendar app before then using Talk Calendar will be straight forward. 
+If you have used a calendar application before then using Talk Calendar will be straight forward. 
 
 ### Adding New Event
 
@@ -214,7 +214,7 @@ You may need to use the [Ubuntu snap store](https://snapcraft.io/) to install th
 
 ### Building on Debian 12 Bookworm
 
-Debian 12 Bookworm uses GTK4.8 . The Talk Calendar source code has been developed using GTK4.14 (Fedora 40) and so will not compile using GTK4.8 without making a number of changes (see code notes below). Debian testing (Trixie) is the current development state of the next stable Debian distribution. According to the [Debian GTK4 tracker](https://tracker.debian.org/pkg/gtk4) Trixie currently has GTK4.12 in its repositories. Debian experimental is using GTK4.14. Talk Calendar code will most likley compile using Debian testing and experimental but I have not tried this.
+Debian 12 Bookworm uses GTK4.8 . The Talk Calendar source code has been developed using GTK4.14 (Fedora 40) and so will not compile using GTK4.8 without making a number of changes (see code notes below). Debian testing (Trixie) is the current development state of the next stable Debian distribution. According to the [Debian GTK4 tracker](https://tracker.debian.org/pkg/gtk4) Trixie currently has GTK4.12 in its repositories. Debian experimental is using GTK4.14. Talk Calendar code will most likely compile using Debian testing and experimental but I have not tried this.
 
 To determine which version of GTK4 is running on a Debian system use the following terminal command.
 
@@ -238,11 +238,11 @@ My diphone speech synthesizer has a number of limitations.
 
 2. Apostrophes and other special characters are not used as inserting these into the database can cause errors. There are two types of apostrophes. Apostrophes of possession and contraction. Possessive apostrophes indicate ownership of something, like in the following sentence: "Dog's birthday". You have to enter the word name without an apostrophe e.g. dogs. Contraction apostrophes are used to shorten words. For example, "It's a nice day outside" which is expanded as "It is a nice day outside". Use the expanded version with the Talk Calendar diphone speech synthesizer. 
 
-3. The pronunciation of some words is poor as there is very little information online on how to convert words to a diphone list (in many cases I have made an educated guess). More work is needed on word pronunciation.
+3. The pronunciation of some words is poor. There is very little information on-line about how to convert words to a diphone list (in many cases I have made an educated guess). More work is needed on word pronunciation.
 
 My diphone speech synthesizer is functional and has been coded from scratch using C and GTK4. It is more versatile than my previous speech synthesizer which was based on concatenating and playing back pre-recorded English words. I have also been working on a formant speech syntheiszer details of which can be found [here](https://github.com/crispinprojects/formant-synthesizer). 
 
-Talk Calendar ***does not use*** the [espeak](https://github.com/espeak-ng/espeak-ng) formant speech synthesizer because the license of some of its components may not be compatible with the GTK LGPL v2.1 license. Specifically this relates to the IEEE80.c file [license](https://github.com/espeak-ng/espeak-ng/blob/c1d9341f86eee4b7a0da50712b627d8a76e92fea/src/libespeak-ng/ieee80.c) which says "Copyright (C) 1989-1991 Apple Computer, Inc." There is further discussed [here](https://opensource.stackexchange.com/questions/11545/possibilities-to-use-a-gpl-v3-licensed-library-in-a-closed-source-game). As this is a hobby project I would rather just use my own speech synthesizer coded from scratch to avoid any license compatibility issues. Obviously, my speech synthesizer although functional is not as good as espeak.
+Talk Calendar ***does not use*** the [espeak](https://github.com/espeak-ng/espeak-ng) formant speech synthesizer because the license of some of its components may not be compatible with the GTK LGPL v2.1 license. For example, the IEEE80.c file [license](https://github.com/espeak-ng/espeak-ng/blob/c1d9341f86eee4b7a0da50712b627d8a76e92fea/src/libespeak-ng/ieee80.c) which says "Copyright (C) 1989-1991 Apple Computer, Inc." There is further discussed [here](https://opensource.stackexchange.com/questions/11545/possibilities-to-use-a-gpl-v3-licensed-library-in-a-closed-source-game). As this is a hobby project I would rather just use my own speech synthesizer coded from scratch to avoid any license compatibility issues. 
 
 ## Versioning
 

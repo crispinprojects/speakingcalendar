@@ -5764,8 +5764,12 @@ pair_t table[] = {
 //s","b-aa aa-uh uh-ch ch-uh uh-r r-z"},
 {"boucherie","b-aa aa-uh uh-ch ch-uh uh-r r-iy"},
 {"bouchet","b-uw uw-sh sh-eh eh-iy"},
-{"boudoir","b-uw uw-d d-ao ao-iy iy-r"},
-{"boudoirs","b-uw uw-d d-ao ao-iy iy-r r-z"},
+
+//{"boudoir","b-uw uw-d d-ao ao-iy iy-r"},
+{"boudoir","b-uw uw-d d-ao ao-ah ah-v v-w w-ah ah-r r-r"},
+{"boudoirs","b-uw uw-d d-ao ao-ah ah-v v-w w-ah ah-r r-r r-z"},
+//{"boudoirs","b-uw uw-d d-ao ao-iy iy-r r-z"},
+
 {"bouffe","b-ao ao-uh uh-f"},
 {"bougainville","b-uw uw-g g-ih ih-n n-v v-ih ih-l"},
 {"bough","b-aa aa-uh"},
@@ -6847,7 +6851,14 @@ pair_t table[] = {
 {"buttering","b-ah ah-t t-uh uh-r r-ih ih-ng"},
 {"buttermilk","b-ah ah-t t-uh uh-r r-m m-ih ih-l l-k"},
 {"butternut","b-ah ah-t t-uh uh-r r-n n-ah ah-t"},
+
+{"butterworth","b-ah ah-t t-uh uh-r r-w w-uh uh-r r-th"},
+
+
+
 {"buttery","b-ah ah-t t-uh uh-r r-iy"},
+
+
 {"butting","b-ah ah-t t-ih ih-ng"},
 {"buttock","b-ah ah-t t-ah ah-k"},
 {"buttocks","b-ah ah-t t-ah ah-k k-s"},
@@ -31492,10 +31503,10 @@ pair_t table[] = {
 {"meeks","m-iy iy-k k-s"},
 //s","m-iy iy-k k-s s-ih ih-z"},
 {"meer","m-iy iy-uh uh-r"},
-{"meet","m-iy iy-t"},
+{"meet","m-iy iy-t t-t"},
 {"meeteth","m-iy iy-t t-ih ih-th"},
 {"meetin","m-iy iy-t t-ih ih-n"},
-{"meeting","m-iy iy-t t-ih ih-ng"},
+{"meeting","m-iy iy-t t-ih ih-ng ng-g"},
 {"meetings","m-iy iy-t t-ih ih-ng ng-z"},
 {"meets","m-iy iy-t t-s"},
 {"meg","m-eh eh-g"},
@@ -41951,8 +41962,14 @@ pair_t table[] = {
 {"reservedness","r-ih ih-z z-uh uh-r r-v v-ah ah-d d-n n-ah ah-s"},
 {"reserves","r-ih ih-z z-uh uh-r r-v v-z"},
 {"reserving","r-ih ih-z z-uh uh-r r-v v-ih ih-ng"},
-{"reservoir","r-eh eh-z z-ah ah-v v-w w-aa aa-r"},
-{"reservoirs","r-eh eh-z z-uh uh-r r-v v-w w-aa aa-r r-z"},
+
+{"reservoir","r-eh eh-z z-ah ah-v v-w w-ah ah-r r-r"},
+//{"reservoir","r-eh eh-z z-ah ah-v v-w w-aa aa-ao ao-iy iy-r"},
+//{"reservoir","r-eh eh-z z-ah ah-v v-w w-ah ah-aa aa-r r-r"},
+
+//{"reservoirs","r-eh eh-z z-uh uh-r r-v v-w w-aa aa-r r-z"},
+{"reservoirs","r-eh eh-z z-ah ah-v v-w w-ah ah-r r-r r-z"},
+
 {"reset","r-iy iy-s s-eh eh-t"},
 {"reshape","r-iy iy-sh sh-eh eh-iy iy-p"},
 {"reshaping","r-iy iy-sh sh-eh eh-iy iy-p p-ih ih-ng"},
@@ -45160,7 +45177,7 @@ pair_t table[] = {
 {"shield","sh-iy iy-l l-d"},
 {"shielded","sh-iy iy-l l-d d-ih ih-d"},
 {"shielding","sh-iy iy-l l-d d-ih ih-ng"},
-{"shields","sh-iy iy-l l-d d-z"},
+{"shields","sh-iy iy-l l-d d-d d-z z-z"},
 {"shift","sh-ih ih-f f-t"},
 {"shifted","sh-ih ih-f f-t t-ah ah-d"},
 {"shifter","sh-ih ih-f f-t t-uh uh-r"},
@@ -48832,7 +48849,7 @@ pair_t table[] = {
 {"sunbury","s-ah ah-n n-b b-eh eh-r r-iy"},
 {"sunda","s-ah ah-n n-d d-ah"},
 
-{"sunday","s-ah ah-n n-d d-eh d-eh eh-iy"},
+{"sunday","s-s s-ah ah-n n-d d-eh d-eh eh-iy"},
 
 {"sundays","s-ah ah-n n-d d-eh eh-iy iy-z"},
 {"sunder","s-ah ah-n n-d d-uh uh-r"},
@@ -50630,7 +50647,12 @@ pair_t table[] = {
 {"thrumming","th-r r-ah ah-m m-ih ih-ng"},
 {"thrush","th-r r-ah ah-sh"},
 {"thrushes","th-r r-ah ah-sh sh-ah ah-z"},
+
+{"thrusscross","th-r r-ah ah-s s-k k-r r-ao ao-s"},
+
 {"thrust","th-r r-ah ah-s s-t"},
+
+
 {"thrusting","th-r r-ah ah-s s-t t-ih ih-ng"},
 {"thrusts","th-r r-ah ah-s s-t t-s"},
 {"thucydides","th-uw uw-s s-aa aa-iy iy-d d-aa aa-iy iy-d d-z"},
@@ -51539,7 +51561,9 @@ pair_t table[] = {
 {"travailing","t-r r-ah ah-v v-eh eh-iy iy-l l-ih ih-ng"},
 {"travails","t-r r-ah ah-v v-eh eh-iy iy-l l-z"},
 {"travaux","t-r r-ah ah-v v-ao ao-uh"},
-{"travel","t-r t-t t-r r-ae ae-v v-ah ah-l"},
+
+{"travel","t-t t-r r-ae ae-v v-ah ah-l"},
+
 {"traveled","t-r r-ae ae-v v-ah ah-l l-d"},
 {"traveler","t-r r-ae ae-v v-ah ah-l l-uh uh-r"},
 //s","t-r r-ae ae-v v-ah ah-l l-uh uh-r r-z"},
@@ -53578,7 +53602,7 @@ pair_t table[] = {
 {"unyielding","ah-n n-y y-iy iy-l l-d d-ih ih-ng"},
 {"unyoked","ah-n n-y y-ao ao-uh uh-k k-t"},
 {"unyoking","ah-n n-y y-ao ao-uh uh-k k-ih ih-ng"},
-{"up","ah-p"},
+{"up","ah-p p-p"},
 //ard","ah-p p-aa aa-r r-d"},
 {"upanishads","ah-p p-ae ae-n n-ih ih-sh sh-ae ae-d d-z"},
 {"upas","ah-p p-ah ah-z"},
@@ -55918,6 +55942,7 @@ pair_t table[] = {
 {"wireless","w-aa aa-iy iy-r r-l l-ih ih-s"},
 {"wires","w-aa aa-iy iy-uh uh-r r-z"},
 {"wiring","w-aa aa-iy iy-r r-ih ih-ng"},
+{"wirral","w-uh uh-r r-ah ah-l"},	
 {"wirthin","w-uh uh-r r-th th-ah ah-n"},
 {"wiry","w-ih ih-r r-iy"},
 {"wisbeach","w-ih ih-s s-b b-iy iy-ch"},

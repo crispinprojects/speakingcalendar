@@ -34,8 +34,8 @@
 
 static GMutex lock; //talk thread
 
-#define CONFIG_DIRNAME "talkcalendar-020"
-#define CONFIG_FILENAME "talkcalendar-020"
+#define CONFIG_DIRNAME "talkcalendar-022"
+#define CONFIG_FILENAME "talkcalendar-022"
 static char * m_config_file = NULL;
 
 //Declarations
@@ -197,12 +197,9 @@ static int m_notification=0;
 static int m_has_reminder=0; //plumbing for future updates
 static int m_reminder_min=0; //plumbing for future updates
 
-static int m_window_width=1200;
-static int m_window_height=900;
-
 static const char* m_todaycolour="lightblue";
 static const char* m_eventcolour="burlywood";
-static const char* m_holidaycolour="lightseagreen";
+static const char* m_holidaycolour="lightseagreen"; //TODO
 
 //Talking
 static int m_talk =1;
@@ -219,7 +216,7 @@ static int m_upcoming_days=7;
 
 static int m_reset_preferences=0;
 
-static int m_talk_rate=17000;
+static int m_talk_rate=15000;
 //static int m_talk_rate=16000;
 
 
@@ -355,13 +352,11 @@ static void config_load_default()
 	m_talk_priority=0; 
 	m_talk_upcoming=0;
 	m_upcoming_days=7;
-	m_talk_rate=17000;	
+	m_talk_rate=15000;	
 	//calendar
 	m_12hour_format=1;
 	m_show_end_time=0;
 	
-	m_window_width=1200;
-	m_window_height=900;
 	m_todaycolour="lightblue";
 	m_eventcolour="burlywood";
 	m_holidaycolour="lightseagreen";
@@ -383,13 +378,11 @@ static void config_read()
 	m_talk_priority=0; 
 	m_talk_upcoming=0;
 	m_upcoming_days=7;
-	m_talk_rate=17000;	
+	m_talk_rate=15000;	
 	//calendar
 	m_12hour_format=1;
 	m_show_end_time=0;
 	
-	m_window_width=1200;
-	m_window_height=900;
 	m_todaycolour="lightblue";
 	m_eventcolour="burlywood";
 	m_holidaycolour="lightseagreen";
@@ -416,9 +409,6 @@ static void config_read()
 	m_12hour_format=g_key_file_get_integer(kf, "calendar_settings", "hour_format", NULL);
 	m_show_end_time = g_key_file_get_integer(kf, "calendar_settings", "show_end_time", NULL);
 		
-	m_window_width = g_key_file_get_integer(kf, "calendar_settings", "window_width", NULL);
-	m_window_height=g_key_file_get_integer(kf, "calendar_settings", "window_height", NULL);
-	
 	m_todaycolour=g_key_file_get_string(kf, "calendar_settings", "todaycolour", NULL);
     m_eventcolour=g_key_file_get_string(kf, "calendar_settings", "eventcolour", NULL);
     m_holidaycolour=g_key_file_get_string(kf, "calendar_settings", "holidaycolour", NULL);
@@ -448,9 +438,6 @@ void config_write()
 	//calendar
 	g_key_file_set_integer(kf, "calendar_settings", "hour_format", m_12hour_format);
 	g_key_file_set_integer(kf, "calendar_settings", "show_end_time", m_show_end_time);
-	
-	g_key_file_set_integer(kf, "calendar_settings", "window_width", m_window_width);
-	g_key_file_set_integer(kf, "calendar_settings", "window_height", m_window_height);
 	
 	g_key_file_set_string(kf, "calendar_settings", "todaycolour", m_todaycolour);
 	g_key_file_set_string(kf, "calendar_settings", "eventcolour", m_eventcolour);
@@ -511,6 +498,8 @@ static char *ignore_first_zero(char *input)
   
   return input;
 }
+//=====================================================================
+
 //=====================================================================
 
 static char *remove_zeros(const char *text)
@@ -680,7 +669,6 @@ static char* replace_newlines(const char *text)
 }
 
 
-
 //======================================================================
 static guint get_dropdown_position(const char* month)
 {
@@ -761,200 +749,6 @@ static int first_day_of_month(int month, int year)
             year + (year / 4)) % 7;
 }
 //======================================================================
-//static char* get_day_of_week(int day, int month, int year) 
-//{
-
-	//char* weekday_str="";
-	//GDate* day_date;
-	//day_date = g_date_new_dmy(day, month, year);
-	//GDateWeekday weekday =g_date_get_weekday(day_date);
-		
-	//switch(weekday)
-	//{
-	//case G_DATE_MONDAY:
-	//weekday_str="monday ";;
-	//break;
-	//case G_DATE_TUESDAY:
-	//weekday_str="tuesday ";;
-	//break;
-	//case G_DATE_WEDNESDAY:
-	//weekday_str="wednesday ";
-	//break;
-	//case G_DATE_THURSDAY:
-	//weekday_str="thursday ";
-	//break;
-	//case G_DATE_FRIDAY:
-	//weekday_str="friday ";
-	//break;
-	//case G_DATE_SATURDAY:
-	//weekday_str="saturday ";
-	//break;
-	//case G_DATE_SUNDAY:
-	//weekday_str="sunday ";
-	//break;
-	//default:
-	//weekday_str="unknown ";
-	//}//switch
-
-	//return weekday_str;
-//}
-////======================================================================
-//static char* get_day_number_ordinal_string(int day) 
-//{
-
-	//char* day_str ="";
-
-	//switch (day) {
-		//case 1:
-		//day_str="first ";
-		//break;
-		//case 2:
-		//day_str="second ";
-		//break;
-		//case 3:
-		//day_str="third ";
-		//break;
-		//case 4:
-		//day_str="fourth ";
-		//break;
-		//case 5:
-		//day_str="fifth ";
-		//break;
-		//case 6:
-		//day_str="sixth ";
-		//break;
-		//case 7:
-		//day_str="seventh ";
-		//break;
-		//case 8:
-		//day_str="eighth ";
-		//break;
-		//case 9:
-		//day_str="ninth ";
-		//break;
-		//case 10:
-		//day_str="tenth ";
-		//break;
-		//case 11:
-		//day_str="eleventh ";
-		//break;
-		//case 12:
-		//day_str="twelfth ";
-		//break;
-		//case 13:
-		//day_str="thirteenth ";
-		//break;
-		//case 14:
-		//day_str="fourteenth ";
-		//break;
-		//case 15:
-		//day_str="fifteenth ";
-
-		//break;
-		//case 16:
-		//day_str="sixteenth ";
-		//break;
-		//case 17:
-		//day_str="seventeenth ";
-		//break;
-		//case 18:
-		//day_str="eighteenth ";
-		//break;
-		//case 19:
-		//day_str="nineteenth ";
-		//break;
-		//case 20:
-		//day_str="twentieth ";
-		//break;
-		//case 21:
-		//day_str="twenty first ";
-		//break;
-		//case 22:
-		//day_str="twenty second ";
-		//break;
-		//case 23:
-		//day_str="twenty third ";
-		//break;
-		//case 24:
-		//day_str="twenty fourth ";
-		//break;
-		//case 25:
-		//day_str="twenty fifth ";
-		//break;
-		//case 26:
-		//day_str="twenty sixth ";
-		//break;
-		//case 27:
-		//day_str="twenty seventh ";
-		//break;
-		//case 28:
-		//day_str="twenty eighth ";
-		//break;
-		//case 29:
-		//day_str="twenty nineth ";
-		//break;
-		//case 30:
-		//day_str="thirtieth ";
-		//break;
-		//case 31:
-		//day_str="thirty first ";
-		//break;
-		//default:
-		////Unknown day ordinal
-		//day_str="unknown";
-		//break;
-	  //} //day switch
-	//return day_str;
-//}
-////======================================================================
-//static char* get_month_string(int month) {
-
-	//char* result ="";
-	
-	//switch(month) {
-	//case 1:
-		//result = "january ";
-		//break;
-	//case 2:
-		//result = "february ";
-		//break;
-	//case 3:
-		//result= "march ";
-		//break;
-	//case 4:
-		//result = "april ";
-		//break;
-	//case 5:
-		//result ="may ";
-		//break;
-	//case 6:
-		//result = "june ";
-		//break;
-	//case 7:
-		//result ="july ";
-		//break;
-	//case 8:
-		//result ="august ";
-		//break;
-	//case 9:
-		//result= "september ";
-		//break;
-	//case 10:
-		//result = "october ";
-		//break;
-	//case 11:
-		//result = "november ";
-		//break;
-	//case 12:
-		//result = "december ";
-		//break;
-	//default:
-		//result = "unknown";
-	//}
-	//return result;
-//}
-//======================================================================
-
 
 //======================================================================
 
@@ -1154,19 +948,30 @@ static void callbk_add_new_event(GtkButton *button, gpointer user_data)
 
 	buffer_summary = gtk_entry_get_buffer(GTK_ENTRY(entry_summary));
 	m_summary = gtk_entry_buffer_get_text(buffer_summary);
+	
+	m_summary= g_strchug((char *) m_summary); //remove leading spaces
+	m_summary= g_strchomp ((char *) m_summary); //remove trailing spaces
+	
 	m_summary = remove_semicolons(m_summary);
 	m_summary = remove_commas(m_summary);
 	m_summary =remove_punctuations(m_summary);
 			
 	buffer_description = gtk_entry_get_buffer(GTK_ENTRY(entry_description));
 	m_description = gtk_entry_buffer_get_text(buffer_description);
+	
+	m_description= g_strchug((char *) m_description); //remove leading spaces
+	m_description= g_strchomp ((char *) m_description); //remove trailing spaces
+	
 	m_description = remove_semicolons(m_description);
 	m_description = remove_commas(m_description);
 	m_description =remove_punctuations(m_description);
 	
 	buffer_location = gtk_entry_get_buffer(GTK_ENTRY(entry_location));
 	m_location = gtk_entry_buffer_get_text(buffer_location);
-	m_location = gtk_entry_buffer_get_text(buffer_location);
+	
+	m_location= g_strchug((char *) m_location); //remove leading spaces
+	m_location= g_strchomp ((char *) m_location); //remove trailing spaces
+		
 	m_location = remove_semicolons(m_location);
 	m_location = remove_commas(m_location);
 	m_location =remove_punctuations(m_location);
@@ -1610,19 +1415,30 @@ static void callbk_update_event(GtkButton *button, gpointer user_data)
 	
 	buffer_summary = gtk_entry_get_buffer(GTK_ENTRY(entry_summary));
 	m_summary = gtk_entry_buffer_get_text(buffer_summary);
+	
+	m_summary= g_strchug((char *) m_summary); //remove leading spaces
+	m_summary= g_strchomp ((char *) m_summary); //remove trailing spaces
+	
 	m_summary = remove_semicolons(m_summary);
 	m_summary = remove_commas(m_summary);
 	m_summary =remove_punctuations(m_summary);
 		
 	buffer_description = gtk_entry_get_buffer(GTK_ENTRY(entry_description));
 	m_description = gtk_entry_buffer_get_text(buffer_description);
+	
+	m_description= g_strchug((char *) m_description); //remove leading spaces
+	m_description= g_strchomp ((char *) m_description); //remove trailing spaces
+	
 	m_description = remove_semicolons(m_description);
 	m_description = remove_commas(m_description);
 	m_description =remove_punctuations(m_description);
 	
 	buffer_location = gtk_entry_get_buffer(GTK_ENTRY(entry_location));
 	m_location = gtk_entry_buffer_get_text(buffer_location);
-	m_location = gtk_entry_buffer_get_text(buffer_location);
+	
+	m_location= g_strchug((char *) m_location); //remove leading spaces
+	m_location= g_strchomp ((char *) m_location); //remove trailing spaces
+	
 	m_location = remove_semicolons(m_location);
 	m_location = remove_commas(m_location);
 	m_location =remove_punctuations(m_location);
@@ -3150,7 +2966,7 @@ static void callbk_about(GSimpleAction * action, GVariant *parameter, gpointer u
 	gtk_widget_set_size_request(about_dialog, 200,200);
     gtk_window_set_modal(GTK_WINDOW(about_dialog),TRUE);
 	gtk_about_dialog_set_program_name(GTK_ABOUT_DIALOG(about_dialog), "Talk Calendar");
-	gtk_about_dialog_set_version (GTK_ABOUT_DIALOG(about_dialog), "Version 0.2.1");
+	gtk_about_dialog_set_version (GTK_ABOUT_DIALOG(about_dialog), "Version 0.2.2");
 	gtk_about_dialog_set_copyright(GTK_ABOUT_DIALOG(about_dialog),"Copyright © 2024");
 	gtk_about_dialog_set_comments(GTK_ABOUT_DIALOG(about_dialog),"Talking calendar");
 	gtk_about_dialog_set_license_type (GTK_ABOUT_DIALOG(about_dialog), GTK_LICENSE_LGPL_2_1);
@@ -4766,7 +4582,7 @@ static void callbk_set_preferences(GtkButton *button, gpointer  user_data){
 	m_holidaycolour="lightseagreen"; //TODO
 	//talking
 	m_talk=1;	
-	m_talk_rate=17000;
+	m_talk_rate=15000;
 	m_talk_event_number=0;
 	m_talk_location=1;	
 	m_talk_at_startup=1;
@@ -5127,13 +4943,14 @@ static void callbk_quit(GSimpleAction * action,	G_GNUC_UNUSED GVariant *paramete
 //======================================================================
 static void startup(GtkApplication *app)
 {	 
+	 //g_print("startup called\n");
 	 config_initialize();	  	
 	 db_create_events_table(); //startup database 
 }
 //======================================================================
 void callbk_shutdown(GtkWindow *window, gint response_id, gpointer user_data)
 {
-	gtk_window_get_default_size(GTK_WINDOW(window), &m_window_width,&m_window_height);
+	//g_print("shutdown called\n");	
 	config_write();		
 }
 
@@ -5147,9 +4964,7 @@ static void window_header(GtkWindow *window)
   GtkWidget *menu_button;
   GtkWidget *label;
   GtkWidget *button_new_event;
-  //GtkWidget *button_edit_event;
-  //GtkWidget *button_delete_event;
-  //GtkWidget *button_talk;
+ 
   
   header = gtk_header_bar_new ();  
   gtk_window_set_titlebar (GTK_WINDOW (window), header);
@@ -5157,12 +4972,9 @@ static void window_header(GtkWindow *window)
   //create headerbar buttons
   button_new_event = gtk_button_new_with_label ("New Event");
   g_signal_connect (button_new_event, "clicked", G_CALLBACK (callbk_new_event), window);
-    
-  //button_talk = gtk_button_new_with_label ("Talk"); 
-  //g_signal_connect (button_talk, "clicked", G_CALLBACK (callbk_speak), window);
+     
   
   gtk_header_bar_pack_start(GTK_HEADER_BAR (header), button_new_event);
-  //gtk_header_bar_pack_end(GTK_HEADER_BAR (header), button_talk);
   
   
 	// Menu model
@@ -5217,18 +5029,19 @@ static void window_header(GtkWindow *window)
 
 static void activate (GtkApplication *app, gpointer  user_data)
 {
+	g_print("Talk Calendar activated\n");
+	
 	GtkWidget *window;
 	GtkWidget *header;
 	GtkWidget *calendar; 
-	//GtkWidget *box;
+		
 	
-	//GtkWidget *date_label; //display date
-	gchar *today_str="";
 
 	// create a new window, and set its title
 	window = gtk_application_window_new (app);
 	gtk_window_set_title (GTK_WINDOW (window), "Talk Calendar ");
-	gtk_window_set_default_size(GTK_WINDOW (window),1200,900);
+	//gtk_window_set_default_size(GTK_WINDOW (window),1800,1000);
+	
 	g_signal_connect (window, "destroy", G_CALLBACK (callbk_shutdown), NULL);
 	window_header(GTK_WINDOW(window));
 		
@@ -5259,6 +5072,7 @@ static void activate (GtkApplication *app, gpointer  user_data)
 	char* day_str = g_strdup_printf("%d", m_start_day);
 	char* month_str =g_strdup_printf("%d", m_start_month);
 	char* year_str =g_strdup_printf("%d", m_start_year);	
+    //gchar *today_str="";
     //today_str = g_strconcat(today_str, day_str, "-",month_str,"-",year_str,NULL);
     //g_print("today is: %s\n", today_str);
        
@@ -5354,8 +5168,7 @@ static void activate (GtkApplication *app, gpointer  user_data)
 	// connect keyboard accelerators	
 	gtk_application_set_accels_for_action(GTK_APPLICATION(app),"app.home", home_accels);
 	gtk_application_set_accels_for_action(GTK_APPLICATION(app),"app.newevent", newevent_accels);
-	
-	//gtk_application_set_accels_for_action(GTK_APPLICATION(app),"app.speak", speak_accels);	
+		
 	gtk_application_set_accels_for_action(GTK_APPLICATION(app),"app.speaktime", time_accels);
 	
 	gtk_application_set_accels_for_action(GTK_APPLICATION(app),"app.info", info_accels);
@@ -5364,8 +5177,11 @@ static void activate (GtkApplication *app, gpointer  user_data)
 	if(m_talk && m_talk_at_startup) {
 		speak_events();		
 	}
+		
+	gtk_window_maximize(GTK_WINDOW(window));
 	
 	gtk_window_set_child(GTK_WINDOW(window),GTK_WIDGET(calendar));
+    
 	gtk_window_present (GTK_WINDOW (window));    //use present not show with gtk4	
 	
 }
