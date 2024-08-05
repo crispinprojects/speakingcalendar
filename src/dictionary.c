@@ -16053,7 +16053,11 @@ pair_t table[] = {
 {"eight","eh-iy iy-t"},
 {"eighteen","eh-iy iy-t t-iy iy-iy iy-n n-n"},
 {"eighteenth","eh-iy iy-t t-iy iy-n n-th"},
-{"eighth","eh-eh eh-iy iy-t t-t t-th th-th"},
+
+//{"eighth","eh-eh eh-iy iy-t t-t t-th th-th"},
+
+{"eighth","eh-iy iy-t t-th th-pau"},
+
 //s","eh-iy iy-th th-s"},
 {"eighths","eh-iy iy-t t-th th-s"},
 {"eighties","eh-iy iy-t t-iy iy-z"},
@@ -16178,7 +16182,13 @@ pair_t table[] = {
 {"elevator","eh-l l-ah ah-v v-eh eh-iy iy-t t-uh uh-r"},
 {"elevators","eh-l l-ah ah-v v-eh eh-iy iy-t t-uh uh-r r-z"},
 {"eleven","ih-l l-eh eh-v v-ah ah-n"},
-{"eleventh","ih-l l-eh eh-v v-ah ah-n n-th"},
+
+//{"eleventh","ih-l l-eh eh-v v-ah ah-n n-th th_pau"},
+{"eleventh","ih-l l-eh eh-v v-ah ah-n n-th th_th th_pau"},
+
+//{"eleventh","ih-l l-eh eh-v v-ah ah-n n-th th_hh hh_ah ah_pau"},
+
+
 {"elf","eh-l l-f"},
 {"elfin","eh-l l-f f-ih ih-n"},
 {"elfinhart","eh-l l-f f-ih ih-n n-hh hh-aa aa-r r-t"},
@@ -19933,7 +19943,9 @@ pair_t table[] = {
 {"fourscore","f-ao ao-r r-s s-k k-ao ao-r"},
 {"fourteen","f-ao ao-r r-t t-iy iy-iy iy-n n-n"},
 {"fourteenth","f-ao ao-r r-t t-iy iy-n n-th"},
-{"fourth","f-ao ao-r r-th"},
+
+{"fourth","f-ao ao-r r-th th-th"},
+
 {"fourthly","f-ao ao-r r-th th-l l-iy"},
 {"fourths","f-ao ao-r r-th th-s"},
 {"fowl","f-aa aa-uh uh-l"},
@@ -20168,7 +20180,8 @@ pair_t table[] = {
 {"frictionless","f-r r-ih ih-k k-sh sh-ah ah-n n-l l-ah ah-s"},
 {"frictions","f-r r-ih ih-k k-sh sh-ah ah-n n-z"},
 
-{"friday","f-r r-aa aa-iy iy-d d-eh eh-iy"},
+{"friday","f-r r-aa aa-iy iy-d d-eh eh-iy iy_pau"},
+
 {"fridays","f-r r-aa aa-iy iy-d d-iy iy-z"},
 {"fried","f-r r-aa aa-iy iy-d"},
 {"frieda","f-r r-iy iy-d d-ah"},
@@ -32603,7 +32616,7 @@ pair_t table[] = {
 {"monboddo","m-aa aa-n n-b b-aa aa-d d-ao ao-uh"},
 
 //{"day","d-eh eh-iy"},
-{"monday","m-m m-ah ah-n n-n n-d d-d d-eh ey-iy"},
+{"monday","m-m m-ah ah-n n-n n-d d-d d-eh ey-iy iy_pau"},
 
 //{"mun","m-ah ah-n"},
 //{"monday","m-ao ao-uh uh-n n-d d-iy"},
@@ -43758,7 +43771,7 @@ pair_t table[] = {
 {"saturating","s-ae ae-ch ch-uh uh-r r-eh eh-iy iy-t t-ih ih-ng"},
 {"saturation","s-ae ae-ch ch-uh uh-r r-eh eh-iy iy-sh sh-ah ah-n"},
 
-{"saturday","s-ae ae-t t-uh uh-r r-d d-eh eh-iy"},
+{"saturday","s-ae ae-t t-uh uh-r r-d d-eh eh-iy iy_pau"},
 
 {"saturdays","s-ae ae-t t-uh uh-r r-d d-iy iy-z"},
 {"saturn","s-ae ae-t t-uh uh-r r-n"},
@@ -44832,7 +44845,31 @@ pair_t table[] = {
 {"sevenfold","s-eh eh-v v-ah ah-n n-f f-ao ao-uh uh-l l-d"},
 {"sevens","s-eh eh-v v-ah ah-n n-z"},
 {"seventeen","s-eh eh-v v-ah ah-n n-t t-iy iy-iy iy-n n-n"},
-{"seventeenth","s-eh eh-v v-ah ah-n n-t t-iy iy-n n-th"},
+
+//{"seventeenth","s-eh eh-v v-ah ah-n n-t t-iy iy-n n-th th-th th-pau"},
+
+//{"seventeenth","s-eh eh-v v-ah ah-n n-t t-iy iy_pau pau_iy iy-n n-th th-hh"},
+//{"seventeenth","s-eh eh-v v-ah ah-n n-t t-iy iy-n n_pau pau_n n-th th-hh"},
+
+//{"eleventh","ih-l l-eh eh-v v-ah ah-n n-th th_hh hh_ah ah_pau"},
+
+//{"seventeenth","s-eh eh-v v-ah ah-n n-t t-iy iy_th th_iy iy-n n_pau pau_n n_ah ah_n n-th th_hh hh_ah ah_pau"},
+
+//{"seventeenth","s-eh eh-v v-ah ah-n n-t t-iy iy-iy iy-th th-n n-pau pau-n n-ah ah-n n-th th-hh hh-ah ah-pau"},
+
+{"seventeenth","s-eh eh-v v-ah ah-n n-t t-iy iy-iy iy-th th-n n-pau pau-n n-th th-hh hh-ah ah-pau"},
+
+//{"seventeenth","s-eh eh-v v-ah ah-n n-t t-iy iy-iy iy-th th-n n-pau pau-n n-th th-th th-pau"},
+
+
+//{"seventeenth","s-eh eh-v v-ah ah-n n-t t-iy iy_pau pau_iy iy-n n_pau pau_n n-th th_hh hh_ah ah_pau"},
+
+//{"seventeenth","s-eh eh-v v-ah ah-n n-t t-iy iy_pau pau_iy iy-n n_pau pau_n n-th th_th th_hh hh_ah ah_pau"},
+
+//{"seventeenth","s-eh eh-v v-ah ah-n n-t t-iy iy-n n-th th-uh uh-pau"},
+
+//{"seventeenth","s-eh eh-v v-ah ah-n n-t t-eh eh-iy iy-n n-n n-th th-pau"},
+
 {"seventh","s-eh eh-v v-ah ah-n n-th"},
 {"seventieth","s-eh eh-v v-ah ah-n n-t t-iy iy-ih ih-th"},
 {"seventy","s-eh eh-v v-ah ah-n n-t t-iy"},
@@ -48849,7 +48886,9 @@ pair_t table[] = {
 {"sunbury","s-ah ah-n n-b b-eh eh-r r-iy"},
 {"sunda","s-ah ah-n n-d d-ah"},
 
-{"sunday","s-s s-ah ah-n n-d d-eh d-eh eh-iy"},
+//{"sunday","s-s s-ah ah-n n-n n-d d-eh d-eh eh-iy"},
+
+{"sunday","s-ah ah-n n-n n-d d-eh eh-iy iy_pau"},
 
 {"sundays","s-ah ah-n n-d d-eh eh-iy iy-z"},
 {"sunder","s-ah ah-n n-d d-uh uh-r"},
@@ -50648,7 +50687,7 @@ pair_t table[] = {
 {"thrush","th-r r-ah ah-sh"},
 {"thrushes","th-r r-ah ah-sh sh-ah ah-z"},
 
-{"thrusscross","th-r r-ah ah-s s-k k-r r-ao ao-s"},
+{"thrusscross","th-r r-ah ah-s s-k k-r r-ao ao-s s_pau"},
 
 {"thrust","th-r r-ah ah-s s-t"},
 
@@ -50695,7 +50734,8 @@ pair_t table[] = {
 {"thuringians","th-uh uh-r r-ih ih-ng ng-g g-iy iy-ah ah-n n-z"},
 
 
-{"thursday","th-uh uh-r r-z z-d d-eh d-eh eh-iy"},
+//{"thursday","th-uh uh-r r-z z-d d-eh d-eh eh-iy iy_pau"},
+{"thursday","th-uh uh-r r-z z-d d-eh eh-iy iy_pau"},
 
 {"thursdays","th-uh uh-r r-z z-d d-eh eh-iy iy-z"},
 {"thurston","th-uh uh-r r-s s-t t-ah ah-n"},
@@ -51992,7 +52032,7 @@ pair_t table[] = {
 
 //{"day","d-eh eh-iy"},
 
-{"tuesday","t-uw uw-z z-d d-eh eh-iy"},
+{"tuesday","t-uw uw-z z-d d-eh eh-iy iy_pau"},
 
 {"tuesdays","t-uw uw-z z-d d-eh eh-iy iy-z"},
 {"tuft","t-ah ah-f f-t"},
@@ -55234,7 +55274,8 @@ pair_t table[] = {
 {"wedlock","w-eh eh-d d-l l-aa aa-k"},
 
 //{"day","d-eh eh-iy"},
-{"wednesday","w-eh eh-n n-z z-d d-eh eh-iy"},
+//{"wednesday","w-eh eh-n n-z z-d d-eh eh-iy"},
+{"wednesday","w-eh eh-n n-z z-d d-eh eh-iy iy_pau"},
 //s","w-eh eh-n n-z z-d d-iy iy-z"},
 {"wednesdays","w-eh eh-n n-z z-d d-eh eh-iy iy-z"},
 {"wee","w-iy"},

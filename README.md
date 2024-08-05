@@ -60,11 +60,9 @@ If you have used a calendar application before then using Talk Calendar will be 
 * Events are sorted by start time when displayed
 * Check the "Is Yearly" check box if the event repeats every year (e.g. birthdays)
 
-Screenshots of the new event dialog are shown below.
+A screenshot of the new event dialog is shown below.
 
 ![](talkcalendar-new-event.png)
-
-![](talkcalendar-new-event2.png)
 
 ### Display and Speak Events
 
@@ -78,7 +76,7 @@ Screenshots of the new event dialog are shown below.
 
 ### Searching For Events
 
-* Select "Event->Search from the hamburger menu .
+* Select "Search->Search For Events" from the hamburger menu .
 * Enter a search term or location.
 
 ![](talkcalendar-search.png)
@@ -87,7 +85,7 @@ Screenshots of the new event dialog are shown below.
 
 ### Preferences
 
-* Select Calendar->Preferences from the hamburger menu or use Ctrl+Alt+p to invoke the preferences window (see screenshot below).
+* Select "Edit->Preferences" from the hamburger menu or use Ctrl+Alt+p to invoke the preferences window (see screenshot below).
 * Change options as required.
 
 ![](talkcalendar-preferences.png)
@@ -102,7 +100,7 @@ A list of HTML colour names can be found [here](https://www.w3schools.com/tags/r
 
 ### Information
 
-* Select "Information"  from the hamburger menu or press F1
+* Select "Help->Information"  from the hamburger menu or press F1
 * the information window shows the keyboard shoutcuts, how many records are in the database, the Sqlite version being used on the system, the desktop font and scale factor.
 
 ![](talkcalendar-information.png)

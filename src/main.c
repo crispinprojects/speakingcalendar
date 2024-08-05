@@ -2966,7 +2966,7 @@ static void callbk_about(GSimpleAction * action, GVariant *parameter, gpointer u
 	gtk_widget_set_size_request(about_dialog, 200,200);
     gtk_window_set_modal(GTK_WINDOW(about_dialog),TRUE);
 	gtk_about_dialog_set_program_name(GTK_ABOUT_DIALOG(about_dialog), "Talk Calendar");
-	gtk_about_dialog_set_version (GTK_ABOUT_DIALOG(about_dialog), "Version 0.2.2");
+	gtk_about_dialog_set_version (GTK_ABOUT_DIALOG(about_dialog), "Version 0.2.3");
 	gtk_about_dialog_set_copyright(GTK_ABOUT_DIALOG(about_dialog),"Copyright © 2024");
 	gtk_about_dialog_set_comments(GTK_ABOUT_DIALOG(about_dialog),"Talking calendar");
 	gtk_about_dialog_set_license_type (GTK_ABOUT_DIALOG(about_dialog), GTK_LICENSE_LGPL_2_1);
@@ -4710,7 +4710,7 @@ static void callbk_preferences(GSimpleAction* action, GVariant *parameter,gpoint
 	//sample rate
 	GtkAdjustment *adjustment_talk_rate;
 	// value,lower,upper,step_increment,page_increment,page_size
-	adjustment_talk_rate = gtk_adjustment_new(17000.00, 10000.00, 20000.00, 500.0, 10.0, 0.0);
+	adjustment_talk_rate = gtk_adjustment_new(17000.00, 12000.00, 24000.00, 500.0, 10.0, 0.0);
 	// start time spin
 	label_talk_rate = gtk_label_new("Talk Rate ");
 	spin_button_talk_rate = gtk_spin_button_new(adjustment_talk_rate, 16000, 0);
@@ -4936,6 +4936,7 @@ static void callbk_info(GSimpleAction *action, GVariant *parameter,  gpointer us
 
 static void callbk_quit(GSimpleAction * action,	G_GNUC_UNUSED GVariant *parameter, gpointer user_data)
 {
+	config_write();
 	g_application_quit(G_APPLICATION(user_data));		
 }
 
@@ -4972,56 +4973,85 @@ static void window_header(GtkWindow *window)
   //create headerbar buttons
   button_new_event = gtk_button_new_with_label ("New Event");
   g_signal_connect (button_new_event, "clicked", G_CALLBACK (callbk_new_event), window);
-     
   
   gtk_header_bar_pack_start(GTK_HEADER_BAR (header), button_new_event);
   
-  
-	// Menu model
-	GMenu *menu, *section;
-	menu = g_menu_new();
-			
-	section = g_menu_new ();
-	g_menu_append (section, "Import", "app.import"); 	
-	g_menu_append_section (menu, NULL, G_MENU_MODEL (section));
-	g_object_unref (section);
-	
-	section = g_menu_new ();
-	g_menu_append (section, "Export", "app.export"); 	
-	g_menu_append_section (menu, NULL, G_MENU_MODEL (section));
-	g_object_unref (section);
-	
-	section = g_menu_new ();
-	g_menu_append (section, "Delete All", "app.deleteall"); 	
-	g_menu_append_section (menu, NULL, G_MENU_MODEL (section));
-	g_object_unref (section);
-	
-	section = g_menu_new ();
-	g_menu_append (section, "Search", "app.search"); 	
-	g_menu_append_section (menu, NULL, G_MENU_MODEL (section));
-	g_object_unref (section);
-	
-	section = g_menu_new();
-	g_menu_append(section, "Preferences", "app.preferences");
-	g_menu_append_section(menu, NULL, G_MENU_MODEL(section));
-	g_object_unref(section);
-	
-	section = g_menu_new ();
-	g_menu_append (section, "Information", "app.info"); //show app info
-	g_menu_append_section (menu, NULL, G_MENU_MODEL (section));
-	g_object_unref (section);
+    GMenu *menu;
+    GMenu *file_menu;
+    GMenu *edit_menu; 
+    GMenu *search_menu;    
+    GMenu *calendar_menu;
+    GMenu *help_menu;
+    GMenuItem *item;
 
-	section = g_menu_new ();
-	g_menu_append (section, "About", "app.about");
-	g_menu_append_section (menu, NULL, G_MENU_MODEL (section));
-	g_object_unref (section);
-	   
-    menu_button = gtk_menu_button_new();
+	menu =g_menu_new();
+	file_menu =g_menu_new();
+	edit_menu =g_menu_new();
+	search_menu =g_menu_new();	
+	calendar_menu =g_menu_new();
+	help_menu =g_menu_new();
+	
+	//File items	
+	item =g_menu_item_new("New Event", "app.newevent");
+	g_menu_append_item(file_menu,item);
+	g_object_unref(item);		
+	item =g_menu_item_new("Export", "app.export");
+	g_menu_append_item(file_menu,item);
+	g_object_unref(item);	
+	item =g_menu_item_new("Import", "app.import");
+	g_menu_append_item(file_menu,item);
+	g_object_unref(item);	
+	item =g_menu_item_new("Delete All Events", "app.deleteall");
+	g_menu_append_item(file_menu,item);
+	g_object_unref(item);	
+	item =g_menu_item_new("Quit", "app.quit");
+	g_menu_append_item(file_menu,item);
+	g_object_unref(item);
+	
+	//Edit items
+	item =g_menu_item_new("Preferences", "app.preferences");
+	g_menu_append_item(edit_menu,item);
+	g_object_unref(item);
+	
+	//Search
+	item =g_menu_item_new("Search For Events", "app.search");
+	g_menu_append_item(search_menu,item);
+	g_object_unref(item);
+	
+	//Calendar items
+	item =g_menu_item_new("Go To Today", "app.home");
+	g_menu_append_item(calendar_menu,item);
+	g_object_unref(item);	
+	
+	item =g_menu_item_new("Speak Time", "app.speaktime");
+	g_menu_append_item(calendar_menu,item);
+	g_object_unref(item);
+		
+	//Help items
+	item =g_menu_item_new("Information", "app.info");
+	g_menu_append_item(help_menu,item);
+	g_object_unref(item);	
+	item =g_menu_item_new("About", "app.about");
+	g_menu_append_item(help_menu,item);
+	g_object_unref(item);
+	
+	g_menu_append_submenu(menu, "File", G_MENU_MODEL(file_menu));
+    g_object_unref(file_menu);
+    g_menu_append_submenu(menu, "Edit", G_MENU_MODEL(edit_menu));
+    g_object_unref(edit_menu); 
+    g_menu_append_submenu(menu, "Search", G_MENU_MODEL(search_menu));
+    g_object_unref(search_menu);      
+    g_menu_append_submenu(menu, "Calendar", G_MENU_MODEL(calendar_menu));
+    g_object_unref(calendar_menu);
+    g_menu_append_submenu(menu, "Help", G_MENU_MODEL(help_menu));
+    g_object_unref(help_menu);
+	
+	menu_button = gtk_menu_button_new();
 	gtk_widget_set_tooltip_text(menu_button, "Menu");
 	gtk_menu_button_set_icon_name (GTK_MENU_BUTTON (menu_button),"open-menu-symbolic"); 		
 	gtk_menu_button_set_menu_model (GTK_MENU_BUTTON (menu_button), G_MENU_MODEL(menu));
 	gtk_header_bar_pack_end(GTK_HEADER_BAR (header), menu_button);
-  
+	  
 }
 
 
@@ -5052,6 +5082,7 @@ static void activate (GtkApplication *app, gpointer  user_data)
 	const gchar *time_accels[2] = {"t", NULL };
 	const gchar *info_accels[2] = {"F1", NULL };	
 	const gchar * preferences_accels[2] = { "<Ctrl><Alt>P", NULL };
+	const gchar * quit_accels[2] = { "<Ctrl>Q", NULL };
 		
 	calendar = custom_calendar_new();
 	
@@ -5173,6 +5204,8 @@ static void activate (GtkApplication *app, gpointer  user_data)
 	
 	gtk_application_set_accels_for_action(GTK_APPLICATION(app),"app.info", info_accels);
 	gtk_application_set_accels_for_action(GTK_APPLICATION(app),"app.preferences", preferences_accels);
+	gtk_application_set_accels_for_action(GTK_APPLICATION(app),"app.quit", quit_accels);
+	
 	
 	if(m_talk && m_talk_at_startup) {
 		speak_events();		
