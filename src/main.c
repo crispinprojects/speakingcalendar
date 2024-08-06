@@ -930,14 +930,12 @@ char* get_public_holiday_str(int day)
 
 	if (m_start_month==12 && day==25) {
 	//christmas day
-	return "Christmas Day";
-	//public_holiday_str =g_strconcat(public_holiday_str," Christmas Day ", NULL);
+	return "Christmas Day";	
 	}
 
 	if (m_start_month==12 && day==26) {
 	//boxing day
-	return "Boxing Day";
-	//public_holiday_str =g_strconcat(public_holiday_str," Boxing Day ", NULL);
+	return "Boxing Day";	
 	}
 
 	if (m_start_month == 5) {
@@ -953,8 +951,7 @@ char* get_public_holiday_str(int day)
 
      if( day==may_day) 
      return "Public Holiday "; //may bank holiday
-     //public_holiday_str =g_strconcat(public_holiday_str," Bank Holiday ", NULL);
-
+    
      int days_in_may =g_date_get_days_in_month (m_start_month, m_start_year);
 
      int plus_days = 0;
@@ -973,11 +970,6 @@ char* get_public_holiday_str(int day)
 
 	} //m_start_month ==5 (May)
 	
-	//if (m_start_month==2 && day==14) {
-	////valentine day
-	 //return "Valentine Day";
-	////public_holiday_str =g_strconcat(public_holiday_str," Valentine Day ", NULL);
-	//}
 		
 	GDate *easter_date =calculate_easter(m_start_year);
 	int easter_day = g_date_get_day(easter_date);
@@ -986,8 +978,7 @@ char* get_public_holiday_str(int day)
 	if(m_start_month==easter_month && day == easter_day)
 	{
 	//easter day
-	return "Easter Day";
-	//public_holiday_str =g_strconcat(public_holiday_str," Easter Day", NULL);
+	return "Easter Day";	
 	}
 
 	g_date_subtract_days(easter_date,2);
@@ -997,8 +988,7 @@ char* get_public_holiday_str(int day)
 	if(m_start_month==easter_friday_month && day ==easter_friday)
 	{
 	//easter friday
-	return "Easter Friday";
-	//public_holiday_str =g_strconcat(public_holiday_str,"Easter Friday ", NULL);
+	return "Easter Friday";	
 	}
 
 	g_date_add_days(easter_date,3);
@@ -1008,8 +998,7 @@ char* get_public_holiday_str(int day)
 	if(m_start_month==easter_monday_month && day ==easter_monday)
 	{
 	//easter monday
-	return "Easter Monday";
-	//public_holiday_str =g_strconcat(public_holiday_str," Easter Monday", NULL);
+	return "Easter Monday";	
 	}
 			
 	if (m_start_month == 8) {
@@ -1038,8 +1027,7 @@ char* get_public_holiday_str(int day)
      int august_bank_day = g_date_get_day(august_bank);
 
      if (g_date_valid_dmy (august_bank_day,m_start_month,m_start_year) && day ==august_bank_day)
-     return "Public Holiday";   //august bank holiday
-     //public_holiday_str =g_strconcat(public_holiday_str," Bank Holiday ", NULL);
+     return "Public Holiday";   //august bank holiday   
 
     } //m_start_month==8
 
@@ -4946,7 +4934,7 @@ static void callbk_set_preferences(GtkButton *button, gpointer  user_data)
 static void callbk_preferences(GSimpleAction* action, GVariant *parameter,gpointer user_data)
 {	
 	GtkWidget *window =user_data;
-
+	
 	GtkWidget *dialog;
 	GtkWidget *grid;
 	
@@ -5175,6 +5163,7 @@ static void callbk_preferences(GSimpleAction* action, GVariant *parameter,gpoint
 static void callbk_info(GSimpleAction *action, GVariant *parameter,  gpointer user_data)
 {	
 	GtkWidget *window =user_data;
+	GtkWidget *calendar =g_object_get_data(G_OBJECT(window), "window-calendar-key");
 	GtkWidget *dialog;
 	GtkWidget *box;
 	gint response;
@@ -5186,6 +5175,7 @@ static void callbk_info(GSimpleAction *action, GVariant *parameter,  gpointer us
 	GtkWidget *label_preferences_shortcut;
 	GtkWidget *label_info_shortcut;
 	GtkWidget *label_time_shortcut;
+	GtkWidget *label_quit_shortcut;
 		
 	GtkWidget *label_record_info;
 	GtkWidget *label_record_number;
@@ -5221,8 +5211,9 @@ static void callbk_info(GSimpleAction *action, GVariant *parameter,  gpointer us
 	
 	label_preferences_shortcut=gtk_label_new("Ctrl+Alt+P: Preferences");
 	label_info_shortcut=gtk_label_new("F1: Information");
-	//label_speak_shortcut=gtk_label_new("Spacebar: Speak");
 	label_time_shortcut=gtk_label_new("t: Speak time");
+	label_quit_shortcut=gtk_label_new("Ctrl+q: Quit");
+
 		
 	label_record_info=gtk_label_new("Storage");
 	gtk_label_set_attributes (GTK_LABEL (label_record_info), attrs);
@@ -5257,10 +5248,9 @@ static void callbk_info(GSimpleAction *action, GVariant *parameter,  gpointer us
 	gtk_box_append(GTK_BOX(box),label_home_shortcut);
 	gtk_box_append(GTK_BOX(box),label_newevent_shortcut);	
 	gtk_box_append(GTK_BOX(box),label_preferences_shortcut);
-	gtk_box_append(GTK_BOX(box),label_info_shortcut);
-	
-	//gtk_box_append(GTK_BOX(box), label_speak_shortcut);	
+	gtk_box_append(GTK_BOX(box),label_info_shortcut);	
 	gtk_box_append(GTK_BOX(box), label_time_shortcut);
+	gtk_box_append(GTK_BOX(box), label_quit_shortcut);	
 		
 	gtk_box_append(GTK_BOX(box), label_record_info);
 	gtk_box_append(GTK_BOX(box), label_record_number);
@@ -5271,7 +5261,10 @@ static void callbk_info(GSimpleAction *action, GVariant *parameter,  gpointer us
 	gtk_box_append(GTK_BOX(box),label_gnome_text_scale);
 		
 	pango_attr_list_unref(attrs);
+	
 	gtk_window_present (GTK_WINDOW (dialog));
+	
+	gtk_window_set_focus(GTK_WINDOW(window), GTK_WIDGET(calendar));
 	
 }
 //=====================================================================
@@ -5412,6 +5405,7 @@ static void activate (GtkApplication *app, gpointer  user_data)
 	gtk_window_set_title (GTK_WINDOW (window), "Talk Calendar "); 		
 	g_signal_connect (window, "destroy", G_CALLBACK (callbk_shutdown), NULL);
 	window_header(GTK_WINDOW(window));
+	
 		
 	//Keyboard accelerators
 	const gchar *home_accels[2] = { "Home", NULL };
@@ -5551,6 +5545,8 @@ static void activate (GtkApplication *app, gpointer  user_data)
 	gtk_window_maximize(GTK_WINDOW(window));
 	
 	gtk_window_set_child(GTK_WINDOW(window),GTK_WIDGET(calendar));
+	
+	gtk_window_set_focus(GTK_WINDOW(window), GTK_WIDGET(calendar));
     
 	gtk_window_present (GTK_WINDOW (window));    //use present not show with gtk4	
 	

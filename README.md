@@ -9,7 +9,7 @@ It has been developed using C and [GTK4](https://docs.gtk.org/gtk4/). A screensh
 ## Core Features
 
 * built with C and GTK 4.14.4 (Fedora 40)
-* month view calendar 
+* month-view calendar 
 * event details, location, start and end time can be entered and edited
 * export and import iCalendar files (backup and restore)
 * Sqlite3 database used to store events
@@ -17,7 +17,7 @@ It has been developed using C and [GTK4](https://docs.gtk.org/gtk4/). A screensh
 
 ### Local Install Using Prebuilt Binary
 
-A 64-bit prebuilt binary for the latest version of Talk Calendar is available and can be downloaded from the binary directory. This has been built using GTK 4.14 and tested with both Fedora 40 and Ubuntu 24.04 LTS. 
+A 64-bit prebuilt binary for the latest version of Talk Calendar is available and can be downloaded from the binary directory. This has been built using GTK 4.14 and tested with Fedora 40 and Ubuntu 24.04 LTS. 
 
 Extract the downloaded file which contains the Talk Calendar executable. Assuming that the GTK4 base libraries are installed the Talk Calendar binary can be run from the terminal using:
 
@@ -27,11 +27,13 @@ Extract the downloaded file which contains the Talk Calendar executable. Assumin
 
 or double click on the "talkcalendar" file. Talk Calendar must have executable permissions to execute. Right click it and choose Properties->Permissions and tick allow "Executable as Program".
 
-To add Talk Calendar to the system menu modify the "talkcalendar.desktop" template file provided in the download which is shown below.  Use your own user name and the  directory location for the Talk Calendar executable. The "Path" variable  defines where the Talk Calendar executable and  calendar database are located.
+To add Talk Calendar to the system menu modify the "talkcalendar.desktop" entry file provided in the download. A desktop entry for an application, or .desktop file, provides metadata about an application such as its name, icon, command to execute and other properties. For user-specific applications desktop files can be located locally in the ~/.local/share/applications/ directory. Local user entries take precedence over system entries. 
+
+The "talkcalendar.desktop" file is shown below. You need to modify this using your own user name and directory locations. The Icon variable specifies the path to the icon file associated with application. The Exec variable defines the command to execute when launching an application. The Path variable tells the system where to look for the executable and in this case the calendar database. In a .desktop file, you need to use absolute and full paths.
 
 ```
 [Desktop Entry]
-Version=0.1.1
+Version=0.2.4
 Type=Application
 Name=Talk Calendar
 Comment=Talking calendar
@@ -39,11 +41,10 @@ Icon=/home/username/folder/talkcalendar/calendar.png
 Exec=/home/username/folder/talkcalendar/talkcalendar
 Path=/home/username/folder/talkcalendar
 X-GNOME-UsesNotifications=true
-Actions=
 Categories=Calendar;Office;
 ```
 
-Copy the "talkcalendar.desktop" file to the ***~/.local/share/applications/*** directory. Create the ~/.local/share/applications/ directory if it does not already exist. Files in ./local take precedence over those in system directories. This way of locally installing Talk Calendar should be universal across different Linux distributions.
+Copy your modified  "talkcalendar.desktop" file to the ***~/.local/share/applications/*** directory. Create the ~/.local/share/applications/ directory if it does not already exist. This way of locally installing Talk Calendar should be universal across different Linux distributions.
 
 ## Calendar Usage
 
@@ -66,13 +67,13 @@ A screenshot of the new event dialog is shown below.
 
 ### Display and Speak Events
 
-* Select a date on the month view calendar which has events and this will invoke the day events list view as shown below.
+* Select a date on the month-view calendar which has events and this will invoke the day events list view as shown below.
 
 ![](talkcalendar-day-events.png)
 
 * Event details are spoken when the day events list view is invoked (assuming that talking is selected in the preferences).
 
-* The day events list view allows individual events to be selected so that they can be edited or deleted (make sure you click on the event before selecting either the "Edit Event" or "Delete Event button)
+* The day events list view allows individual events to be selected so that they can be edited or deleted (make sure you click on the event before using either the "Edit Event" or "Delete Event button)
 
 ### Searching For Events
 
@@ -91,13 +92,14 @@ A screenshot of the new event dialog is shown below.
 ![](talkcalendar-preferences.png)
 
 * Use HTML colour names for changing the today and event day calendar colours.
-* Check "Show Public Holidays" to display the main UK public holidays on the Claendar using the public holiday HTML colour name.
+* Check "Show Public Holidays" to display the main UK public holidays on the Calendar using the public holiday HTML colour name.
 
-A list of HTML colour names can be found [here](https://www.w3schools.com/tags/ref_colornames.asp). Most of the major colour names have been implemented (see the HTML colour name list). 
+A list of HTML colour names can be found [here](https://www.w3schools.com/tags/ref_colornames.asp). Most of the major colour names have been implemented (see the HTML colour name list in the download). 
 
 ## Talking
 
-* Events are spoken when a date on the month view calendar is selected (assuming talk preferences checked).
+* Events are spoken when a date in the month-view calendar is selected (assuming talk preferences checked).
+* Talk Calendar will tell you the time if you press the "t" key
 
 ### Information
 
@@ -223,7 +225,7 @@ dpkg -l | grep libgtk*
 
 ## Code Notes
 
-I am now using Fedora 40 to develop the Talk Calendar application and not Debian 12 Bookworm. Fedora 40 uses GTK4.14 as opposed to the older GTK 4.8 used by Debian 12 Bookworm. This mean that the code will not compile with Debian 12 Bookworm without making changes to the source code. These include things like replacing "gtk_css_provider_load_from_string" with "gtk_css_provider_load_from_data" as the function gtk_css_provider_load_from_data was depreciated in GTK 4.12. A bigger change is that the GtkFileDialog API is no longer signal based. With GTK4.12 and above it is callback based which should match a GAsyncReadyCallback function (async/await). With Debian 12  (GTK4.8) I used the function "gtk_file_chooser_dialog_new" with a response callback but this approach has been depreciated.
+I am now using Fedora 40 to develop the Talk Calendar application and not Debian 12 Bookworm. Fedora 40 uses GTK4.14 as opposed to the older GTK 4.8 used by Debian 12 Bookworm. This mean that the code will not compile with Debian 12 Bookworm without making changes to the source code. These include things like replacing "gtk_css_provider_load_from_string" with "gtk_css_provider_load_from_data". The function gtk_css_provider_load_from_data was depreciated in GTK 4.12. A bigger change is that the GtkFileDialog API is no longer signal based. With GTK4.12 and above it is callback based which should match a GAsyncReadyCallback function (async/await). With Debian 12  (GTK4.8) I used the function "gtk_file_chooser_dialog_new" with a response callback but this approach has been depreciated.
 
 ## Speech Synthesis
 
@@ -243,7 +245,7 @@ Many open source and commercial speech synthesizers use the formant speech synth
 
 Consequently, as Talk Calendar is a hobby project I would rather just use my own diphone-based speech synthesizer to avoid any potential license compatibility issues with using eSpeak. Even with its limitations, my diphone speech synthesizer is functional and has been coded from scratch using C and GTK4. It is more versatile than my previous speech synthesizer which was based on concatenating and playing back pre-recorded English words. 
 
-I have also been working on a formant speech synthesizer details of which can be found [here](https://github.com/crispinprojects/formant-synthesizer) but the sound quality is very robotic with buzzing and humming background noise.
+I have also been working on a formant speech synthesizer the details of which can be found [here](https://github.com/crispinprojects/formant-synthesizer) but the sound quality is very robotic with buzzing and humming background noise.
 
 ## Versioning
 
