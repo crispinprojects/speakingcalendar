@@ -34,7 +34,7 @@ To add Talk Calendar to the system menu modify the "talkcalendar.desktop" templa
 Version=0.1.1
 Type=Application
 Name=Talk Calendar
-Comment=Talking calendar (espeak version)
+Comment=Talking calendar
 Icon=/home/username/folder/talkcalendar/calendar.png
 Exec=/home/username/folder/talkcalendar/talkcalendar
 Path=/home/username/folder/talkcalendar
@@ -91,6 +91,7 @@ A screenshot of the new event dialog is shown below.
 ![](talkcalendar-preferences.png)
 
 * Use HTML colour names for changing the today and event day calendar colours.
+* Check "Show Public Holidays" to display the main UK public holidays on the Claendar using the public holiday HTML colour name.
 
 A list of HTML colour names can be found [here](https://www.w3schools.com/tags/ref_colornames.asp). Most of the major colour names have been implemented (see the HTML colour name list). 
 

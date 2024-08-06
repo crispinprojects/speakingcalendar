@@ -16052,7 +16052,7 @@ pair_t table[] = {
 {"eigh","eh-iy"},
 {"eight","eh-iy iy-t"},
 {"eighteen","eh-iy iy-t t-iy iy-iy iy-n n-n"},
-{"eighteenth","eh-iy iy-t t-iy iy-n n-th"},
+{"eighteenth","eh-iy iy-t t-iy iy-n n-th th-pau"},
 
 //{"eighth","eh-eh eh-iy iy-t t-t t-th th-th"},
 
@@ -18822,8 +18822,8 @@ pair_t table[] = {
 {"fifes","f-aa aa-iy iy-f f-s"},
 {"fifeshire","f-aa aa-iy iy-f f-sh sh-aa aa-iy iy-r"},
 {"fifteen","f-ih ih-f f-t t-iy iy-iy iy-n n-n"},
-{"fifteenth","f-ih ih-f f-t t-iy iy-n n-th"},
-{"fifth","f-ih ih-f f-th"},
+{"fifteenth","f-ih ih-f f-t t-iy iy-n n-th th-pau"},
+{"fifth","f-ih ih-f f-th th-pau"},
 {"fifths","f-ih ih-f f-th th-s"},
 {"fifties","f-ih ih-f f-t t-iy iy-z"},
 {"fiftieth","f-ih ih-f f-t t-iy iy-ih ih-th"},
@@ -19942,9 +19942,10 @@ pair_t table[] = {
 {"fours","f-ao ao-r r-z"},
 {"fourscore","f-ao ao-r r-s s-k k-ao ao-r"},
 {"fourteen","f-ao ao-r r-t t-iy iy-iy iy-n n-n"},
-{"fourteenth","f-ao ao-r r-t t-iy iy-n n-th"},
 
-{"fourth","f-ao ao-r r-th th-th"},
+{"fourteenth","f-ao ao-r r-t t-iy iy-n n-th th-pau"},
+
+{"fourth","f-ao ao-r r-th th-th th-pau"},
 
 {"fourthly","f-ao ao-r r-th th-l l-iy"},
 {"fourths","f-ao ao-r r-th th-s"},
@@ -22022,7 +22023,7 @@ pair_t table[] = {
 {"greased","g-r r-iy iy-s s-t"},
 {"greasing","g-r r-iy iy-s s-ih ih-ng"},
 {"greasy","g-r r-iy iy-s s-iy"},
-{"great","g-r r-eh eh-iy iy-t"},
+{"great","g-r r-eh eh-iy iy-t t-t t-pau"},
 {"greatcoat","g-r r-eh eh-iy iy-t t-k k-ao ao-uh uh-t"},
 {"greatcoats","g-r r-eh eh-iy iy-t t-k k-ao ao-uh uh-t t-s"},
 {"greate","g-r r-eh eh-iy iy-t"},
@@ -23291,7 +23292,9 @@ pair_t table[] = {
 {"healers","hh-iy iy-l l-uh uh-r r-z"},
 {"healing","hh-iy iy-l l-ih ih-ng"},
 {"heals","hh-iy iy-l l-z"},
-{"health","hh-eh eh-l l-th"},
+{"health","hh-eh eh-l l-th th-pau"},
+
+//th-hh hh-ah
 {"healthful","hh-eh eh-l l-th th-f f-ah ah-l"},
 {"healthfulness","hh-eh eh-l l-th th-f f-ah ah-l l-n n-ah ah-s"},
 {"healthier","hh-eh eh-l l-th th-iy iy-uh uh-r"},
@@ -34038,14 +34041,16 @@ pair_t table[] = {
 {"ninepence","n-ih ih-n n-ah ah-p p-eh eh-n n-s"},
 {"niners","n-aa aa-iy iy-n n-uh uh-r r-z"},
 {"nineteen","n-aa aa-iy iy-n n-t t-iy iy-iy iy-n n-n"},
-{"nineteenth","n-aa aa-iy iy-n n-t t-iy iy-n n-th"},
+{"nineteenth","n-aa aa-iy iy-n n-t t-iy iy-n n-th th-pau"},
 {"nineties","n-aa aa-iy iy-n n-t t-iy iy-z"},
 {"ninetieth","n-aa aa-iy iy-n n-t t-iy iy-ih ih-th"},
 {"ninety","n-aa aa-iy iy-n n-t t-iy"},
 {"nineveh","n-ih ih-n n-ah ah-v v-ah"},
 {"ninian","n-ih ih-n n-iy iy-ah ah-n"},
 {"ninib","n-aa aa-iy iy-n n-ih ih-b"},
-{"ninth","n-aa aa-iy iy-n n-th"},
+
+{"ninth","n-aa aa-iy iy-n n-th th-pau"},
+
 {"ninths","n-aa aa-iy iy-n n-th th-s"},
 {"ninus","n-aa aa-iy iy-n n-ah ah-s"},
 {"niobrara","n-aa aa-iy iy-ao ao-uh uh-b b-r r-aa aa-r r-ah"},
@@ -34223,7 +34228,7 @@ pair_t table[] = {
 {"norrington","n-ao ao-r r-ih ih-ng ng-t t-ah ah-n"},
 {"norris","n-ao ao-r r-ih ih-s"},
 {"norroway","n-ao ao-r r-ao ao-uh uh-w w-eh eh-iy"},
-{"north","n-ao ao-r r-th"},
+{"north","n-ao ao-r r-th th-pau"},
 //s","n-ao ao-r r-th th-s"},
 {"northampton","n-ao ao-r r-th th-ae ae-m m-p p-t t-ah ah-n"},
 {"northamptonshire","n-ao ao-r r-th th-ae ae-m m-p p-t t-ah ah-n n-sh sh-aa aa-iy iy-r"},
@@ -43220,7 +43225,7 @@ pair_t table[] = {
 {"rumpus","r-ah ah-m m-p p-ah ah-s"},
 {"rums","r-ah ah-m m-z"},
 {"rumsey","r-ah ah-m m-z z-iy"},
-{"run","r-ah ah-n"},
+{"run","r-ah ah-n n-pau"},
 {"runabout","r-ah ah-n n-ah ah-b b-aa aa-uh uh-t"},
 {"runagate","r-ah ah-n n-ah ah-g g-eh eh-iy iy-t"},
 {"runaway","r-ah ah-n n-ah ah-w w-eh eh-iy"},
@@ -44846,32 +44851,36 @@ pair_t table[] = {
 {"sevens","s-eh eh-v v-ah ah-n n-z"},
 {"seventeen","s-eh eh-v v-ah ah-n n-t t-iy iy-iy iy-n n-n"},
 
-//{"seventeenth","s-eh eh-v v-ah ah-n n-t t-iy iy-n n-th th-th th-pau"},
+{"seventeenth","s-eh eh-v v-ah ah-n n-pau pau-t t-iy iy-iy iy-n n-n n-th th-pau"},
+//th-hh hh-ah ah-pau"
+//{"seventeenth","s-eh eh-v v-ah ah-n n-pau pau-n n-t t-iy iy-n n-th th-pau"},
+
+//{"seventeenth","s-eh eh-v v-ah ah-n n-pau pau-n n-t t-iy iy-n n-th th-hh"},
 
 //{"seventeenth","s-eh eh-v v-ah ah-n n-t t-iy iy_pau pau_iy iy-n n-th th-hh"},
 //{"seventeenth","s-eh eh-v v-ah ah-n n-t t-iy iy-n n_pau pau_n n-th th-hh"},
 
 //{"eleventh","ih-l l-eh eh-v v-ah ah-n n-th th_hh hh_ah ah_pau"},
 
-//{"seventeenth","s-eh eh-v v-ah ah-n n-t t-iy iy_th th_iy iy-n n_pau pau_n n_ah ah_n n-th th_hh hh_ah ah_pau"},
+//{"seventeenth","s-eh eh-v v-ah ah-n n-t t-iy iy_th th_iy iy-n n_pau pau_n n_ah ah_n n-th th-hh hh-ah ah-pau"},
 
-//{"seventeenth","s-eh eh-v v-ah ah-n n-t t-iy iy-iy iy-th th-n n-pau pau-n n-ah ah-n n-th th-hh hh-ah ah-pau"},
+//{"seventeenth","s-eh eh-v v-ah ah-n n-pau pau-n n-t t-iy iy-iy iy-n n-th th-hh hh-ah ah-pau"},
 
-{"seventeenth","s-eh eh-v v-ah ah-n n-t t-iy iy-iy iy-th th-n n-pau pau-n n-th th-hh hh-ah ah-pau"},
+//{"seventeenth","s-eh eh-v v-ah ah-n n-t t-iy iy-iy iy-th th-n n-pau pau-n n-th th-hh hh-ah ah-pau"},
 
 //{"seventeenth","s-eh eh-v v-ah ah-n n-t t-iy iy-iy iy-th th-n n-pau pau-n n-th th-th th-pau"},
 
 
-//{"seventeenth","s-eh eh-v v-ah ah-n n-t t-iy iy_pau pau_iy iy-n n_pau pau_n n-th th_hh hh_ah ah_pau"},
+//{"seventeenth","s-eh eh-v v-ah ah-n n-t t-iy iy_pau pau_iy iy-n n_pau pau_n n-th th-hh hh-ah ah-pau"},
 
-//{"seventeenth","s-eh eh-v v-ah ah-n n-t t-iy iy_pau pau_iy iy-n n_pau pau_n n-th th_th th_hh hh_ah ah_pau"},
+//{"seventeenth","s-eh eh-v v-ah ah-n n-t t-iy iy_pau pau_iy iy-n n_pau pau_n n-th th-th th-hh hh-ah ah-pau"},
 
 //{"seventeenth","s-eh eh-v v-ah ah-n n-t t-iy iy-n n-th th-uh uh-pau"},
 
 //{"seventeenth","s-eh eh-v v-ah ah-n n-t t-eh eh-iy iy-n n-n n-th th-pau"},
 
-{"seventh","s-eh eh-v v-ah ah-n n-th"},
-{"seventieth","s-eh eh-v v-ah ah-n n-t t-iy iy-ih ih-th"},
+{"seventh","s-eh eh-v v-ah ah-n n-th th-pau"},
+//{"seventieth","s-eh eh-v v-ah ah-n n-t t-iy iy-ih ih-th"},
 {"seventy","s-eh eh-v v-ah ah-n n-t t-iy"},
 {"sever","s-eh eh-v v-uh uh-r"},
 {"severa","s-eh eh-iy iy-v v-eh eh-r r-ah"},
@@ -45911,9 +45920,9 @@ pair_t table[] = {
 {"sixpences","s-ih ih-k k-s s-p p-ah ah-n n-s s-ih ih-z"},
 {"sixpenny","s-ih ih-k k-s s-p p-eh eh-n n-iy"},
 {"sixteen","s-ih ih-k k-s s-t t-iy iy-iy iy-n n-n"},
-{"sixteenth","s-ih ih-k k-s s-t t-iy iy-n n-th"},
+{"sixteenth","s-ih ih-k k-s s-t t-iy iy-n n-th th-pau"},
 {"sixteenths","s-ih ih-k k-s s-t t-iy iy-n n-th th-s"},
-{"sixth","s-ih ih-k k-s s-th"},
+{"sixth","s-ih ih-k k-s s-th th-pau"},
 {"sixths","s-ih ih-k k-s s-th th-s"},
 {"sixties","s-ih ih-k k-s s-t t-iy iy-z"},
 {"sixtus","s-ih ih-k k-s s-t t-ah ah-s"},
@@ -50507,7 +50516,7 @@ pair_t table[] = {
 {"thirsts","th-uh uh-r r-s s-t t-s"},
 {"thirsty","th-uh uh-r r-s s-t t-iy"},
 {"thirteen","th-uh uh-r r-t t-iy iy-iy iy-n n-n"},
-{"thirteenth","th-uh uh-r r-t t-iy iy-n n-th"},
+{"thirteenth","th-uh uh-r r-t t-iy iy-n n-th th-pau"},
 {"thirties","th-uh uh-r r-t t-iy iy-z"},
 {"thirtieth","th-uh uh-r r-t t-iy iy-ah ah-th"},
 {"thirty","th-uh uh-r r-d d-iy"},
@@ -50984,7 +50993,7 @@ pair_t table[] = {
 {"titus","t-aa aa-iy iy-t t-ah ah-s"},
 {"tiverton","t-ih ih-v v-t t-ah ah-n"},
 {"tlaloc","t-l l-ae ae-l l-aa aa-k"},
-{"to","t-uw uw_uw"},
+{"to","t-uw uw-pau"},
 //t","t-uw uw-t"},
 {"toad","t-ao ao-uh uh-d"},
 //s","t-ao ao-uh uh-d d-z"},
@@ -55983,7 +55992,9 @@ pair_t table[] = {
 {"wireless","w-aa aa-iy iy-r r-l l-ih ih-s"},
 {"wires","w-aa aa-iy iy-uh uh-r r-z"},
 {"wiring","w-aa aa-iy iy-r r-ih ih-ng"},
-{"wirral","w-uh uh-r r-ah ah-l"},	
+
+{"wirral","w-uh uh-r r-ah ah-l"},
+	
 {"wirthin","w-uh uh-r r-th th-ah ah-n"},
 {"wiry","w-ih ih-r r-iy"},
 {"wisbeach","w-ih ih-s s-b b-iy iy-ch"},
