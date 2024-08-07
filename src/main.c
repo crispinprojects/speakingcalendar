@@ -32,10 +32,9 @@
 #include <glib/gstdio.h>  //needed for g_mkdir
 #include <math.h>  //compile with -lm
 
-static GMutex lock; //talk thread
 
-#define CONFIG_DIRNAME "talkcalendar-024"
-#define CONFIG_FILENAME "talkcalendar-024"
+#define CONFIG_DIRNAME "talkcalendar-025"
+#define CONFIG_FILENAME "talkcalendar-025"
 static char * m_config_file = NULL;
 
 //Declarations
@@ -127,13 +126,6 @@ static char* replace_newlines(const char *text);
 
 static int first_day_of_month(int month, int year);
 
-
-//static char* get_cardinal_string(int number);
-//static char* get_day_number_ordinal_string(int day);
-//static char* get_month_string(int month);
-//static char* get_day_of_week(int day, int month, int year);
-
-
 //Search
 static void callbk_search(GSimpleAction *action, GVariant *parameter,  gpointer user_data);
 static void callbk_search_events(GtkButton *button, gpointer user_data);
@@ -146,7 +138,12 @@ static void callbk_speaktime(GSimpleAction * action, GVariant *parameter, gpoint
 
 unsigned char *rawcat(unsigned char *arrys[], unsigned int arry_size[], int arry_count);
 unsigned int get_merge_size(unsigned int sizes_arry[], int arry_size);
-static gpointer thread_playraw(gpointer user_data);
+
+static void play_audio_async (GTask *task,
+                          gpointer object,
+                          gpointer task_data,
+                          GCancellable *cancellable);
+
 
 GList* convert_date_to_weekday_diphone_list(int day, int month, int year);
 GList* convert_day_number_to_diphone_list(int day_number);
@@ -219,12 +216,12 @@ static int m_talk_description=1;
 //static int m_talk_overlap=0;
 static int m_talk_priority=0;
 
+static gchar* m_raw_file ="/tmp/textout.raw";
+
 static int m_upcoming_days=7;
 
 static int m_reset_preferences=0;
-
-static int m_talk_rate=15000;
-//static int m_talk_rate=16000;
+static int m_talk_rate=16000;
 
 
 
@@ -359,7 +356,7 @@ static void config_load_default()
 	m_talk_priority=0; 
 	m_talk_upcoming=0;
 	m_upcoming_days=7;
-	m_talk_rate=15000;	
+	m_talk_rate=16000;	
 	//calendar
 	m_12hour_format=1;
 	m_show_end_time=0;
@@ -385,7 +382,7 @@ static void config_read()
 	m_talk_priority=0; 
 	m_talk_upcoming=0;
 	m_upcoming_days=7;
-	m_talk_rate=15000;	
+	m_talk_rate=16000;	
 	//calendar
 	m_12hour_format=1;
 	m_show_end_time=0;
@@ -3276,7 +3273,7 @@ static void callbk_about(GSimpleAction * action, GVariant *parameter, gpointer u
 	gtk_widget_set_size_request(about_dialog, 200,200);
     gtk_window_set_modal(GTK_WINDOW(about_dialog),TRUE);
 	gtk_about_dialog_set_program_name(GTK_ABOUT_DIALOG(about_dialog), "Talk Calendar");
-	gtk_about_dialog_set_version (GTK_ABOUT_DIALOG(about_dialog), "Version 0.2.4");
+	gtk_about_dialog_set_version (GTK_ABOUT_DIALOG(about_dialog), "Version 0.2.5");
 	gtk_about_dialog_set_copyright(GTK_ABOUT_DIALOG(about_dialog),"Copyright © 2024");
 	gtk_about_dialog_set_comments(GTK_ABOUT_DIALOG(about_dialog),"Talking calendar");
 	gtk_about_dialog_set_license_type (GTK_ABOUT_DIALOG(about_dialog), GTK_LICENSE_LGPL_2_1);
@@ -3385,17 +3382,14 @@ static void speak_time(gint hour, gint min)
 	unsigned char *data = rawcat(diphone_arrays, diphone_arrays_sizes, diphone_number);	
 	unsigned int data_len = get_merge_size(diphone_arrays_sizes,diphone_number);	
     
-		
-	gchar* raw_file ="/tmp/talkout.raw";
-	FILE* f = fopen(raw_file, "w");
+	
+	FILE* f = fopen(m_raw_file, "w");
     fwrite(data, data_len, 1, f);
     fclose(f); 
     
-	GThread *thread_audio; 
-	g_mutex_lock (&lock);
-    thread_audio = g_thread_new(NULL, thread_playraw, raw_file);  
-	g_thread_unref (thread_audio);
-	
+	GTask* task = g_task_new(NULL, NULL, NULL, NULL);
+    g_task_run_in_thread(task, play_audio_async);     
+    g_object_unref(task);
 	//clean up 
 	g_list_free(diphone_list);	
 	free(data);	//prevent memory leak as malloc used
@@ -3422,29 +3416,30 @@ static void callbk_speak(GSimpleAction* action, GVariant *parameter,gpointer use
 	speak_events();	
 }
 
-//======================================================================
-// playraw (threading)
-//======================================================================
 
-static gpointer thread_playraw(gpointer user_data)
-{  
-    gchar *raw_file =user_data;       
+//======================================================================
+static void play_audio_async (GTask *task,
+                          gpointer object,
+                          gpointer task_data,
+                          GCancellable *cancellable)
+{
+   
+    //g_print("play audio async sleep\n");        
     gchar *m_sample_rate_str = g_strdup_printf("%i", m_talk_rate); 
     gchar *sample_rate_str ="-r ";    
     sample_rate_str= g_strconcat(sample_rate_str,m_sample_rate_str, NULL);     
     gchar * command_str ="aplay -c 1 -f S16_LE";
     //gchar * command_str ="aplay -c 1 -f U8";
-    command_str =g_strconcat(command_str," ",sample_rate_str, " ", raw_file, NULL); 
-    system(command_str);            
-    g_mutex_unlock (&lock); //thread mutex unlock 
-    return NULL; 
+    command_str =g_strconcat(command_str," ",sample_rate_str, " ", m_raw_file, NULL);     
+    system(command_str);    
+    //g_print("play audio async wake up\n");
+    g_task_return_boolean(task, TRUE);
 }
+
+
 //======================================================================
-
-
-//----------------------------------------------------------------------
 // Concatentation
-//---------------------------------------------------------------------
+//======================================================================
 
 unsigned char *rawcat(unsigned char *arrys[], unsigned int arry_size[], int arry_count) 
 {	
@@ -4328,17 +4323,14 @@ static void speak_events() {
 	//concatenate using raw cat
 	unsigned char *data = rawcat(diphone_arrays, diphone_arrays_sizes, diphone_number);	
 	unsigned int data_len = get_merge_size(diphone_arrays_sizes,diphone_number);	
-    
-		
-	gchar* raw_file ="/tmp/talkout.raw";
-	FILE* f = fopen(raw_file, "w");
+
+	FILE* f = fopen(m_raw_file, "w");
     fwrite(data, data_len, 1, f);
     fclose(f); 
     
-	GThread *thread_audio; 
-	g_mutex_lock (&lock);
-    thread_audio = g_thread_new(NULL, thread_playraw, raw_file);  
-	g_thread_unref (thread_audio);
+	GTask* task = g_task_new(NULL, NULL, NULL, NULL);
+    g_task_run_in_thread(task, play_audio_async);     
+    g_object_unref(task);
 	
 	//clean up 
 	g_list_free(diphone_list);	
@@ -5039,7 +5031,7 @@ static void callbk_preferences(GSimpleAction* action, GVariant *parameter,gpoint
 	//sample rate
 	GtkAdjustment *adjustment_talk_rate;
 	// value,lower,upper,step_increment,page_increment,page_size
-	adjustment_talk_rate = gtk_adjustment_new(17000.00, 12000.00, 24000.00, 500.0, 10.0, 0.0);
+	adjustment_talk_rate = gtk_adjustment_new(16000.00, 12000.00, 24000.00, 500.0, 10.0, 0.0);
 	// start time spin
 	label_talk_rate = gtk_label_new("Talk Rate ");
 	spin_button_talk_rate = gtk_spin_button_new(adjustment_talk_rate, 16000, 0);

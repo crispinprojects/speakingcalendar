@@ -33,7 +33,7 @@ The "talkcalendar.desktop" file is shown below. You need to modify this using yo
 
 ```
 [Desktop Entry]
-Version=0.2.4
+Version=0.2.5
 Type=Application
 Name=Talk Calendar
 Comment=Talking calendar
@@ -225,7 +225,7 @@ dpkg -l | grep libgtk*
 
 ## Code Notes
 
-I am now using Fedora 40 to develop the Talk Calendar application and not Debian 12 Bookworm. Fedora 40 uses GTK4.14 as opposed to the older GTK 4.8 used by Debian 12 Bookworm. This mean that the code will not compile with Debian 12 Bookworm without making changes to the source code. These include things like replacing "gtk_css_provider_load_from_string" with "gtk_css_provider_load_from_data". The function gtk_css_provider_load_from_data was depreciated in GTK 4.12. A bigger change is that the GtkFileDialog API is no longer signal based. With GTK4.12 and above it is callback based which should match a GAsyncReadyCallback function (async/await). With Debian 12  (GTK4.8) I used the function "gtk_file_chooser_dialog_new" with a response callback but this approach has been depreciated.
+I am now using Fedora 40 to develop the Talk Calendar application and not Debian 12 Bookworm. Fedora 40 uses GTK4.14 as opposed to the older GTK 4.8 used by Debian 12 Bookworm. This mean that the code will not compile with Debian 12 Bookworm without making changes to the source code. These include things like replacing "gtk_css_provider_load_from_string" with "gtk_css_provider_load_from_data". The function gtk_css_provider_load_from_data was depreciated in GTK 4.12. A bigger change is that the GtkFileDialog API is no longer signal based. With GTK4.12 and above it is callback based which should match a GAsyncReadyCallback function (async/await pattern). In computer programming, the async/await pattern is a syntactic feature that allows an asynchronous, non-blocking function to be structured in a way similar to an ordinary synchronous function. With Debian 12  (GTK4.8) I used the older function "gtk_file_chooser_dialog_new" with a response callback but this approach has been depreciated.
 
 ## Speech Synthesis
 
