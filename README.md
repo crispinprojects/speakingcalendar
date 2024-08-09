@@ -91,10 +91,10 @@ A screenshot of the new event dialog is shown below.
 
 ![](talkcalendar-preferences.png)
 
-* Use HTML colour names for changing the today and event day calendar colours.
-* Check "Show Public Holidays" to display the main UK public holidays on the Calendar using the public holiday HTML colour name.
+* Check "Show Public Holidays" to display the main UK public holidays on the Calendar.
+* Click on the colour buttons to change the today, event-day and public holiday calendar colours.
 
-A list of HTML colour names can be found [here](https://www.w3schools.com/tags/ref_colornames.asp). Most of the major colour names have been implemented (see the HTML colour name list in the download). 
+![](talkcalendar-colour-dialog.png)
 
 ## Talking
 
@@ -225,7 +225,13 @@ dpkg -l | grep libgtk*
 
 ## Code Notes
 
-I am now using Fedora 40 to develop the Talk Calendar application and not Debian 12 Bookworm. Fedora 40 uses GTK4.14 as opposed to the older GTK 4.8 used by Debian 12 Bookworm. This mean that the code will not compile with Debian 12 Bookworm without making changes to the source code. These include things like replacing "gtk_css_provider_load_from_string" with "gtk_css_provider_load_from_data". The function gtk_css_provider_load_from_data was depreciated in GTK 4.12. A bigger change is that the GtkFileDialog API is no longer signal based. With GTK4.12 and above it is callback based which should match a GAsyncReadyCallback function (async/await pattern). In computer programming, the async/await pattern is a syntactic feature that allows an asynchronous, non-blocking function to be structured in a way similar to an ordinary synchronous function. With Debian 12  (GTK4.8) I used the older function "gtk_file_chooser_dialog_new" with a response callback but this approach has been depreciated.
+I am now using Fedora 40 to develop the Talk Calendar application and not Debian 12 Bookworm. Fedora 40 uses GTK4.14 as opposed to the older GTK 4.8 used by Debian 12 Bookworm. This mean that the code will not compile with Debian 12 Bookworm without making changes to the source code. These include things like replacing "gtk_css_provider_load_from_string" with "gtk_css_provider_load_from_data". The function gtk_css_provider_load_from_data was depreciated in GTK 4.12. 
+
+A bigger change is that the GtkFileDialog API is no longer signal based. With GTK4.12 and above it is callback based which should match a GAsyncReadyCallback function (async/await pattern). In computer programming, the async/await pattern is a syntactic feature that allows an asynchronous, non-blocking function to be structured in a way similar to an ordinary synchronous function. With Debian 12  (GTK4.8) I used the older function "gtk_file_chooser_dialog_new" with a response callback but this approach has been depreciated.
+
+Code related to colours has been migrated to use GdkRGBA as GdkColor is being deprecated. The code for setting HTML CSS colour names has been completely removed in favour of the new GtkColorDialog API. A [GtkColorDialogButton](https://docs.gtk.org/gtk4/class.ColorDialogButton.html) is wrapped around a GtkColorDialog allowing a colour chooser dialog to be opened to change calendar colours.
+
+Playing audio using GThread and GMutex has been replaced with GTask (async/wait pattern). With GTK4 it appears that the preferred way to perform work in a thread is to use GTask. The code now uses [g_task_run_in_thread()](https://docs.gtk.org/gio/method.Task.run_in_thread.html) so that a play audio blocking operation is executed in a separate background thread. The function g_task_run_in_thread() turns a synchronous operation into an asynchronous one, by running it in a thread. Aparently, GTask maintains a thread pool that is based on the number of CPUs available (i.e.supports multiple CPU-cores). The basic GTask code structure is now working but will be updated as I learn more. I have now added a guard to prevent multiple audio clips being played at once.
 
 ## Speech Synthesis
 
