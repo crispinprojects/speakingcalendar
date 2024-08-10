@@ -5081,97 +5081,88 @@ void callbk_shutdown(GtkWindow *window, gint response_id, gpointer user_data)
 //======================================================================
 static void window_header(GtkWindow *window)
 {
-  //header
-  GtkWidget *header;
-  GtkWidget *button_header;	
-  GtkWidget *menu_button;
-  GtkWidget *label;
-  GtkWidget *button_new_event;
- 
+	//header
+	GtkWidget *header;
+	GtkWidget *button_header;	
+	GtkWidget *menu_button;
+	GtkWidget *label;
+	GtkWidget *button_new_event;
+	GtkWidget *popover;
+	
+	header = gtk_header_bar_new ();  
+	gtk_window_set_titlebar (GTK_WINDOW (window), header);
+	
+	//create headerbar buttons
+	button_new_event = gtk_button_new_with_label ("New Event");
+	g_signal_connect (button_new_event, "clicked", G_CALLBACK (callbk_new_event), window);
+	
+	gtk_header_bar_pack_start(GTK_HEADER_BAR (header), button_new_event);
   
-  header = gtk_header_bar_new ();  
-  gtk_window_set_titlebar (GTK_WINDOW (window), header);
-    
-  //create headerbar buttons
-  button_new_event = gtk_button_new_with_label ("New Event");
-  g_signal_connect (button_new_event, "clicked", G_CALLBACK (callbk_new_event), window);
-  
-  gtk_header_bar_pack_start(GTK_HEADER_BAR (header), button_new_event);
-  
-    GMenu *menu;
-    GMenu *file_menu;
-    GMenu *edit_menu; 
-    GMenu *search_menu;    
-    GMenu *calendar_menu;
-    GMenu *help_menu;
-    GMenuItem *item;
-
+	//create menu (model)
+	GMenu *menu;
+	GMenuItem *item;
 	menu =g_menu_new();
-	file_menu =g_menu_new();
-	edit_menu =g_menu_new();
-	search_menu =g_menu_new();	
-	calendar_menu =g_menu_new();
-	help_menu =g_menu_new();
 	
 	//File items	
 	item =g_menu_item_new("New Event", "app.newevent");
-	g_menu_append_item(file_menu,item);
+	g_menu_append_item(menu,item);
 	g_object_unref(item);		
-	item =g_menu_item_new("Export", "app.export");
-	g_menu_append_item(file_menu,item);
-	g_object_unref(item);	
+	
 	item =g_menu_item_new("Import", "app.import");
-	g_menu_append_item(file_menu,item);
-	g_object_unref(item);	
-	item =g_menu_item_new("Delete All Events", "app.deleteall");
-	g_menu_append_item(file_menu,item);
-	g_object_unref(item);	
-	item =g_menu_item_new("Quit", "app.quit");
-	g_menu_append_item(file_menu,item);
+	g_menu_append_item(menu,item);
 	g_object_unref(item);
 	
-	//Edit items
-	item =g_menu_item_new("Preferences", "app.preferences");
-	g_menu_append_item(edit_menu,item);
+	item =g_menu_item_new("Export", "app.export");
+	g_menu_append_item(menu,item);
 	g_object_unref(item);
+	
+	item =g_menu_item_new("Preferences", "app.preferences");
+	g_menu_append_item(menu,item);
+	g_object_unref(item);	
 	
 	//Search
 	item =g_menu_item_new("Search For Events", "app.search");
-	g_menu_append_item(search_menu,item);
+	g_menu_append_item(menu,item);
 	g_object_unref(item);
+		
+	item =g_menu_item_new("Delete All Events", "app.deleteall");
+	g_menu_append_item(menu,item);
+	g_object_unref(item);	
+	
 	
 	//Calendar items
 	item =g_menu_item_new("Go To Today", "app.home");
-	g_menu_append_item(calendar_menu,item);
+	g_menu_append_item(menu,item);
 	g_object_unref(item);	
 	
 	item =g_menu_item_new("Speak Time", "app.speaktime");
-	g_menu_append_item(calendar_menu,item);
+	g_menu_append_item(menu,item);
+	g_object_unref(item);
+	
+	
+	item =g_menu_item_new("Information", "app.info");
+	g_menu_append_item(menu,item);
+	g_object_unref(item);	
+	
+	item =g_menu_item_new("About", "app.about");
+	g_menu_append_item(menu,item);
+	g_object_unref(item);
+	
+	item =g_menu_item_new("Quit", "app.quit");
+	g_menu_append_item(menu,item);
 	g_object_unref(item);
 		
-	//Help items
-	item =g_menu_item_new("Information", "app.info");
-	g_menu_append_item(help_menu,item);
-	g_object_unref(item);	
-	item =g_menu_item_new("About", "app.about");
-	g_menu_append_item(help_menu,item);
-	g_object_unref(item);
+	//menu_button = gtk_menu_button_new();
+	//gtk_widget_set_tooltip_text(menu_button, "Menu");
+	//gtk_menu_button_set_icon_name (GTK_MENU_BUTTON (menu_button),"open-menu-symbolic"); 		
+	//gtk_menu_button_set_menu_model (GTK_MENU_BUTTON (menu_button), G_MENU_MODEL(menu));
 	
-	g_menu_append_submenu(menu, "File", G_MENU_MODEL(file_menu));
-    g_object_unref(file_menu);
-    g_menu_append_submenu(menu, "Edit", G_MENU_MODEL(edit_menu));
-    g_object_unref(edit_menu); 
-    g_menu_append_submenu(menu, "Search", G_MENU_MODEL(search_menu));
-    g_object_unref(search_menu);      
-    g_menu_append_submenu(menu, "Calendar", G_MENU_MODEL(calendar_menu));
-    g_object_unref(calendar_menu);
-    g_menu_append_submenu(menu, "Help", G_MENU_MODEL(help_menu));
-    g_object_unref(help_menu);
+	//Use GTK4 popover i.e. a bubble-like context popup now used to replace menus
+	menu_button = gtk_menu_button_new ();	
+	popover = gtk_popover_menu_new_from_model(G_MENU_MODEL(menu));
+	gtk_menu_button_set_popover(GTK_MENU_BUTTON (menu_button),popover);
+	gtk_popover_set_has_arrow(GTK_POPOVER(popover),TRUE);
 	
-	menu_button = gtk_menu_button_new();
-	gtk_widget_set_tooltip_text(menu_button, "Menu");
-	gtk_menu_button_set_icon_name (GTK_MENU_BUTTON (menu_button),"open-menu-symbolic"); 		
-	gtk_menu_button_set_menu_model (GTK_MENU_BUTTON (menu_button), G_MENU_MODEL(menu));
 	gtk_header_bar_pack_end(GTK_HEADER_BAR (header), menu_button);
 	  
 }
@@ -5192,8 +5183,7 @@ static void activate (GtkApplication *app, gpointer  user_data)
 	gtk_window_set_title (GTK_WINDOW (window), "Talk Calendar "); 		
 	g_signal_connect (window, "destroy", G_CALLBACK (callbk_shutdown), NULL);
 	window_header(GTK_WINDOW(window));
-	
-		
+			
 	//Keyboard accelerators
 	const gchar *home_accels[2] = { "Home", NULL };
 	const gchar *newevent_accels[2] = {"<Ctrl>n", NULL };	
@@ -5218,9 +5208,9 @@ static void activate (GtkApplication *app, gpointer  user_data)
 	g_object_set(calendar, "eventcolour", m_eventcolour, NULL);
 	g_object_set(calendar, "holidaycolour", m_holidaycolour, NULL);	
 	
-	char* day_str = g_strdup_printf("%d", m_start_day);
-	char* month_str =g_strdup_printf("%d", m_start_month);
-	char* year_str =g_strdup_printf("%d", m_start_year);	
+	//char* day_str = g_strdup_printf("%d", m_start_day);
+	//char* month_str =g_strdup_printf("%d", m_start_month);
+	//char* year_str =g_strdup_printf("%d", m_start_year);	
     //gchar *today_str="";
     //today_str = g_strconcat(today_str, day_str, "-",month_str,"-",year_str,NULL);
     //g_print("today is: %s\n", today_str);
