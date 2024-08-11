@@ -33,7 +33,7 @@ The "talkcalendar.desktop" file is shown below. You need to modify this using yo
 
 ```
 [Desktop Entry]
-Version=0.2.5
+Version=0.2.7
 Type=Application
 Name=Talk Calendar
 Comment=Talking calendar
@@ -77,7 +77,7 @@ A screenshot of the new event dialog is shown below.
 
 ### Searching For Events
 
-* Select "Search->Search For Events" from the hamburger menu .
+* Select "Search For Events" from the hamburger menu .
 * Enter a search term or location.
 
 ![](talkcalendar-search.png)
@@ -86,7 +86,7 @@ A screenshot of the new event dialog is shown below.
 
 ### Preferences
 
-* Select "Edit->Preferences" from the hamburger menu or use Ctrl+Alt+p to invoke the preferences window (see screenshot below).
+* Select "Preferences" from the hamburger menu or use Ctrl+Alt+p to invoke the preferences window (see screenshot below).
 * Change options as required.
 
 ![](talkcalendar-preferences.png)
@@ -103,7 +103,7 @@ A screenshot of the new event dialog is shown below.
 
 ### Information
 
-* Select "Help->Information"  from the hamburger menu or press F1
+* Select "Information"  from the hamburger menu or press F1
 * the information window shows the keyboard shoutcuts, how many records are in the database, the Sqlite version being used on the system, the desktop font and scale factor.
 
 ![](talkcalendar-information.png)

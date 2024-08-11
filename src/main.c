@@ -1069,12 +1069,50 @@ static void set_titles_on_calendar(CustomCalendar *calendar)
 	char *startmin_str = "";	
 	char *ampm_str = " ";	
 			
-	if(!is_allday)
+	//if(!is_allday)
+	//{
+	////if not all_day then add start time
+	//if (m_12hour_format)
+	//{
+	
+	//if (start_hour >= 13 && start_hour <= 23)
+	//{
+	//int shour = start_hour;
+	//shour = shour - 12;
+	//ampm_str = "pm ";
+	//starthour_str = g_strdup_printf("%d", shour);
+	//}
+	//else
+	//{
+	//ampm_str = "am ";
+	//starthour_str = g_strdup_printf("%d", start_hour);
+	//}
+	//} // 12
+	//else
+	//{
+	//starthour_str = g_strdup_printf("%d", start_hour);
+	//} // 24
+	
+	//startmin_str = g_strdup_printf("%d", start_min);
+	
+	//if (start_min < 10)
+	//{
+	//time_str = g_strconcat(time_str, starthour_str, ":0", startmin_str, NULL);
+	//}
+	//else
+	//{
+	//time_str = g_strconcat(time_str, starthour_str, ":", startmin_str, NULL);
+	//}
+    //time_str = g_strconcat(time_str, ampm_str, NULL);
+    //display_str = g_strconcat(display_str, time_str, summary_str, NULL);	
+    
+    //}//not all_day
+    
+    if(!is_allday)
 	{
 	//if not all_day then add start time
 	if (m_12hour_format)
-	{
-	
+	{	
 	if (start_hour >= 13 && start_hour <= 23)
 	{
 	int shour = start_hour;
@@ -1082,13 +1120,20 @@ static void set_titles_on_calendar(CustomCalendar *calendar)
 	ampm_str = "pm ";
 	starthour_str = g_strdup_printf("%d", shour);
 	}
-	else
+	if(start_hour == 12)
 	{
-	ampm_str = "am ";
+	ampm_str = "pm ";					
+	starthour_str = g_strdup_printf("%d", start_hour);
+    }
+    if(start_hour <12)
+	{
+	ampm_str = "am ";					
 	starthour_str = g_strdup_printf("%d", start_hour);
 	}
-	} // 12
-	else
+	
+	} // 12 hour format	
+	
+	else //24 hour
 	{
 	starthour_str = g_strdup_printf("%d", start_hour);
 	} // 24
@@ -1103,10 +1148,13 @@ static void set_titles_on_calendar(CustomCalendar *calendar)
 	{
 	time_str = g_strconcat(time_str, starthour_str, ":", startmin_str, NULL);
 	}
-    time_str = g_strconcat(time_str, ampm_str, NULL);
+	
+	//time_str = g_strconcat(time_str, ampm_str, NULL);
+	time_str = g_strconcat(time_str, ampm_str, NULL);
     display_str = g_strconcat(display_str, time_str, summary_str, NULL);	
-    }//not all_day
-    else
+	}
+	    
+    else //all day no time
     {
 	 display_str = g_strconcat(display_str, summary_str, NULL);	
 	}
@@ -1218,13 +1266,13 @@ static void callbk_add_new_event(GtkButton *button, gpointer user_data)
 	
 	GtkEntryBuffer *buffer_summary;
 	GtkWidget *entry_summary = g_object_get_data(G_OBJECT(button), "entry-summary-key");
-
+	
 	GtkEntryBuffer *buffer_location;
 	GtkWidget *entry_location = g_object_get_data(G_OBJECT(button), "entry-location-key");
-
+	
 	GtkEntryBuffer *buffer_description;
 	GtkWidget *entry_description = g_object_get_data(G_OBJECT(button), "entry-description-key");
-
+	
 	GtkWidget *check_button_allday = g_object_get_data(G_OBJECT(button), "check-button-allday-key");
 	GtkWidget *check_button_multiday = g_object_get_data(G_OBJECT(button), "check-button-multiday-key");
 	GtkWidget *check_button_isyearly = g_object_get_data(G_OBJECT(button), "check-button-isyearly-key");
@@ -1233,60 +1281,55 @@ static void callbk_add_new_event(GtkButton *button, gpointer user_data)
 	GtkWidget *spin_button_day_start = g_object_get_data(G_OBJECT(button), "spin-day-start-key");
 	GtkWidget *spin_button_year_start= g_object_get_data(G_OBJECT(button), "spin-year-start-key");
 	
-	
 	GtkWidget *spin_button_start_hour = g_object_get_data(G_OBJECT(button), "spin-start-hour-key");
 	GtkWidget *spin_button_start_min = g_object_get_data(G_OBJECT(button), "spin-start-min-key");
+	
 	GtkWidget *spin_button_end_hour = g_object_get_data(G_OBJECT(button), "spin-end-hour-key");
 	GtkWidget *spin_button_end_min = g_object_get_data(G_OBJECT(button), "spin-end-min-key");
-
+	
+	m_summary =""; //reset
 	buffer_summary = gtk_entry_get_buffer(GTK_ENTRY(entry_summary));
 	m_summary = gtk_entry_buffer_get_text(buffer_summary);
-	
-	m_summary= g_strchug((char *) m_summary); //remove leading spaces
-	m_summary= g_strchomp ((char *) m_summary); //remove trailing spaces
 	
 	m_summary = remove_semicolons(m_summary);
 	m_summary = remove_commas(m_summary);
 	m_summary =remove_punctuations(m_summary);
-			
+	
+	m_description="";		
 	buffer_description = gtk_entry_get_buffer(GTK_ENTRY(entry_description));
 	m_description = gtk_entry_buffer_get_text(buffer_description);
-	
-	m_description= g_strchug((char *) m_description); //remove leading spaces
-	m_description= g_strchomp ((char *) m_description); //remove trailing spaces
 	
 	m_description = remove_semicolons(m_description);
 	m_description = remove_commas(m_description);
 	m_description =remove_punctuations(m_description);
 	
+	m_location="";
 	buffer_location = gtk_entry_get_buffer(GTK_ENTRY(entry_location));
 	m_location = gtk_entry_buffer_get_text(buffer_location);
 	
-	m_location= g_strchug((char *) m_location); //remove leading spaces
-	m_location= g_strchomp ((char *) m_location); //remove trailing spaces
-		
 	m_location = remove_semicolons(m_location);
 	m_location = remove_commas(m_location);
 	m_location =remove_punctuations(m_location);
-			
+	
 	//capture typed values
-	 m_start_day= gtk_spin_button_get_value(GTK_SPIN_BUTTON(spin_button_day_start));
-	 m_start_year= gtk_spin_button_get_value(GTK_SPIN_BUTTON(spin_button_year_start));
-	 
-	 //m_end_day= gtk_spin_button_get_value(GTK_SPIN_BUTTON(spin_button_day_end));
-	 //m_end_year= gtk_spin_button_get_value(GTK_SPIN_BUTTON(spin_button_year_end));
-	 	 
-	 m_start_hour= gtk_spin_button_get_value(GTK_SPIN_BUTTON(spin_button_start_hour));
-	 m_start_min= gtk_spin_button_get_value(GTK_SPIN_BUTTON(spin_button_start_min));
-	 m_end_hour= gtk_spin_button_get_value(GTK_SPIN_BUTTON(spin_button_end_hour));
-	 m_end_min= gtk_spin_button_get_value(GTK_SPIN_BUTTON(spin_button_end_min));
-		
+	m_start_day= gtk_spin_button_get_value(GTK_SPIN_BUTTON(spin_button_day_start));
+	m_start_year= gtk_spin_button_get_value(GTK_SPIN_BUTTON(spin_button_year_start));
+	
+	//m_end_day= gtk_spin_button_get_value(GTK_SPIN_BUTTON(spin_button_day_end));
+	//m_end_year= gtk_spin_button_get_value(GTK_SPIN_BUTTON(spin_button_year_end));
+	
+	m_start_hour= gtk_spin_button_get_value(GTK_SPIN_BUTTON(spin_button_start_hour));
+	m_start_min= gtk_spin_button_get_value(GTK_SPIN_BUTTON(spin_button_start_min));
+	
+	m_end_hour= gtk_spin_button_get_value(GTK_SPIN_BUTTON(spin_button_end_hour));
+	m_end_min= gtk_spin_button_get_value(GTK_SPIN_BUTTON(spin_button_end_min));
+	
 	m_is_allday = gtk_check_button_get_active(GTK_CHECK_BUTTON(check_button_allday));
 	
 	m_is_yearly = gtk_check_button_get_active(GTK_CHECK_BUTTON(check_button_isyearly));	
 	m_priority = gtk_check_button_get_active(GTK_CHECK_BUTTON(check_button_priority));
 	//m_notification = gtk_check_button_get_active(GTK_CHECK_BUTTON(check_button_notification));
-		
+	
 	//TODO multiday
 	m_end_day=m_start_day;
 	m_end_month=m_start_month;
@@ -1698,10 +1741,7 @@ static void callbk_update_event(GtkButton *button, gpointer user_data)
 	
 	buffer_summary = gtk_entry_get_buffer(GTK_ENTRY(entry_summary));
 	m_summary = gtk_entry_buffer_get_text(buffer_summary);
-	
-	m_summary= g_strchug((char *) m_summary); //remove leading spaces
-	m_summary= g_strchomp ((char *) m_summary); //remove trailing spaces
-	
+		
 	m_summary = remove_semicolons(m_summary);
 	m_summary = remove_commas(m_summary);
 	m_summary =remove_punctuations(m_summary);
@@ -1709,18 +1749,12 @@ static void callbk_update_event(GtkButton *button, gpointer user_data)
 	buffer_description = gtk_entry_get_buffer(GTK_ENTRY(entry_description));
 	m_description = gtk_entry_buffer_get_text(buffer_description);
 	
-	m_description= g_strchug((char *) m_description); //remove leading spaces
-	m_description= g_strchomp ((char *) m_description); //remove trailing spaces
-	
 	m_description = remove_semicolons(m_description);
 	m_description = remove_commas(m_description);
 	m_description =remove_punctuations(m_description);
 	
 	buffer_location = gtk_entry_get_buffer(GTK_ENTRY(entry_location));
 	m_location = gtk_entry_buffer_get_text(buffer_location);
-	
-	m_location= g_strchug((char *) m_location); //remove leading spaces
-	m_location= g_strchomp ((char *) m_location); //remove trailing spaces
 	
 	m_location = remove_semicolons(m_location);
 	m_location = remove_commas(m_location);
@@ -1743,8 +1777,7 @@ static void callbk_update_event(GtkButton *button, gpointer user_data)
 	m_end_day=m_start_day;
 	m_end_month=m_start_month;
 	m_end_year=m_start_year;
-	
-	
+		
 	g_object_set(selected_evt, "summary", g_strdup(m_summary), NULL);
 	g_object_set(selected_evt, "location", g_strdup(m_location), NULL);
 	g_object_set(selected_evt, "description", g_strdup(m_description), NULL);
@@ -1917,6 +1950,8 @@ static void callbk_edit_event(GSimpleAction *action, GVariant *parameter,  gpoin
 	m_start_day=start_day;	
 	m_start_hour = start_hour;
 	m_start_min = start_min;
+	m_end_hour = end_hour;
+	m_end_min = end_min;
 	m_is_yearly = is_yearly;
 	m_is_allday = is_allday;	
 	m_priority = is_priority;
@@ -1979,11 +2014,11 @@ static void callbk_edit_event(GSimpleAction *action, GVariant *parameter,  gpoin
 	label_end_time =gtk_label_new("End Time: ");	
 	
 	spin_button_end_hour = gtk_spin_button_new(adjustment_end_hour, 1.0, 0);
-	gtk_spin_button_set_value(GTK_SPIN_BUTTON(spin_button_end_hour), m_end_hour);
+	gtk_spin_button_set_value(GTK_SPIN_BUTTON(spin_button_end_hour), m_end_hour); //end hour
 	g_signal_connect(GTK_SPIN_BUTTON(spin_button_end_hour), "value_changed", G_CALLBACK(callbk_spin_hour_end), NULL);
 	
 	spin_button_end_min = gtk_spin_button_new(adjustment_end_min, 1.0, 0);
-	gtk_spin_button_set_value(GTK_SPIN_BUTTON(spin_button_end_min), m_end_min);
+	gtk_spin_button_set_value(GTK_SPIN_BUTTON(spin_button_end_min), m_end_min); //end min
 	g_signal_connect(GTK_SPIN_BUTTON(spin_button_end_min), "value_changed", G_CALLBACK(callbk_spin_min_end), NULL);
 	
 	check_button_allday = gtk_check_button_new_with_label("Is All Day");
@@ -2124,9 +2159,15 @@ static void callbk_calendar_day_selected(CustomCalendar *calendar, gpointer user
 	dialog_day_selected =gtk_window_new(); 
 	gtk_window_set_title (GTK_WINDOW (dialog_day_selected), "Day Events");
 	gtk_window_set_default_size(GTK_WINDOW(dialog_day_selected),600,300);
-	gtk_window_set_modal(GTK_WINDOW (dialog_day_selected),TRUE);
+	
+	//window stacking order determined by window manager
+	
+	//gtk_window_set_modal(GTK_WINDOW (dialog_day_selected),TRUE); //causes the update event dialog to freeze
+	
+	//need a new approach maybe a popover?
+	
+	//centre dialog window?
 	gtk_window_set_transient_for(GTK_WINDOW (dialog_day_selected),GTK_WINDOW(window));	
-	//stacking order determined by window amanager
 	
 	GtkWidget *header;   
 	GtkWidget *button_edit_event;
@@ -2210,13 +2251,21 @@ static void callbk_calendar_day_selected(CustomCalendar *calendar, gpointer user
 	ampm_str = "pm ";
 	starthour_str = g_strdup_printf("%d", shour);
 	}
-	else
+	if(start_hour == 12)
 	{
-	ampm_str = "am ";
+	ampm_str = "pm ";					
+	starthour_str = g_strdup_printf("%d", start_hour);
+	 }
+	if(start_hour <12)
+	{
+	ampm_str = "am ";					
 	starthour_str = g_strdup_printf("%d", start_hour);
 	}
-	} // 12
-	else
+	
+	} // 12 hour format
+	
+	
+	else //24 hour
 	{
 	starthour_str = g_strdup_printf("%d", start_hour);
 	} // 24
@@ -2234,6 +2283,7 @@ static void callbk_calendar_day_selected(CustomCalendar *calendar, gpointer user
 	
 	time_str = g_strconcat(time_str, ampm_str, NULL);
 	
+	//------------------------------------------------------------------
 	if (m_show_end_time)
 	{
 	
@@ -2247,11 +2297,23 @@ static void callbk_calendar_day_selected(CustomCalendar *calendar, gpointer user
 	ampm_str = "pm ";
 	endhour_str = g_strdup_printf("%d", end_hour);
 	}
-	else
+	
+	if(end_hour == 12)
 	{
-	ampm_str = "am ";
+	ampm_str = "pm ";					
+	endhour_str = g_strdup_printf("%d", end_hour);
+	 }
+	if(end_hour <12)
+	{
+	ampm_str = "am ";					
 	endhour_str = g_strdup_printf("%d", end_hour);
 	}
+	
+	//else
+	//{
+	//ampm_str = "am ";
+	//endhour_str = g_strdup_printf("%d", end_hour);
+	//}
 	} // 12
 	else
 	{
@@ -2275,6 +2337,7 @@ static void callbk_calendar_day_selected(CustomCalendar *calendar, gpointer user
 	display_str = g_strconcat(display_str, time_str, summary_str, "\n", NULL);	
 		
 	}//if not allday
+	
 	else
 	{
 		display_str=g_strconcat(display_str,summary_str, "\n",NULL);
@@ -2301,7 +2364,7 @@ static void callbk_calendar_day_selected(CustomCalendar *calendar, gpointer user
 			
 	g_array_free(evt_arry_day, FALSE); //clear the array 
 	
-	if (m_speaking == FALSE) speak_events();  
+	if (m_speaking == FALSE) speak_events();  //i.e. not already speaking
     
     g_object_set_data(G_OBJECT(button_delete_event), "dialog-delete-key", dialog_day_selected);
     
@@ -3251,7 +3314,7 @@ static void callbk_about(GSimpleAction * action, GVariant *parameter, gpointer u
 	gtk_widget_set_size_request(about_dialog, 200,200);
     gtk_window_set_modal(GTK_WINDOW(about_dialog),TRUE);
 	gtk_about_dialog_set_program_name(GTK_ABOUT_DIALOG(about_dialog), "Talk Calendar");
-	gtk_about_dialog_set_version (GTK_ABOUT_DIALOG(about_dialog), "Version 0.2.6");
+	gtk_about_dialog_set_version (GTK_ABOUT_DIALOG(about_dialog), "Version 0.2.7");
 	gtk_about_dialog_set_copyright(GTK_ABOUT_DIALOG(about_dialog),"Copyright © 2024");
 	gtk_about_dialog_set_comments(GTK_ABOUT_DIALOG(about_dialog),"Talking calendar");
 	gtk_about_dialog_set_license_type (GTK_ABOUT_DIALOG(about_dialog), GTK_LICENSE_LGPL_2_1);
