@@ -15721,7 +15721,9 @@ pair_t table[] = {
 //s","iy-g g-ah ah-l l-z"},
 {"eagles","iy-g g-ah ah-l l-z"},
 {"eames","iy-m m-z"},
-{"ear","iy-r"},
+//{"ear","iy-r r-pau"},
+{"ear","ih-r r-pau"},
+
 //d","uh-r r-d"},
 {"eardrops","ih-r r-d d-r r-aa aa-p p-s"},
 {"eared","ih-r r-d"},
@@ -21322,7 +21324,7 @@ pair_t table[] = {
 {"glass","g-l l-ae ae-s"},
 {"glassdale","g-l l-ae ae-s s-d d-eh eh-iy iy-l"},
 {"glassed","g-l l-ae ae-s s-t"},
-{"glasses","g-l l-ae ae-s s-ah ah-z"},
+{"glasses","g-l l-ae ae-s s-ah ah-z z-pau"},
 {"glassfuls","g-l l-ae ae-f f-ah ah-l l-z"},
 {"glassware","g-l l-ae ae-s s-w w-eh eh-r"},
 {"glassy","g-l l-ae ae-s s-iy"},
@@ -22448,6 +22450,9 @@ pair_t table[] = {
 {"guire","g-aa aa-iy iy-r"},
 //s","g-aa aa-iy iy-r r-z"},
 {"guise","g-aa aa-iy iy-z"},
+
+{"guiseley","g-aa aa-iy iy-z z-l l-iy iy-pau"},
+
 {"guitar","g-ih ih-t t-aa aa-r"},
 {"guitarist","g-ih ih-t t-aa aa-r r-ah ah-s s-t"},
 {"guitars","g-ih ih-t t-aa aa-r r-z"},
@@ -42464,6 +42469,7 @@ pair_t table[] = {
 {"ricocheted","r-ih ih-k k-ah ah-sh sh-eh eh-iy iy-d"},
 {"ricocheting","r-ih ih-k k-ah ah-sh sh-eh eh-iy iy-ih ih-ng"},
 {"ricollect","r-ih ih-k k-ah ah-l l-eh eh-k k-t"},
+{"ricos","r-iy iy-k k-ao ao-uh uk-z z-pau"},
 {"rid","r-ih ih-d"},
 {"ridable","r-aa aa-iy iy-d d-ah ah-b b-ah ah-l"},
 {"ridd","r-ih ih-d"},
@@ -43830,7 +43836,9 @@ pair_t table[] = {
 {"saved","s-eh eh-iy iy-v v-d"},
 {"savell","s-aa aa-v v-eh eh-iy iy-l"},
 {"savelli","s-ah ah-v v-eh eh-l l-iy"},
-{"savers","s-eh eh-iy iy-v v-uh uh-r r-z"},
+
+{"savers","s-eh eh-iy iy-v v-uh uh-r r-z z-pau"},
+
 {"saves","s-eh eh-iy iy-v v-z"},
 {"savest","s-ae ae-v v-ah ah-s s-t"},
 {"savez","s-aa aa-v v-eh eh-z"},
@@ -55677,6 +55685,7 @@ pair_t table[] = {
 {"whittled","w-ih ih-t t-ah ah-l l-d"},
 {"whittler","hh-w w-ih ih-t t-ah ah-l l-uh uh-r"},
 {"whittling","w-ih ih-t t-l l-ih ih-ng"},
+{"whitworth","w-ih ih-t t-w w-uh uh-r r-th"},
 {"whity","hh-w w-ih ih-t t-iy"},
 {"whiz","w-ih ih-z"},
 {"whizzed","w-ih ih-z z-d"},

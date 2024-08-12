@@ -1036,83 +1036,65 @@ static void set_titles_on_calendar(CustomCalendar *calendar)
 	custom_calendar_reset_marks(CUSTOM_CALENDAR(calendar));	
 	custom_calendar_reset_holidays(CUSTOM_CALENDAR(calendar));	
 	
-	GArray *evt_arry_month; //standard month events
-	evt_arry_month = g_array_new(FALSE, FALSE, sizeof(CALENDAR_TYPE_EVENT));	
-	db_get_all_events_year_month(evt_arry_month, m_start_year,m_start_month);
+	guint8 month_days =g_date_get_days_in_month(m_start_month,m_start_year);	
 		
-	//char* day_titles="";
-	
-	for (int i = 0; i < evt_arry_month->len; i++)
+	//cycle through month days and display any events
+	for (int day=1; day<=month_days; day++)
 	{
-	CalendarEvent *evt = g_array_index(evt_arry_month, CalendarEvent *, i);
+	GArray *evt_arry_day; //day events	
+	evt_arry_day = g_array_new(FALSE, FALSE, sizeof(CALENDAR_TYPE_EVENT)); // setup arraylist
+	db_get_all_events_year_month_day(evt_arry_day, m_start_year,m_start_month, day);
 	
+	//display
+	for (int i = 0; i < evt_arry_day->len; i++)
+	{
+	CalendarEvent *evt_day = g_array_index(evt_arry_day , CalendarEvent *, i); //sorted
 	
 	int start_day=0;
 	int start_month=0;
 	int start_year=0;
 	char* summary_str="";
+	char* summary_str11="";	
+	char *location_str="";
+	char *description_str="";	
 	int start_hour=0;
-	int start_min=0;		
+	int start_min=0;	
+	int end_hour=0;
+	int end_min=0;
+	int is_yearly=0;
 	int is_allday=0;
-		
-	g_object_get (evt, "startday", &start_day, NULL);
-	g_object_get (evt, "startmonth", &start_month, NULL);
-	g_object_get (evt, "startyear", &start_year, NULL);	
-	g_object_get(evt, "summary", &summary_str, NULL);
-	g_object_get(evt, "starthour", &start_hour, NULL);
-	g_object_get(evt, "startmin", &start_min, NULL);
-	g_object_get(evt, "isallday", &is_allday, NULL);
+	int is_priority=0;
+	
+	g_object_get (evt_day, "startday", &start_day, NULL);
+	g_object_get (evt_day, "startmonth", &start_month, NULL);
+	g_object_get (evt_day, "startyear", &start_year, NULL);	
+	g_object_get(evt_day, "summary", &summary_str, NULL);	
+	g_object_get(evt_day, "location", &location_str, NULL);
+	g_object_get(evt_day, "description", &description_str, NULL);	
+	g_object_get(evt_day, "starthour", &start_hour, NULL);
+	g_object_get(evt_day, "startmin", &start_min, NULL);	
+	g_object_get(evt_day, "endhour", &end_hour, NULL);
+	g_object_get(evt_day, "endmin", &end_min, NULL);
+	g_object_get(evt_day, "isyearly", &is_yearly, NULL);
+	g_object_get(evt_day, "isallday", &is_allday, NULL);
+	g_object_get(evt_day, "ispriority", &is_priority, NULL);
 	
 	char *display_str="";
 	char *time_str = "";
 	char *starthour_str = "";
-	char *startmin_str = "";	
-	char *ampm_str = " ";	
-			
-	//if(!is_allday)
-	//{
-	////if not all_day then add start time
-	//if (m_12hour_format)
-	//{
+	char *startmin_str = "";
+	char *endhour_str = "";
+	char *endmin_str = "";
+	char *ampm_str = " ";
 	
-	//if (start_hour >= 13 && start_hour <= 23)
-	//{
-	//int shour = start_hour;
-	//shour = shour - 12;
-	//ampm_str = "pm ";
-	//starthour_str = g_strdup_printf("%d", shour);
-	//}
-	//else
-	//{
-	//ampm_str = "am ";
-	//starthour_str = g_strdup_printf("%d", start_hour);
-	//}
-	//} // 12
-	//else
-	//{
-	//starthour_str = g_strdup_printf("%d", start_hour);
-	//} // 24
+	summary_str11 =g_strndup(summary_str,11);
 	
-	//startmin_str = g_strdup_printf("%d", start_min);
-	
-	//if (start_min < 10)
-	//{
-	//time_str = g_strconcat(time_str, starthour_str, ":0", startmin_str, NULL);
-	//}
-	//else
-	//{
-	//time_str = g_strconcat(time_str, starthour_str, ":", startmin_str, NULL);
-	//}
-    //time_str = g_strconcat(time_str, ampm_str, NULL);
-    //display_str = g_strconcat(display_str, time_str, summary_str, NULL);	
-    
-    //}//not all_day
-    
-    if(!is_allday)
+	if(!is_allday)
 	{
 	//if not all_day then add start time
 	if (m_12hour_format)
-	{	
+	{
+	
 	if (start_hour >= 13 && start_hour <= 23)
 	{
 	int shour = start_hour;
@@ -1124,14 +1106,15 @@ static void set_titles_on_calendar(CustomCalendar *calendar)
 	{
 	ampm_str = "pm ";					
 	starthour_str = g_strdup_printf("%d", start_hour);
-    }
-    if(start_hour <12)
+	 }
+	if(start_hour <12)
 	{
 	ampm_str = "am ";					
 	starthour_str = g_strdup_printf("%d", start_hour);
 	}
 	
-	} // 12 hour format	
+	} // 12 hour format
+	
 	
 	else //24 hour
 	{
@@ -1149,20 +1132,119 @@ static void set_titles_on_calendar(CustomCalendar *calendar)
 	time_str = g_strconcat(time_str, starthour_str, ":", startmin_str, NULL);
 	}
 	
-	//time_str = g_strconcat(time_str, ampm_str, NULL);
+	
 	time_str = g_strconcat(time_str, ampm_str, NULL);
-    display_str = g_strconcat(display_str, time_str, summary_str, NULL);	
-	}
-	    
-    else //all day no time
-    {
-	 display_str = g_strconcat(display_str, summary_str, NULL);	
-	}
+    display_str = g_strconcat(display_str, time_str, summary_str11, NULL);	
+   } //if !all_day	
+   else
+   {
+	   display_str = g_strconcat(display_str, summary_str11, NULL);	
+   }
 	
 	custom_calendar_set_day_str(CUSTOM_CALENDAR(calendar), start_day, display_str); 
-	custom_calendar_mark_day(CUSTOM_CALENDAR(calendar), start_day);
+	custom_calendar_mark_day(CUSTOM_CALENDAR(calendar), start_day);		
+	
+	} //for day	events
+		
+	} //for each day in month
+	
+	
+	
+	
+	
+	//GArray *evt_arry_month; //standard month events
+	//evt_arry_month = g_array_new(FALSE, FALSE, sizeof(CALENDAR_TYPE_EVENT));	
+	//db_get_all_events_year_month(evt_arry_month, m_start_year,m_start_month);
+		
+	////char* day_titles="";
+	
+	//for (int i = 0; i < evt_arry_month->len; i++)
+	//{
+	//CalendarEvent *evt = g_array_index(evt_arry_month, CalendarEvent *, i);
+	
+	
+	//int start_day=0;
+	//int start_month=0;
+	//int start_year=0;
+	//char* summary_str="";
+	//char* summary_str11="";
+	//int start_hour=0;
+	//int start_min=0;		
+	//int is_allday=0;
+		
+	//g_object_get (evt, "startday", &start_day, NULL);
+	//g_object_get (evt, "startmonth", &start_month, NULL);
+	//g_object_get (evt, "startyear", &start_year, NULL);	
+	//g_object_get(evt, "summary", &summary_str, NULL);
+	//g_object_get(evt, "starthour", &start_hour, NULL);
+	//g_object_get(evt, "startmin", &start_min, NULL);
+	//g_object_get(evt, "isallday", &is_allday, NULL);
+	
+	//char *display_str="";
+	//char *time_str = "";
+	//char *starthour_str = "";
+	//char *startmin_str = "";	
+	//char *ampm_str = " ";	
+	
+	//summary_str11 =g_strndup(summary_str,11);
+	    
+    //if(!is_allday)
+	//{
+	////if not all_day then add start time
+	//if (m_12hour_format)
+	//{	
+	//if (start_hour >= 13 && start_hour <= 23)
+	//{
+	//int shour = start_hour;
+	//shour = shour - 12;
+	//ampm_str = "pm ";
+	//starthour_str = g_strdup_printf("%d", shour);
+	//}
+	//if(start_hour == 12)
+	//{
+	//ampm_str = "pm ";					
+	//starthour_str = g_strdup_printf("%d", start_hour);
+    //}
+    //if(start_hour <12)
+	//{
+	//ampm_str = "am ";					
+	//starthour_str = g_strdup_printf("%d", start_hour);
+	//}
+	
+	//} // 12 hour format	
+	
+	//else //24 hour
+	//{
+	//starthour_str = g_strdup_printf("%d", start_hour);
+	//} // 24
+	
+	//startmin_str = g_strdup_printf("%d", start_min);
+	
+	//if (start_min < 10)
+	//{
+	//time_str = g_strconcat(time_str, starthour_str, ":0", startmin_str, NULL);
+	//}
+	//else
+	//{
+	//time_str = g_strconcat(time_str, starthour_str, ":", startmin_str, NULL);
+	//}
+	
+	////time_str = g_strconcat(time_str, ampm_str, NULL);
+	//time_str = g_strconcat(time_str, ampm_str, NULL);
+    //display_str = g_strconcat(display_str, time_str, summary_str11, NULL);	
+	//}
+	    
+    //else //all day no time
+    //{
+	 //display_str = g_strconcat(display_str, summary_str11, NULL);	
+	//}
+	
+	//custom_calendar_set_day_str(CUSTOM_CALENDAR(calendar), start_day, display_str); 
+	//custom_calendar_mark_day(CUSTOM_CALENDAR(calendar), start_day);
 			
-	}//for month events
+	//}//for month events
+	
+	
 	
 	//markup holidays
 	if(m_holidays) {
@@ -1382,7 +1464,7 @@ static void callbk_new_event(GSimpleAction *action, GVariant *parameter,  gpoint
 	GtkWidget *window = user_data;
 	GtkWidget *dialog;
 	
-	dialog = gtk_window_new(); // gtk_dialog_new_with_buttons deprecated gtk4.10
+	dialog = gtk_window_new(); 
 	gtk_window_set_title(GTK_WINDOW(dialog), "New Event");
 	
 	GtkWidget *button_add_event;
@@ -1471,8 +1553,8 @@ static void callbk_new_event(GSimpleAction *action, GVariant *parameter,  gpoint
 	label_summary = gtk_label_new("Summary: ");
 	entry_summary = gtk_entry_new();
 	gtk_entry_set_has_frame(GTK_ENTRY(entry_summary),TRUE); 
-	gtk_entry_set_max_length(GTK_ENTRY(entry_summary), 20);
-	//gtk_entry_set_max_length(GTK_ENTRY(entry_summary), 15);
+	//gtk_entry_set_max_length(GTK_ENTRY(entry_summary), 20);
+	gtk_entry_set_max_length(GTK_ENTRY(entry_summary), 11);
 	
 	//description
 	label_description = gtk_label_new("Description: ");
@@ -1962,8 +2044,10 @@ static void callbk_edit_event(GSimpleAction *action, GVariant *parameter,  gpoin
 	label_summary = gtk_label_new("Summary: ");
 	entry_summary = gtk_entry_new();
 	gtk_entry_set_has_frame(GTK_ENTRY(entry_summary),TRUE); 
-	gtk_entry_set_max_length(GTK_ENTRY(entry_summary), 20);
-	//gtk_entry_set_max_length(GTK_ENTRY(entry_summary),15);
+	//gtk_entry_set_max_length(GTK_ENTRY(entry_summary), 20);
+	gtk_entry_set_max_length(GTK_ENTRY(entry_summary), 11);
+	//gtk_entry_set_max_length(GTK_ENTRY(entry_summary), 11);
+	
 	buffer_summary = gtk_entry_buffer_new(m_summary, -1); // show  event summary
 	gtk_entry_set_buffer(GTK_ENTRY(entry_summary), buffer_summary);
 	
@@ -2078,7 +2162,7 @@ static void callbk_edit_event(GSimpleAction *action, GVariant *parameter,  gpoin
 	
 	gtk_grid_attach(GTK_GRID(grid), label_description, 1, 2, 1, 1);
 	gtk_grid_attach(GTK_GRID(grid), entry_description, 2, 2, 3, 1);
-	
+		
 	gtk_grid_attach(GTK_GRID(grid), label_location, 1, 3, 1, 1);
 	gtk_grid_attach(GTK_GRID(grid), entry_location, 2, 3, 3, 1);
 	
@@ -3314,7 +3398,7 @@ static void callbk_about(GSimpleAction * action, GVariant *parameter, gpointer u
 	gtk_widget_set_size_request(about_dialog, 200,200);
     gtk_window_set_modal(GTK_WINDOW(about_dialog),TRUE);
 	gtk_about_dialog_set_program_name(GTK_ABOUT_DIALOG(about_dialog), "Talk Calendar");
-	gtk_about_dialog_set_version (GTK_ABOUT_DIALOG(about_dialog), "Version 0.2.7");
+	gtk_about_dialog_set_version (GTK_ABOUT_DIALOG(about_dialog), "Version 0.2.8");
 	gtk_about_dialog_set_copyright(GTK_ABOUT_DIALOG(about_dialog),"Copyright © 2024");
 	gtk_about_dialog_set_comments(GTK_ABOUT_DIALOG(about_dialog),"Talking calendar");
 	gtk_about_dialog_set_license_type (GTK_ABOUT_DIALOG(about_dialog), GTK_LICENSE_LGPL_2_1);
@@ -4209,8 +4293,8 @@ static void speak_events() {
 	} //while loop words
    
     if(g_list_length(desc_list) ==0){		
-		desc_list=g_list_concat(desc_list,word_to_diphones("no"));
-		desc_list=g_list_concat(desc_list,word_to_diphones("description"));		
+		desc_list=g_list_concat(desc_list,word_to_diphones("unknown"));
+		//desc_list=g_list_concat(desc_list,word_to_diphones("word"));		
 		diphone_list =g_list_concat(diphone_list,desc_list);
 	}
     diphone_list =g_list_concat(diphone_list, word_to_diphones("pau"));
