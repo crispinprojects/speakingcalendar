@@ -43,7 +43,10 @@ GDK_AVAILABLE_IN_ALL void custom_calendar_reset_marks (CustomCalendar *calendar)
 GDK_AVAILABLE_IN_ALL gboolean  custom_calendar_get_day_is_marked (CustomCalendar *calendar, guint day);
 
 GDK_AVAILABLE_IN_ALL void custom_calendar_set_day_str(CustomCalendar *calendar, int day, char* title);
-GDK_AVAILABLE_IN_ALL void custom_calendar_initialise_str_array(CustomCalendar *calendar);
+GDK_AVAILABLE_IN_ALL void custom_calendar_initialise_eventday_array(CustomCalendar *calendar);
+
+GDK_AVAILABLE_IN_ALL void custom_calendar_set_tooltip_str(CustomCalendar *calendar, int day, char* title);
+GDK_AVAILABLE_IN_ALL void custom_calendar_initialise_tooltip_array(CustomCalendar *calendar);
 
 GDK_AVAILABLE_IN_ALL void custom_calendar_mark_holiday(CustomCalendar *calendar,  guint day);
 GDK_AVAILABLE_IN_ALL void  custom_calendar_unmark_holiday(CustomCalendar *calendar,guint day);

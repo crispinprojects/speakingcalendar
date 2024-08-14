@@ -68,7 +68,8 @@ struct _CustomCalendar
 	int year;
 	int day_month[6][7];
 	int days[6][7];	
-	char *str_array[32];
+	char *eventday_array[32];
+	char *tooltip_array[32];
 	int num_marked_days;
 	int marked_day[32];
 	char *holiday_array[32];
@@ -343,44 +344,44 @@ GtkWidget *custom_calendar_new(void)
 }
 //======================================================================
 
-void custom_calendar_initialise_str_array(CustomCalendar *calendar)
+void custom_calendar_initialise_eventday_array(CustomCalendar *calendar)
 {
 	
-     calendar->str_array[0]=""; //day0 has zero index
-     calendar->str_array[1]=""; //day1 
-     calendar->str_array[2]="";
-     calendar->str_array[3]="";
-     calendar->str_array[4]="";
-     calendar->str_array[5]="";
-     calendar->str_array[6]="";
-     calendar->str_array[7]="";
-     calendar->str_array[8]="";
-     calendar->str_array[9]="";
+     calendar->eventday_array[0]=""; //day0 has zero index
+     calendar->eventday_array[1]=""; //day1 
+     calendar->eventday_array[2]="";
+     calendar->eventday_array[3]="";
+     calendar->eventday_array[4]="";
+     calendar->eventday_array[5]="";
+     calendar->eventday_array[6]="";
+     calendar->eventday_array[7]="";
+     calendar->eventday_array[8]="";
+     calendar->eventday_array[9]="";
      
-     calendar->str_array[10]=""; 
-     calendar->str_array[11]=""; 
-     calendar->str_array[12]="";
-     calendar->str_array[13]="";
-     calendar->str_array[14]="";
-     calendar->str_array[15]="";
-     calendar->str_array[16]="";
-     calendar->str_array[17]="";
-     calendar->str_array[18]="";
-     calendar->str_array[19]="";
+     calendar->eventday_array[10]=""; 
+     calendar->eventday_array[11]=""; 
+     calendar->eventday_array[12]="";
+     calendar->eventday_array[13]="";
+     calendar->eventday_array[14]="";
+     calendar->eventday_array[15]="";
+     calendar->eventday_array[16]="";
+     calendar->eventday_array[17]="";
+     calendar->eventday_array[18]="";
+     calendar->eventday_array[19]="";
      
-     calendar->str_array[20]=""; 
-     calendar->str_array[21]=""; 
-     calendar->str_array[22]="";
-     calendar->str_array[23]="";
-     calendar->str_array[24]="";
-     calendar->str_array[25]="";
-     calendar->str_array[26]="";
-     calendar->str_array[27]="";
-     calendar->str_array[28]="";
-     calendar->str_array[29]="";
+     calendar->eventday_array[20]=""; 
+     calendar->eventday_array[21]=""; 
+     calendar->eventday_array[22]="";
+     calendar->eventday_array[23]="";
+     calendar->eventday_array[24]="";
+     calendar->eventday_array[25]="";
+     calendar->eventday_array[26]="";
+     calendar->eventday_array[27]="";
+     calendar->eventday_array[28]="";
+     calendar->eventday_array[29]="";
      
-     calendar->str_array[30]="";
-     calendar->str_array[31]="";
+     calendar->eventday_array[30]="";
+     calendar->eventday_array[31]="";
      
 }
 //=====================================================================
@@ -389,16 +390,76 @@ void custom_calendar_set_day_str(CustomCalendar *calendar, int day, char* title)
 {
 	//g_return_if_fail(CUSTOM_IS_CALENDAR(calendar));
 	
-	char* day_titles=calendar->str_array[day];
+	char* day_titles=calendar->eventday_array[day];
 	day_titles =g_strconcat(day_titles,"\n",title,NULL);
 	
 	if (day >= 1 && day <= 31)
 	{
-		//calendar->str_array[day]=title;
-		calendar->str_array[day]=day_titles;
+		//calendar->eventday_array[day]=title;
+		calendar->eventday_array[day]=day_titles;
 	}	
 }
 //======================================================================
+
+//======================================================================
+
+void custom_calendar_initialise_tooltip_array(CustomCalendar *calendar)
+{
+	
+     calendar->tooltip_array[0]=""; //day0 has zero index
+     calendar->tooltip_array[1]=""; //day1 
+     calendar->tooltip_array[2]="";
+     calendar->tooltip_array[3]="";
+     calendar->tooltip_array[4]="";
+     calendar->tooltip_array[5]="";
+     calendar->tooltip_array[6]="";
+     calendar->tooltip_array[7]="";
+     calendar->tooltip_array[8]="";
+     calendar->tooltip_array[9]="";
+     
+     calendar->tooltip_array[10]=""; 
+     calendar->tooltip_array[11]=""; 
+     calendar->tooltip_array[12]="";
+     calendar->tooltip_array[13]="";
+     calendar->tooltip_array[14]="";
+     calendar->tooltip_array[15]="";
+     calendar->tooltip_array[16]="";
+     calendar->tooltip_array[17]="";
+     calendar->tooltip_array[18]="";
+     calendar->tooltip_array[19]="";
+     
+     calendar->tooltip_array[20]=""; 
+     calendar->tooltip_array[21]=""; 
+     calendar->tooltip_array[22]="";
+     calendar->tooltip_array[23]="";
+     calendar->tooltip_array[24]="";
+     calendar->tooltip_array[25]="";
+     calendar->tooltip_array[26]="";
+     calendar->tooltip_array[27]="";
+     calendar->tooltip_array[28]="";
+     calendar->tooltip_array[29]="";
+     
+     calendar->tooltip_array[30]="";
+     calendar->tooltip_array[31]="";
+     
+}
+//=====================================================================
+
+void custom_calendar_set_tooltip_str(CustomCalendar *calendar, int day, char* tooltip_str)
+{
+	//g_return_if_fail(CUSTOM_IS_CALENDAR(calendar));
+	
+	char* tooltip_strs=calendar->tooltip_array[day];
+	tooltip_strs =g_strconcat(tooltip_strs,"\n",tooltip_str,NULL);
+	
+	if (day >= 1 && day <= 31)
+	{
+		calendar->tooltip_array[day]=tooltip_strs;
+	}	
+}
+//======================================================================
+
+
 void custom_calendar_initialise_holiday_array(CustomCalendar *calendar)
 {
 	
@@ -531,7 +592,7 @@ static void custom_calendar_init(CustomCalendar *calendar)
 	
 	gtk_widget_set_focusable(widget, TRUE);		
 	setup_monthname();	
-	custom_calendar_initialise_str_array(calendar);
+	custom_calendar_initialise_eventday_array(calendar);
 	custom_calendar_initialise_holiday_array(calendar);
 
 	int week_start = 0; // local
@@ -759,6 +820,7 @@ static void custom_calendar_select_day(CustomCalendar *calendar, guint dday, gui
 	
 	
 	gchar *aday_str = "";
+	//gchar *tooltip_str = "";
 	// update day labels
 	for (int y = 0; y < 6; y++)
 	{
@@ -773,15 +835,16 @@ static void custom_calendar_select_day(CustomCalendar *calendar, guint dday, gui
 				
 				char* holiday_str =calendar->holiday_array[aday];
 				
-				char* title_str =calendar->str_array[aday];
-				
-				//if (calendar->marked_holiday[aday])
-				//{
-				//}		
-				
+				char* title_str =calendar->eventday_array[aday];
+				char* tooltip_str =calendar->tooltip_array[aday];
+				//g_print("tooltip = %s\n",tooltip_str);
+								
 				aday_str = g_strconcat(aday_str ,day_num_str," ", holiday_str, "\n ",title_str, NULL);
-						
+				
+				gtk_widget_set_tooltip_text(GTK_WIDGET(calendar->day_number_labels[y][x]), tooltip_str);
+				
 				gtk_label_set_label(GTK_LABEL(calendar->day_number_labels[y][x]), aday_str);
+					
 					
 					//if today					
 					if (aday == today_day && calendar->month == today_month && calendar->year == today_year)

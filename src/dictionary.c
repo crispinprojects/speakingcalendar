@@ -46666,6 +46666,9 @@ pair_t table[] = {
 {"softest","s-ao ao-f f-t t-ah ah-s s-t"},
 {"softly","s-ao ao-f f-t t-l l-iy"},
 {"softness","s-ao ao-f f-t t-n n-ah ah-s"},
+
+{"software","s-aa aa-f f-t t-w w-eh eh-r r-pau"},
+
 {"sofya","s-ao ao-f f-y y-ah"},
 {"sogdiana","s-aa aa-g g-d d-iy iy-ae ae-n n-ah"},
 {"soggy","s-aa aa-g g-iy"},

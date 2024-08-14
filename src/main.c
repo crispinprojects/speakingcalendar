@@ -33,8 +33,8 @@
 #include <math.h>  //compile with -lm
 
 
-#define CONFIG_DIRNAME "talkcalendar-026"
-#define CONFIG_FILENAME "talkcalendar-026"
+#define CONFIG_DIRNAME "talk-calendar"
+#define CONFIG_FILENAME "talk-calendar"
 static char * m_config_file = NULL;
 
 //Declarations
@@ -238,7 +238,8 @@ const char * const month_strs[] = {
 
 //====================================================================
 
-const GActionEntry app_actions[] = { 
+const GActionEntry app_actions[] = {
+  { "speak", callbk_speak}, 
   { "speaktime", callbk_speaktime},   
   { "home", callbk_calendar_home}, 
   { "newevent", callbk_new_event},
@@ -1031,7 +1032,9 @@ char* get_public_holiday_str(int day)
 static void set_titles_on_calendar(CustomCalendar *calendar) 
 {	
 	//custom_calendar_mark_day(CUSTOM_CALENDAR(calendar), 1);//testing
-	custom_calendar_initialise_str_array(calendar);
+	
+	custom_calendar_initialise_eventday_array(calendar);
+	custom_calendar_initialise_tooltip_array(calendar);
 	custom_calendar_initialise_holiday_array(calendar);
 	custom_calendar_reset_marks(CUSTOM_CALENDAR(calendar));	
 	custom_calendar_reset_holidays(CUSTOM_CALENDAR(calendar));	
@@ -1080,6 +1083,7 @@ static void set_titles_on_calendar(CustomCalendar *calendar)
 	g_object_get(evt_day, "ispriority", &is_priority, NULL);
 	
 	char *display_str="";
+	char *tooltip_str="";
 	char *time_str = "";
 	char *starthour_str = "";
 	char *startmin_str = "";
@@ -1087,7 +1091,8 @@ static void set_titles_on_calendar(CustomCalendar *calendar)
 	char *endmin_str = "";
 	char *ampm_str = " ";
 	
-	summary_str11 =g_strndup(summary_str,11);
+	summary_str11 =g_strndup(summary_str,8);
+	summary_str11 =g_strconcat(summary_str11,"...",NULL);	
 	
 	if(!is_allday)
 	{
@@ -1135,114 +1140,24 @@ static void set_titles_on_calendar(CustomCalendar *calendar)
 	
 	time_str = g_strconcat(time_str, ampm_str, NULL);
     display_str = g_strconcat(display_str, time_str, summary_str11, NULL);	
+    //tooltip_str = g_strconcat(tooltip_str, time_str, summary_str, "\n",location_str, NULL);	
+    tooltip_str = g_strconcat(tooltip_str, time_str, summary_str, "\n",description_str, "\n", location_str, NULL);	
    } //if !all_day	
    else
    {
 	   display_str = g_strconcat(display_str, summary_str11, NULL);	
+	   //tooltip_str = g_strconcat(tooltip_str, summary_str, "\n",location_str, NULL);
+	   tooltip_str = g_strconcat(tooltip_str, summary_str, "\n",description_str, "\n", location_str, NULL);	
    }
 	
 	custom_calendar_set_day_str(CUSTOM_CALENDAR(calendar), start_day, display_str); 
+	custom_calendar_set_tooltip_str(CUSTOM_CALENDAR(calendar), start_day, tooltip_str); 
 	custom_calendar_mark_day(CUSTOM_CALENDAR(calendar), start_day);		
 	
 	} //for day	events
 		
 	} //for each day in month
 	
-	
-	
-	
-	
-	//GArray *evt_arry_month; //standard month events
-	//evt_arry_month = g_array_new(FALSE, FALSE, sizeof(CALENDAR_TYPE_EVENT));	
-	//db_get_all_events_year_month(evt_arry_month, m_start_year,m_start_month);
-		
-	////char* day_titles="";
-	
-	//for (int i = 0; i < evt_arry_month->len; i++)
-	//{
-	//CalendarEvent *evt = g_array_index(evt_arry_month, CalendarEvent *, i);
-	
-	
-	//int start_day=0;
-	//int start_month=0;
-	//int start_year=0;
-	//char* summary_str="";
-	//char* summary_str11="";
-	//int start_hour=0;
-	//int start_min=0;		
-	//int is_allday=0;
-		
-	//g_object_get (evt, "startday", &start_day, NULL);
-	//g_object_get (evt, "startmonth", &start_month, NULL);
-	//g_object_get (evt, "startyear", &start_year, NULL);	
-	//g_object_get(evt, "summary", &summary_str, NULL);
-	//g_object_get(evt, "starthour", &start_hour, NULL);
-	//g_object_get(evt, "startmin", &start_min, NULL);
-	//g_object_get(evt, "isallday", &is_allday, NULL);
-	
-	//char *display_str="";
-	//char *time_str = "";
-	//char *starthour_str = "";
-	//char *startmin_str = "";	
-	//char *ampm_str = " ";	
-	
-	//summary_str11 =g_strndup(summary_str,11);
-	    
-    //if(!is_allday)
-	//{
-	////if not all_day then add start time
-	//if (m_12hour_format)
-	//{	
-	//if (start_hour >= 13 && start_hour <= 23)
-	//{
-	//int shour = start_hour;
-	//shour = shour - 12;
-	//ampm_str = "pm ";
-	//starthour_str = g_strdup_printf("%d", shour);
-	//}
-	//if(start_hour == 12)
-	//{
-	//ampm_str = "pm ";					
-	//starthour_str = g_strdup_printf("%d", start_hour);
-    //}
-    //if(start_hour <12)
-	//{
-	//ampm_str = "am ";					
-	//starthour_str = g_strdup_printf("%d", start_hour);
-	//}
-	
-	//} // 12 hour format	
-	
-	//else //24 hour
-	//{
-	//starthour_str = g_strdup_printf("%d", start_hour);
-	//} // 24
-	
-	//startmin_str = g_strdup_printf("%d", start_min);
-	
-	//if (start_min < 10)
-	//{
-	//time_str = g_strconcat(time_str, starthour_str, ":0", startmin_str, NULL);
-	//}
-	//else
-	//{
-	//time_str = g_strconcat(time_str, starthour_str, ":", startmin_str, NULL);
-	//}
-	
-	////time_str = g_strconcat(time_str, ampm_str, NULL);
-	//time_str = g_strconcat(time_str, ampm_str, NULL);
-    //display_str = g_strconcat(display_str, time_str, summary_str11, NULL);	
-	//}
-	    
-    //else //all day no time
-    //{
-	 //display_str = g_strconcat(display_str, summary_str11, NULL);	
-	//}
-	
-	//custom_calendar_set_day_str(CUSTOM_CALENDAR(calendar), start_day, display_str); 
-	//custom_calendar_mark_day(CUSTOM_CALENDAR(calendar), start_day);
-			
-	//}//for month events
 	
 	
 	
@@ -1553,8 +1468,8 @@ static void callbk_new_event(GSimpleAction *action, GVariant *parameter,  gpoint
 	label_summary = gtk_label_new("Summary: ");
 	entry_summary = gtk_entry_new();
 	gtk_entry_set_has_frame(GTK_ENTRY(entry_summary),TRUE); 
-	//gtk_entry_set_max_length(GTK_ENTRY(entry_summary), 20);
-	gtk_entry_set_max_length(GTK_ENTRY(entry_summary), 11);
+	gtk_entry_set_max_length(GTK_ENTRY(entry_summary),20);
+	//gtk_entry_set_max_length(GTK_ENTRY(entry_summary), 11);
 	
 	//description
 	label_description = gtk_label_new("Description: ");
@@ -2044,8 +1959,8 @@ static void callbk_edit_event(GSimpleAction *action, GVariant *parameter,  gpoin
 	label_summary = gtk_label_new("Summary: ");
 	entry_summary = gtk_entry_new();
 	gtk_entry_set_has_frame(GTK_ENTRY(entry_summary),TRUE); 
-	//gtk_entry_set_max_length(GTK_ENTRY(entry_summary), 20);
-	gtk_entry_set_max_length(GTK_ENTRY(entry_summary), 11);
+	gtk_entry_set_max_length(GTK_ENTRY(entry_summary), 20);
+	//gtk_entry_set_max_length(GTK_ENTRY(entry_summary), 11);
 	//gtk_entry_set_max_length(GTK_ENTRY(entry_summary), 11);
 	
 	buffer_summary = gtk_entry_buffer_new(m_summary, -1); // show  event summary
@@ -3398,7 +3313,7 @@ static void callbk_about(GSimpleAction * action, GVariant *parameter, gpointer u
 	gtk_widget_set_size_request(about_dialog, 200,200);
     gtk_window_set_modal(GTK_WINDOW(about_dialog),TRUE);
 	gtk_about_dialog_set_program_name(GTK_ABOUT_DIALOG(about_dialog), "Talk Calendar");
-	gtk_about_dialog_set_version (GTK_ABOUT_DIALOG(about_dialog), "Version 0.2.8");
+	gtk_about_dialog_set_version (GTK_ABOUT_DIALOG(about_dialog), "Version 0.2.9");
 	gtk_about_dialog_set_copyright(GTK_ABOUT_DIALOG(about_dialog),"Copyright © 2024");
 	gtk_about_dialog_set_comments(GTK_ABOUT_DIALOG(about_dialog),"Talking calendar");
 	gtk_about_dialog_set_license_type (GTK_ABOUT_DIALOG(about_dialog), GTK_LICENSE_LGPL_2_1);
@@ -3820,7 +3735,7 @@ GList* get_event_number_diphone_list(int event_number) {
 	GList *noevents_list=NULL;    
 	noevents_list = word_to_diphones("no");   
 	noevents_list = g_list_concat(noevents_list,word_to_diphones("events")); 
-	noevents_list = g_list_concat(noevents_list,word_to_diphones("today")); 
+	//noevents_list = g_list_concat(noevents_list,word_to_diphones("today")); 
 	result =noevents_list;	
 	} //if
 	
@@ -5111,6 +5026,7 @@ static void callbk_info(GSimpleAction *action, GVariant *parameter,  gpointer us
 	GtkWidget *label_newevent_shortcut;
 	GtkWidget *label_preferences_shortcut;
 	GtkWidget *label_info_shortcut;
+	GtkWidget *label_speak_shortcut;
 	GtkWidget *label_time_shortcut;
 	GtkWidget *label_quit_shortcut;
 		
@@ -5145,6 +5061,7 @@ static void callbk_info(GSimpleAction *action, GVariant *parameter,  gpointer us
 	
 	label_preferences_shortcut=gtk_label_new("Ctrl+Alt+P: Preferences");
 	label_info_shortcut=gtk_label_new("F1: Information");
+	label_speak_shortcut=gtk_label_new("s: Speak selected day events");
 	label_time_shortcut=gtk_label_new("t: Speak time");
 	label_quit_shortcut=gtk_label_new("Ctrl+q: Quit");
 
@@ -5182,7 +5099,8 @@ static void callbk_info(GSimpleAction *action, GVariant *parameter,  gpointer us
 	gtk_box_append(GTK_BOX(box),label_home_shortcut);
 	gtk_box_append(GTK_BOX(box),label_newevent_shortcut);	
 	gtk_box_append(GTK_BOX(box),label_preferences_shortcut);
-	gtk_box_append(GTK_BOX(box),label_info_shortcut);	
+	gtk_box_append(GTK_BOX(box),label_info_shortcut);
+	gtk_box_append(GTK_BOX(box), label_speak_shortcut);	
 	gtk_box_append(GTK_BOX(box), label_time_shortcut);
 	gtk_box_append(GTK_BOX(box), label_quit_shortcut);	
 		
@@ -5286,6 +5204,9 @@ static void window_header(GtkWindow *window)
 	g_menu_append_item(menu,item);
 	g_object_unref(item);
 	
+	item =g_menu_item_new("Speak Selected Day", "app.speak");
+	g_menu_append_item(menu,item);
+	g_object_unref(item);
 	
 	item =g_menu_item_new("Information", "app.info");
 	g_menu_append_item(menu,item);
@@ -5333,6 +5254,7 @@ static void activate (GtkApplication *app, gpointer  user_data)
 			
 	//Keyboard accelerators
 	const gchar *home_accels[2] = { "Home", NULL };
+	const gchar *speak_accels[2] = { "s", NULL };
 	const gchar *newevent_accels[2] = {"<Ctrl>n", NULL };	
 	const gchar *time_accels[2] = {"t", NULL };
 	const gchar *info_accels[2] = {"F1", NULL };	
@@ -5454,9 +5376,8 @@ static void activate (GtkApplication *app, gpointer  user_data)
 	// connect keyboard accelerators	
 	gtk_application_set_accels_for_action(GTK_APPLICATION(app),"app.home", home_accels);
 	gtk_application_set_accels_for_action(GTK_APPLICATION(app),"app.newevent", newevent_accels);
-		
-	gtk_application_set_accels_for_action(GTK_APPLICATION(app),"app.speaktime", time_accels);
-	
+	gtk_application_set_accels_for_action(GTK_APPLICATION(app),"app.speak", speak_accels);		
+	gtk_application_set_accels_for_action(GTK_APPLICATION(app),"app.speaktime", time_accels);	
 	gtk_application_set_accels_for_action(GTK_APPLICATION(app),"app.info", info_accels);
 	gtk_application_set_accels_for_action(GTK_APPLICATION(app),"app.preferences", preferences_accels);
 	gtk_application_set_accels_for_action(GTK_APPLICATION(app),"app.quit", quit_accels);

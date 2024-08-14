@@ -27,24 +27,25 @@ Extract the downloaded file which contains the Talk Calendar executable. Assumin
 
 or double click on the "talkcalendar" file. Talk Calendar must have executable permissions to execute. Right click it and choose Properties->Permissions and tick allow "Executable as Program".
 
-To add Talk Calendar to the system menu modify the "talkcalendar.desktop" entry file provided in the download. A desktop entry for an application, or .desktop file, provides metadata about an application such as its name, icon, command to execute and other properties. For user-specific applications desktop files can be located locally in the ~/.local/share/applications/ directory. Local user entries take precedence over system entries. 
+To add Talk Calendar to the system menu modify the "talkcalendar.desktop" file provided in the download. A desktop file has a .desktop extension and provides metadata about an application such as its name, icon, command to execute and other properties. For user-specific applications desktop files can be located locally in the ~/.local/share/applications/ directory. Local user entries take precedence over system entries. 
 
-The "talkcalendar.desktop" file is shown below. You need to modify this using your own user name and directory locations. The Icon variable specifies the path to the icon file associated with application. The Exec variable defines the command to execute when launching an application. The Path variable tells the system where to look for the executable and in this case the calendar database. In a .desktop file, you need to use absolute and full paths.
+The "talkcalendar.desktop" file is shown below. You need to modify this using your own user name and directory locations. For example, if your user name is "tiki" and you install local applications in a folder called "Software" and you create a folder called "talkcalendar " to store the Talk Calendar binary executable then the executable path would be "Exec=/home/tiki/Software/talkcalendar/talkcalendar". The Exec variable defines the command to execute when launching an application, in this case, the talkcalendar binary executable. The Path variable tells the system where to look for the executable and the calendar database. The Icon variable specifies the path to the icon file associated with application. In a .desktop file, you need to use absolute and full paths.
 
 ```
 [Desktop Entry]
-Version=0.2.7
+Version=0.2.9
 Type=Application
 Name=Talk Calendar
 Comment=Talking calendar
-Icon=/home/username/folder/talkcalendar/calendar.png
-Exec=/home/username/folder/talkcalendar/talkcalendar
-Path=/home/username/folder/talkcalendar
+Icon=/home/your-user-name/folder/talkcalendar/calendar.png
+Exec=/home/your-user-name/folder/talkcalendar/talkcalendar
+Path=/home/your-user-name/folder/talkcalendar
 X-GNOME-UsesNotifications=true
 Categories=Calendar;Office;
+MimeType=text/calendar;
 ```
 
-Copy your modified  "talkcalendar.desktop" file to the ***~/.local/share/applications/*** directory. Create the ~/.local/share/applications/ directory if it does not already exist. This way of locally installing Talk Calendar should be universal across different Linux distributions.
+Copy your modified  "talkcalendar.desktop" file to the ***~/.local/share/applications/***  hiden directory (tick the "Show Hidden Files" option in the file explorer). Create the ~/.local/share/applications/ directory if it does not already exist. This way of locally installing Talk Calendar should be universal across different Linux distributions.
 
 ## Calendar Usage
 
@@ -54,12 +55,12 @@ If you have used a calendar application before then using Talk Calendar will be 
 
 * Click on the new event button in the header bar or press Ctrl+n to invoke the "New Event" window
 * Enter the event summary (e.g. birthday)
-* Enter description 
+* Enter the description 
 * Enter the location
 * Enter the start date by setting the day, month and year values 
 * Enter start and end times (or tick the all day check box)
 * Events are sorted by start time when displayed
-* Check the "Is Yearly" check box if the event repeats every year (e.g. birthdays)
+* Check the "Is Yearly" check box if the event repeats every year (e.g. birthdays and anniversaries)
 
 A screenshot of the new event dialog is shown below.
 
@@ -67,13 +68,15 @@ A screenshot of the new event dialog is shown below.
 
 ### Display and Speak Events
 
-* Select a date on the month-view calendar which has events and this will invoke the day events list view as shown below.
+* Click on a date in the month-view calendar which has events and this will invoke the day events list view as shown below.
 
 ![](talkcalendar-day-events.png)
 
 * Event details are spoken when the day events list view is invoked (assuming that talking is selected in the preferences).
 
-* The day events list view allows individual events to be selected so that they can be edited or deleted (make sure you click on the event before using either the "Edit Event" or "Delete Event button)
+* The day events list view allows individual events to be selected so that they can be edited or deleted (make sure you click on the event before using either the "Edit Event" or "Delete Event" button).
+
+* Talk Calendar also supports tooltips so that if you hover over a date in the month-view calendar the event details are displayed.
 
 ### Searching For Events
 
@@ -98,8 +101,10 @@ A screenshot of the new event dialog is shown below.
 
 ## Talking
 
-* Events are spoken when a date in the month-view calendar is selected (assuming talk preferences checked).
-* Talk Calendar will tell you the time if you press the "t" key
+* Events are spoken when a day in the month-view calendar is selected (assuming that talking is selected in the preferences).
+* Speaking the selected day events can also be done by pressing the "s" key or using the menu item "Speak Selected Day".
+* Talk Calendar will tell you the time if you press the "t" key.
+* Change the "Talk Rate" value in the Preferences dialog to speed up talking. (if required)
 
 ### Information
 
@@ -215,7 +220,7 @@ You may need to use the [Ubuntu snap store](https://snapcraft.io/) to install th
 
 ### Building on Debian 12 Bookworm
 
-Debian 12 Bookworm uses GTK4.8 . The Talk Calendar source code has been developed using GTK4.14 (Fedora 40) and so will not compile using GTK4.8 without making a number of changes (see code notes below). Debian testing (Trixie) is the current development state of the next stable Debian distribution. According to the [Debian GTK4 tracker](https://tracker.debian.org/pkg/gtk4) Trixie currently has GTK4.12 in its repositories. Debian experimental is using GTK4.14. Talk Calendar code will most likely compile using Debian testing and experimental but I have not tried this.
+Debian 12 Bookworm uses GTK4.8. The Talk Calendar source code has been developed using GTK4.14 (Fedora 40) and so it will not compile using GTK4.8 without making a number of changes (see code notes below). Debian testing (Trixie) is the current development state of the next stable Debian distribution. According to the [Debian GTK4 tracker](https://tracker.debian.org/pkg/gtk4) Trixie currently has GTK4.12 in its repositories. Debian experimental is using GTK4.14. Talk Calendar code will most likely compile using Debian testing and experimental but I have not tried this.
 
 To determine which version of GTK4 is running on a Debian system use the following terminal command.
 
@@ -225,17 +230,19 @@ dpkg -l | grep libgtk*
 
 ## Code Notes
 
-I am now using Fedora 40 to develop the Talk Calendar application and not Debian 12 Bookworm. Fedora 40 uses GTK4.14 as opposed to the older GTK 4.8 used by Debian 12 Bookworm. This mean that the code will not compile with Debian 12 Bookworm without making changes to the source code. These include things like replacing "gtk_css_provider_load_from_string" with "gtk_css_provider_load_from_data". The function gtk_css_provider_load_from_data was depreciated in GTK 4.12. 
+I am now using Fedora 40 to develop the Talk Calendar application and not Debian 12 Bookworm. Fedora 40 uses GTK4.14 as opposed to the older GTK 4.8 used by Debian 12 Bookworm. This mean that the code will not compile with Debian 12 Bookworm without making changes to the source code. For example, Talk Calendar now uses "gtk_css_provider_load_from_string" rather than "gtk_css_provider_load_from_data" which was depreciated in GTK 4.12.
 
-A bigger change is that the GtkFileDialog API is no longer signal based. With GTK4.12 and above it is callback based which should match a GAsyncReadyCallback function (async/await pattern). In computer programming, the async/await pattern is a syntactic feature that allows an asynchronous, non-blocking function to be structured in a way similar to an ordinary synchronous function. With Debian 12  (GTK4.8) I used the older function "gtk_file_chooser_dialog_new" with a response callback but this approach has been depreciated.
+A bigger change is that the GtkFileDialog API is no longer signal based. With GTK4.12 and above it is callback based which should match a GAsyncReadyCallback function (async/await pattern). In computer programming, the async/await pattern is a syntactic feature that allows an asynchronous, non-blocking function to be structured in a way similar to an ordinary synchronous function. With my Debian 12 (GTK4.8) projects I used the older function "gtk_file_chooser_dialog_new" with a response callback but this approach has been depreciated.
 
 Code related to colours has been migrated to use GdkRGBA as GdkColor is being deprecated. The code for setting HTML CSS colour names has been completely removed in favour of the new GtkColorDialog API. A [GtkColorDialogButton](https://docs.gtk.org/gtk4/class.ColorDialogButton.html) is wrapped around a GtkColorDialog allowing a colour chooser dialog to be opened to change calendar colours.
 
-Playing audio using GThread and GMutex has been replaced with GTask (async/wait pattern). With GTK4 it appears that the preferred way to perform work in a thread is to use GTask. The code now uses [g_task_run_in_thread()](https://docs.gtk.org/gio/method.Task.run_in_thread.html) so that a play audio blocking operation is executed in a separate background thread. The function g_task_run_in_thread() turns a synchronous operation into an asynchronous one, by running it in a thread. Aparently, GTask maintains a thread pool that is based on the number of CPUs available (i.e.supports multiple CPU-cores). The basic GTask code structure is now working but will be updated as I learn more. I have now added a guard to prevent multiple audio clips being played at once.
+Playing audio using GThread and GMutex has been replaced with GTask (async/wait pattern). With GTK4 it appears that the preferred way to perform work in a thread is to use GTask. The code now uses [g_task_run_in_thread()](https://docs.gtk.org/gio/method.Task.run_in_thread.html) so that a play audio blocking operation is executed in a separate background thread. The function g_task_run_in_thread() turns a synchronous operation into an asynchronous one, by running it in a thread. Apparently, GTask maintains a thread pool that is based on the number of CPUs available (i.e. supports multiple CPU-cores). The basic GTask code structure is now working but will be updated as I learn more. I have now added a guard to prevent multiple audio clips being played at once.
+
+The Calendar itself has received a number of updates including using tooltips to show event details when you hover over a day in the month-view display.
 
 ## Speech Synthesis
 
-Talk Calendar uses its own built-in diphone speech synthesizer.  A diphone is a sound unit composed of two adjacent partial phonemes i.e. the second half of the first phoneme and the first half of the second phoneme. Words are formed as sequences of elementary speech units called phonemes. A phoneme is the smallest unit of sound that distinguishes one word from another word and there are 44 phonemes in the English language. The synthesizer uses a set of pre-recorded diphone sound samples and concatenates these to produce speech output for a given text input.
+Talk Calendar uses its own built-in diphone speech synthesizer.  A diphone is a sound unit composed of two adjacent partial phonemes i.e. the second half of the first phoneme and the first half of the second phoneme. Words are formed as sequences of elementary speech units called phonemes. A phoneme is the smallest unit of sound that distinguishes one word from another word and there are 44 phonemes in the English language. The synthesizer uses a set of pre-recorded diphone sound samples and concatenates these to produce synthesized speech output for a given text input.
 
 The voice used by Talk Calendar is based on the diphone collection created by Alan W Black and Kevin Lenzo which is free for use for any purpose (commercial or otherwise) and subject to the pretty light restrictions [detailed here](https://github.com/hypnaceae/DiphoneSynth/blob/master/diphones_license.txt). I have used the same licence for the voice that I have created. There is information about recording your own diphones [here](http://festvox.org/bsv/x2401.html) and in the speech synthesis lecture by Professor Alan W Black [here](https://www.youtube.com/watch?v=eDjtEsOvouM&t=1459s).
 
