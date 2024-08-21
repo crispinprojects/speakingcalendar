@@ -31,6 +31,7 @@
 
 #include <glib/gstdio.h>  //needed for g_mkdir
 #include <math.h>  //compile with -lm
+#include <libnotify/notify.h>
 
 
 #define CONFIG_DIRNAME "talk-calendar"
@@ -100,8 +101,14 @@ static void callbk_spin_min_start(GtkSpinButton *button, gpointer user_data);
 static void callbk_spin_hour_end(GtkSpinButton *button, gpointer user_data);
 static void callbk_spin_min_end(GtkSpinButton *button, gpointer user_data);
 
+static void callbk_spin_hour_reminder(GtkSpinButton *button, gpointer user_data);
+static void callbk_spin_min_reminder(GtkSpinButton *button, gpointer user_data);
+
 static void callbk_check_button_allday_toggled (GtkCheckButton *check_button, gpointer user_data);
 static void callbk_check_button_upcoming_toggled(GtkCheckButton *check_button, gpointer user_data);
+
+static void callbk_check_button_hasreminder_toggled(GtkCheckButton *check_button, gpointer user_data);
+static void callbk_check_button_hasreminder_toggled2(GtkCheckButton *check_button, gpointer user_data);
 
 gboolean is_colour_name(gchar* colour_name);
 //Day selected
@@ -123,6 +130,8 @@ static char* replace_hypens(const char *text);
 static char* replace_newlines(const char *text);
 
 static int first_day_of_month(int month, int year);
+
+char* get_time_str(int hour, int min);
 
 //Search
 static void callbk_search(GSimpleAction *action, GVariant *parameter,  gpointer user_data);
@@ -150,9 +159,15 @@ GList* get_event_number_diphone_list(int event_number);
 GList* convert_number_to_diphone_list(int number);
 GList* get_upcoming_number_diphone_list(int number);
 static void speak_time(gint hour, gint min);
+static void speak_reminder();
+
 
 GArray*  get_upcoming_array(int upcoming_days);
 int  get_total_number_of_events();
+
+static gboolean callbk_timer_update(gpointer data);
+
+static void send_notification(gpointer  user_data);
 //======================================================================
 
 //selection
@@ -182,21 +197,32 @@ static int m_end_year=0;
 static int m_end_month=0;
 static int m_end_day=0;
 
+//static int m_present_day =0; //now
+//static int m_present_month=0;
+//static int m_present_year=0;
+
 static int m_current_month=0;
 
 static int m_start_hour=0;
 static int m_start_min=0;
 static int m_end_hour=0;
 static int m_end_min=0;
+
+static int m_has_reminder=0; 
+static int m_reminder_hour=0;
+static int m_reminder_min=0;
+
+static gboolean continue_timer = TRUE;
+
 static int m_priority=0;
 
 static int m_is_yearly=0;
 static int m_is_monthly=0;
 static int m_is_weekly=0;
 static int m_is_allday=0;
-static int m_notification=0;
-static int m_has_reminder=0; //plumbing for future updates
-static int m_reminder_min=0; //plumbing for future updates
+
+
+
 
 static  char* m_todaycolour="rgb(173,216,230)";
 static  char* m_eventcolour="rgb(222,184,135)";
@@ -335,6 +361,153 @@ void print_array(GArray *a) {
 
     }
 }
+
+//=====================================================================
+char* get_time_str(int hour, int min)
+{
+	char *time_str = "";
+	char *hour_str = "";
+	char *min_str = "";	
+	char *ampm_str = " ";
+	
+	if (m_12hour_format)
+	{
+	
+	if (hour >= 13 && hour <= 23)
+	{
+	int shour = hour;
+	shour = shour - 12;
+	ampm_str = "pm ";
+	hour_str = g_strdup_printf("%d", shour);
+	}
+	if(hour == 12)
+	{
+	ampm_str = "pm ";					
+	hour_str = g_strdup_printf("%d", hour);
+	 }
+	if(hour <12)
+	{
+	ampm_str = "am ";					
+	hour_str = g_strdup_printf("%d", hour);
+	}	
+	} // 12 hour format
+		
+	else //24 hour
+	{
+	hour_str = g_strdup_printf("%d", hour);
+	} // 24
+	
+	min_str = g_strdup_printf("%d", min);
+	
+	if (min < 10)
+	{
+	time_str = g_strconcat(time_str, hour_str, ":0", min_str, NULL);
+	}
+	else
+	{
+	time_str = g_strconcat(time_str, hour_str, ":", min_str, NULL);
+	}
+	
+	if (m_12hour_format) time_str = g_strconcat(time_str, ampm_str, NULL);
+	
+	return time_str;
+	
+}
+
+//======================================================================
+// Background Timer
+//======================================================================
+
+static gboolean callbk_timer_update(gpointer data)
+{
+       
+    GDateTime *date_time;
+    //gchar *dt_format;
+    date_time = g_date_time_new_now_local(); // get local time
+    gint now_year = g_date_time_get_year(date_time);
+	gint now_month =g_date_time_get_month(date_time);    
+	gint now_day = g_date_time_get_day_of_month(date_time); 
+	gint now_hour =g_date_time_get_hour(date_time);
+	gint now_min =g_date_time_get_minute (date_time);
+	gint sec = g_date_time_get_second (date_time);
+	
+	 //g_print("date = %d-%d-%d\n", day,month,year);
+	//g_print("time = %d %d %d \n", hour,min,sec);
+      
+	
+	GArray *evt_arry_day; //get day events if any	
+	evt_arry_day = g_array_new(FALSE, FALSE, sizeof(CALENDAR_TYPE_EVENT)); // setup arraylist
+	db_get_all_events_year_month_day(evt_arry_day, now_year,now_month, now_day);
+	//cycle through day event and check for reminders		
+	for (int i = 0; i < evt_arry_day->len; i++)
+	{
+	CalendarEvent *evt_day = g_array_index(evt_arry_day , CalendarEvent *, i); //sorted
+	
+	int start_day=0;
+	int start_month=0;
+	int start_year=0;
+	char* summary_str="";
+	char* location_str="";
+	int start_hour=0;
+	int start_min=0;
+	int has_reminder=0;
+	int reminder_hour=0;
+	int reminder_min=0;
+	
+	g_object_get (evt_day, "startday", &start_day, NULL);
+	g_object_get (evt_day, "startmonth", &start_month, NULL);
+	g_object_get (evt_day, "startyear", &start_year, NULL);	
+	g_object_get(evt_day, "summary", &summary_str, NULL);	
+	g_object_get(evt_day, "location", &location_str, NULL);		
+	g_object_get(evt_day, "starthour", &start_hour, NULL);
+	g_object_get(evt_day, "startmin", &start_min, NULL);	
+	
+	g_object_get(evt_day, "hasreminder", &has_reminder, NULL);
+	g_object_get(evt_day, "reminderhour", &reminder_hour, NULL);
+	g_object_get(evt_day, "remindermin", &reminder_min, NULL);
+		
+	if(reminder_hour==now_hour && reminder_min==now_min && sec==0)
+	{
+		//g_print("Reminder Notification\n");
+		
+		char* time_str =get_time_str(start_hour,start_min);
+		
+		char *notify_str="";
+				
+		notify_str =g_strconcat(notify_str,
+		time_str, " ",
+		summary_str, " ",location_str, NULL); 		
+		send_notification((gpointer) notify_str);
+		speak_reminder();		
+	} //if reminder
+    } //day_events
+	  
+    return continue_timer;
+}
+
+
+//=====================================================================
+
+//====================================================================
+
+static void send_notification(gpointer  user_data)
+{	
+	//g_print("send notification using libnotify\n");	
+	char* user_str =(gpointer) user_data;
+		
+	const char* title= "Talk Calendar Reminder";
+	const char* body=g_strdup(user_str);
+	
+	NotifyNotification *notify;
+	notify_init("notification"); 
+	notify = notify_notification_new(title, body, NULL);		
+	notify_notification_set_urgency (notify, NOTIFY_URGENCY_NORMAL);
+	notify_notification_show(notify,NULL);	 
+	notify_uninit();
+	
+}
+//=====================================================================
+
 //======================================================================
 // Save load config file
 //======================================================================
@@ -343,7 +516,7 @@ static void config_load_default()
 {
 	//talking	
 	m_talk=1;
-	m_talk_at_startup=1;
+	m_talk_at_startup=0;
 	m_talk_event_number=1;
 	m_talk_time=1;
 	m_talk_location=1;	
@@ -370,7 +543,7 @@ static void config_read()
 {
 	// Clean up previously loaded configuration values	
 	m_talk=1;
-	m_talk_at_startup=1;
+	m_talk_at_startup=0;
 	m_talk_event_number=1;
 	m_talk_time=1;
 	m_talk_location=1;	
@@ -1096,49 +1269,51 @@ static void set_titles_on_calendar(CustomCalendar *calendar)
 	
 	if(!is_allday)
 	{
-	//if not all_day then add start time
-	if (m_12hour_format)
-	{
+	////if not all_day then add start time
+	//if (m_12hour_format)
+	//{
 	
-	if (start_hour >= 13 && start_hour <= 23)
-	{
-	int shour = start_hour;
-	shour = shour - 12;
-	ampm_str = "pm ";
-	starthour_str = g_strdup_printf("%d", shour);
-	}
-	if(start_hour == 12)
-	{
-	ampm_str = "pm ";					
-	starthour_str = g_strdup_printf("%d", start_hour);
-	 }
-	if(start_hour <12)
-	{
-	ampm_str = "am ";					
-	starthour_str = g_strdup_printf("%d", start_hour);
-	}
+	//if (start_hour >= 13 && start_hour <= 23)
+	//{
+	//int shour = start_hour;
+	//shour = shour - 12;
+	//ampm_str = "pm ";
+	//starthour_str = g_strdup_printf("%d", shour);
+	//}
+	//if(start_hour == 12)
+	//{
+	//ampm_str = "pm ";					
+	//starthour_str = g_strdup_printf("%d", start_hour);
+	 //}
+	//if(start_hour <12)
+	//{
+	//ampm_str = "am ";					
+	//starthour_str = g_strdup_printf("%d", start_hour);
+	//}
 	
-	} // 12 hour format
-	
-	
-	else //24 hour
-	{
-	starthour_str = g_strdup_printf("%d", start_hour);
-	} // 24
-	
-	startmin_str = g_strdup_printf("%d", start_min);
-	
-	if (start_min < 10)
-	{
-	time_str = g_strconcat(time_str, starthour_str, ":0", startmin_str, NULL);
-	}
-	else
-	{
-	time_str = g_strconcat(time_str, starthour_str, ":", startmin_str, NULL);
-	}
+	//} // 12 hour format
 	
 	
-	time_str = g_strconcat(time_str, ampm_str, NULL);
+	//else //24 hour
+	//{
+	//starthour_str = g_strdup_printf("%d", start_hour);
+	//} // 24
+	
+	//startmin_str = g_strdup_printf("%d", start_min);
+	
+	//if (start_min < 10)
+	//{
+	//time_str = g_strconcat(time_str, starthour_str, ":0", startmin_str, NULL);
+	//}
+	//else
+	//{
+	//time_str = g_strconcat(time_str, starthour_str, ":", startmin_str, NULL);
+	//}
+	
+	
+	//time_str = g_strconcat(time_str, ampm_str, NULL);
+	
+	time_str =get_time_str(start_hour,start_min);
     display_str = g_strconcat(display_str, time_str, summary_str11, NULL);	
     //tooltip_str = g_strconcat(tooltip_str, time_str, summary_str, "\n",location_str, NULL);	
     tooltip_str = g_strconcat(tooltip_str, time_str, summary_str, "\n",description_str, "\n", location_str, NULL);	
@@ -1222,6 +1397,73 @@ static void callbk_spin_min_end(GtkSpinButton *button, gpointer user_data)
 	if ((m_end_hour == m_start_hour) && (m_end_min < m_start_min)) m_end_min =m_start_min;
 }
 //======================================================================
+//======================================================================
+static void callbk_spin_hour_reminder(GtkSpinButton *button, gpointer user_data)
+{	
+	m_reminder_hour = gtk_spin_button_get_value_as_int (button);		
+}
+//======================================================================
+static void callbk_spin_min_reminder(GtkSpinButton *button, gpointer user_data)
+{	
+	m_reminder_min = gtk_spin_button_get_value_as_int (button);		
+}
+//======================================================================
+
+static void callbk_check_button_hasreminder_toggled2(GtkCheckButton *check_button, gpointer user_data)
+{
+	GtkWidget *spin_button_reminder_hour;
+	GtkWidget *spin_button_reminder_min;
+	
+	spin_button_reminder_hour = g_object_get_data(G_OBJECT(user_data), "cb_hasreminder_spin_reminder_hour_key");
+	spin_button_reminder_min = g_object_get_data(G_OBJECT(user_data), "cb_hasreminder_spin_reminder_min_key");
+
+	if (gtk_check_button_get_active(GTK_CHECK_BUTTON(check_button)))
+	{
+		gtk_widget_set_sensitive(spin_button_reminder_hour, FALSE);
+		gtk_widget_set_sensitive(spin_button_reminder_min, FALSE);	
+		
+		//gtk_widget_set_sensitive(spin_button_reminder_hour, TRUE);
+		//gtk_widget_set_sensitive(spin_button_reminder_min, TRUE);
+	}
+	else
+	{
+		//gtk_widget_set_sensitive(spin_button_reminder_hour, FALSE);
+		//gtk_widget_set_sensitive(spin_button_reminder_min, FALSE);	
+		gtk_widget_set_sensitive(spin_button_reminder_hour, TRUE);
+		gtk_widget_set_sensitive(spin_button_reminder_min, TRUE);
+	}
+					
+	
+}
+
+//======================================================================
+static void callbk_check_button_hasreminder_toggled(GtkCheckButton *check_button, gpointer user_data)
+{
+	GtkWidget *spin_button_reminder_hour;
+	GtkWidget *spin_button_reminder_min;
+	
+	spin_button_reminder_hour = g_object_get_data(G_OBJECT(user_data), "cb_hasreminder_spin_reminder_hour_key");
+	spin_button_reminder_min = g_object_get_data(G_OBJECT(user_data), "cb_hasreminder_spin_reminder_min_key");
+
+	if (gtk_check_button_get_active(GTK_CHECK_BUTTON(check_button)))
+	{
+		//gtk_widget_set_sensitive(spin_button_reminder_hour, FALSE);
+		//gtk_widget_set_sensitive(spin_button_reminder_min, FALSE);	
+		
+		gtk_widget_set_sensitive(spin_button_reminder_hour, TRUE);
+		gtk_widget_set_sensitive(spin_button_reminder_min, TRUE);
+	}
+	else
+	{
+		gtk_widget_set_sensitive(spin_button_reminder_hour, FALSE);
+		gtk_widget_set_sensitive(spin_button_reminder_min, FALSE);	
+		//gtk_widget_set_sensitive(spin_button_reminder_hour, TRUE);
+		//gtk_widget_set_sensitive(spin_button_reminder_min, TRUE);
+	}
+					
+	
+}
+//======================================================================
 static void callbk_check_button_allday_toggled(GtkCheckButton *check_button, gpointer user_data)
 {
 
@@ -1284,6 +1526,11 @@ static void callbk_add_new_event(GtkButton *button, gpointer user_data)
 	GtkWidget *spin_button_end_hour = g_object_get_data(G_OBJECT(button), "spin-end-hour-key");
 	GtkWidget *spin_button_end_min = g_object_get_data(G_OBJECT(button), "spin-end-min-key");
 	
+	//reminder	
+	GtkWidget *check_button_hasreminder = g_object_get_data(G_OBJECT(button), "check-button-hasreminder-key");
+	GtkWidget *spin_button_reminder_hour = g_object_get_data(G_OBJECT(button), "spin-reminder-hour-key");
+	GtkWidget *spin_button_reminder_min = g_object_get_data(G_OBJECT(button), "spin-reminder-min-key");
+	
 	m_summary =""; //reset
 	buffer_summary = gtk_entry_get_buffer(GTK_ENTRY(entry_summary));
 	m_summary = gtk_entry_buffer_get_text(buffer_summary);
@@ -1332,6 +1579,22 @@ static void callbk_add_new_event(GtkButton *button, gpointer user_data)
 	m_end_month=m_start_month;
 	m_end_year=m_start_year;
 	
+	m_has_reminder = gtk_check_button_get_active(GTK_CHECK_BUTTON(check_button_hasreminder));
+	m_reminder_hour= gtk_spin_button_get_value(GTK_SPIN_BUTTON(spin_button_reminder_hour));
+	m_reminder_min= gtk_spin_button_get_value(GTK_SPIN_BUTTON(spin_button_reminder_min));
+	//m_has_reminder=0;
+	//m_reminder_hour=m_start_hour;
+	//m_reminder_min=m_start_min;
+	
+	//reminder checks
+	if(m_reminder_hour >m_start_hour) m_reminder_hour=m_start_hour;	
+	if ((m_reminder_hour == m_start_hour) &&(m_reminder_min >m_start_min)) m_reminder_min=m_start_min;
+	
+	//g_print("Has reminder = %d\n", m_has_reminder);
+	//g_print("Reminder hour= %d\n", m_reminder_hour);
+	//g_print("Reminder min = %d\n",m_reminder_min);
+	
+	
 	//add event into db
 		
 	CalendarEvent *evt = g_object_new(CALENDAR_TYPE_EVENT, 0);
@@ -1351,10 +1614,10 @@ static void callbk_add_new_event(GtkButton *button, gpointer user_data)
 	g_object_set(evt, "endmin", m_end_min, NULL);
 	g_object_set(evt, "isyearly", m_is_yearly, NULL);
 	g_object_set(evt, "isallday", m_is_allday, NULL);			
-	g_object_set(evt, "ispriority", m_priority, NULL);
-	g_object_set(evt, "hasnotification", m_notification, NULL);
-	g_object_set(evt, "hasreminder", 0, NULL);
-	g_object_set(evt, "remindermin", 30, NULL);		
+	g_object_set(evt, "ispriority", m_priority, NULL);	
+	g_object_set(evt, "hasreminder", m_has_reminder, NULL);
+	g_object_set(evt, "reminderhour", m_reminder_hour, NULL);
+	g_object_set(evt, "remindermin", m_reminder_min, NULL);		
 	db_insert_event(evt); //insert event into database	
 	
 	m_id_selection = -1;
@@ -1400,6 +1663,7 @@ static void callbk_new_event(GSimpleAction *action, GVariant *parameter,  gpoint
 	GtkWidget *label_spacer3;
 	GtkWidget *label_spacer4;
 	GtkWidget *label_spacer5;
+	GtkWidget *label_spacer6;
 	
 	//date
 	GtkWidget *label_date_start;
@@ -1417,7 +1681,7 @@ static void callbk_new_event(GSimpleAction *action, GVariant *parameter,  gpoint
 	GtkWidget *check_button_allday;	
 	GtkWidget *check_button_isyearly;
 	GtkWidget *check_button_priority;
-	//GtkWidget *check_button_notification;
+	GtkWidget *check_button_hasreminder;
 
 	//Adjustments
 	// value,lower,upper,step_increment,page_increment,page_size
@@ -1433,7 +1697,12 @@ static void callbk_new_event(GSimpleAction *action, GVariant *parameter,  gpoint
 	//end time
 	GtkWidget *label_end_time;
 	GtkWidget *spin_button_end_hour;	
-	GtkWidget *spin_button_end_min;	
+	GtkWidget *spin_button_end_min;
+	
+	//reminder time
+	GtkWidget *label_reminder_time;	
+	GtkWidget *spin_button_reminder_hour;	
+	GtkWidget *spin_button_reminder_min;	
 	
 	GtkAdjustment *adjustment_start_hour = gtk_adjustment_new(1.00, 0.0, 23.00, 1.0, 1.0, 0.0);
 	GtkAdjustment *adjustment_start_min= gtk_adjustment_new(1.00, 0.0, 59.00, 1.0, 1.0, 0.0);
@@ -1441,11 +1710,15 @@ static void callbk_new_event(GSimpleAction *action, GVariant *parameter,  gpoint
 	GtkAdjustment *adjustment_end_hour = gtk_adjustment_new(1.00, 0.0, 23.00, 1.0, 1.0, 0.0);
 	GtkAdjustment *adjustment_end_min = gtk_adjustment_new(1.00, 0.0, 59.00, 1.0, 1.0, 0.0);
 	
+	GtkAdjustment *adjustment_reminder_hour = gtk_adjustment_new(1.00, 0.0, 23.00, 1.0, 1.0, 0.0);
+	GtkAdjustment *adjustment_reminder_min= gtk_adjustment_new(1.00, 0.0, 59.00, 1.0, 1.0, 0.0);
+	
 	label_spacer1 = gtk_label_new("");
 	label_spacer2 = gtk_label_new("");
 	label_spacer3 = gtk_label_new("");
 	label_spacer4 = gtk_label_new("");
 	label_spacer5 = gtk_label_new("");
+	label_spacer6 = gtk_label_new("");
 	
 	button_add_event = gtk_button_new_with_label ("Add Event");
 	g_signal_connect (GTK_BUTTON (button_add_event),"clicked", G_CALLBACK (callbk_add_new_event), G_OBJECT (window));
@@ -1522,6 +1795,27 @@ static void callbk_new_event(GSimpleAction *action, GVariant *parameter,  gpoint
 	gtk_spin_button_set_value(GTK_SPIN_BUTTON(spin_button_end_min), m_end_min);
 	g_signal_connect(GTK_SPIN_BUTTON(spin_button_end_min), "value_changed", G_CALLBACK(callbk_spin_min_end), NULL);
 	
+	//reminder time
+	spin_button_reminder_hour = gtk_spin_button_new(adjustment_reminder_hour, 1.0, 0);	
+	g_signal_connect(GTK_SPIN_BUTTON(spin_button_reminder_hour), "value_changed", G_CALLBACK(callbk_spin_hour_reminder), NULL);	
+	gtk_spin_button_set_value(GTK_SPIN_BUTTON(spin_button_reminder_hour), m_reminder_hour);
+	
+	spin_button_reminder_min = gtk_spin_button_new(adjustment_reminder_min, 1.0, 0);		
+	g_signal_connect(GTK_SPIN_BUTTON(spin_button_reminder_min), "value_changed", G_CALLBACK(callbk_spin_min_reminder), NULL);	
+	gtk_spin_button_set_value(GTK_SPIN_BUTTON(spin_button_reminder_min), m_reminder_min);	
+	
+	label_reminder_time =gtk_label_new("Reminder Time:");
+	check_button_hasreminder=gtk_check_button_new_with_label("Has Reminder");
+	
+	gtk_widget_set_sensitive(spin_button_reminder_hour, FALSE);
+	gtk_widget_set_sensitive(spin_button_reminder_min, FALSE);
+	
+	g_signal_connect_swapped(GTK_CHECK_BUTTON(check_button_hasreminder), "toggled",
+							 G_CALLBACK(callbk_check_button_hasreminder_toggled), check_button_hasreminder);
+	
+	g_object_set_data(G_OBJECT(check_button_hasreminder), "cb_hasreminder_spin_reminder_hour_key", spin_button_reminder_hour);
+	g_object_set_data(G_OBJECT(check_button_hasreminder), "cb_hasreminder_spin_reminder_min_key", spin_button_reminder_min);						 
+	
 	// check buttons
 	check_button_allday = gtk_check_button_new_with_label("Is All Day");
 	g_signal_connect_swapped(GTK_CHECK_BUTTON(check_button_allday), "toggled",
@@ -1547,6 +1841,11 @@ static void callbk_new_event(GSimpleAction *action, GVariant *parameter,  gpoint
 	g_object_set_data(G_OBJECT(button_add_event), "spin-start-min-key", spin_button_start_min);
 	g_object_set_data(G_OBJECT(button_add_event), "spin-end-hour-key", spin_button_end_hour);
 	g_object_set_data(G_OBJECT(button_add_event), "spin-end-min-key", spin_button_end_min);
+	
+	//reminder
+	g_object_set_data(G_OBJECT(button_add_event), "check-button-hasreminder-key", check_button_hasreminder);
+	g_object_set_data(G_OBJECT(button_add_event), "spin-reminder-hour-key", spin_button_reminder_hour);
+	g_object_set_data(G_OBJECT(button_add_event), "spin-reminder-min-key", spin_button_reminder_min);
 		
 	g_object_set_data(G_OBJECT(button_add_event), "spin-day-start-key", spin_button_day_start);	
 	g_object_set_data(G_OBJECT(button_add_event), "spin-year-start-key", spin_button_year_start);	
@@ -1573,30 +1872,37 @@ static void callbk_new_event(GSimpleAction *action, GVariant *parameter,  gpoint
 	//start date
 	gtk_grid_attach(GTK_GRID(grid), label_date_start,       1, 5, 1, 1);
 	gtk_grid_attach(GTK_GRID(grid), spin_button_day_start,  2, 5, 1, 1);
-
 	gtk_grid_attach(GTK_GRID(grid), dropdown_month_start,    3, 5, 1, 1);
 	gtk_grid_attach(GTK_GRID(grid), spin_button_year_start,  4, 5, 1, 1);
 		
 	gtk_grid_attach(GTK_GRID(grid), label_spacer2,       1, 6, 3, 1);
 	
 	//start time
-	gtk_grid_attach(GTK_GRID(grid), label_start_time,       1, 8, 1, 1);
-	gtk_grid_attach(GTK_GRID(grid), spin_button_start_hour,  2, 8, 1, 1);
-	gtk_grid_attach(GTK_GRID(grid), spin_button_start_min,   3, 8, 1, 1);
+	gtk_grid_attach(GTK_GRID(grid), label_start_time,       1, 7, 1, 1);
+	gtk_grid_attach(GTK_GRID(grid), spin_button_start_hour,  2, 7, 1, 1);
+	gtk_grid_attach(GTK_GRID(grid), spin_button_start_min,   3, 7, 1, 1);
 	//end time
-	gtk_grid_attach(GTK_GRID(grid), label_end_time,        1, 9, 1, 1);
-	gtk_grid_attach(GTK_GRID(grid), spin_button_end_hour,  2, 9, 1, 1);
-	gtk_grid_attach(GTK_GRID(grid), spin_button_end_min,   3, 9, 1, 1);
+	gtk_grid_attach(GTK_GRID(grid), label_end_time,        1, 8, 1, 1);
+	gtk_grid_attach(GTK_GRID(grid), spin_button_end_hour,  2, 8, 1, 1);
+	gtk_grid_attach(GTK_GRID(grid), spin_button_end_min,   3, 8, 1, 1);
 	
-	gtk_grid_attach(GTK_GRID(grid), label_spacer4,       1, 10, 3, 1);
-
-	gtk_grid_attach(GTK_GRID(grid), check_button_allday,        1, 11, 1, 1);
-    gtk_grid_attach(GTK_GRID(grid), check_button_isyearly,      2, 11, 1, 1);  
-    gtk_grid_attach(GTK_GRID(grid), check_button_priority,      3, 11, 1, 1);
+	gtk_grid_attach(GTK_GRID(grid), label_spacer3,       1, 9, 3, 1);
+	
+	//reminder time
+	gtk_grid_attach(GTK_GRID(grid), check_button_hasreminder,       1, 10, 1, 1);
+	gtk_grid_attach(GTK_GRID(grid), label_reminder_time,            2, 10, 1, 1);
+	gtk_grid_attach(GTK_GRID(grid), spin_button_reminder_hour,      3, 10, 1, 1);
+	gtk_grid_attach(GTK_GRID(grid), spin_button_reminder_min,        4, 10, 1, 1);
+	
+	gtk_grid_attach(GTK_GRID(grid), label_spacer4,       1, 11, 3, 1); 
+	
+	gtk_grid_attach(GTK_GRID(grid), check_button_allday,        1, 12, 1, 1);
+    gtk_grid_attach(GTK_GRID(grid), check_button_isyearly,      2, 12, 1, 1);  
+    gtk_grid_attach(GTK_GRID(grid), check_button_priority,      3, 12, 1, 1);
    
-    gtk_grid_attach(GTK_GRID(grid), label_spacer5,       1, 12, 3, 1);
+    gtk_grid_attach(GTK_GRID(grid), label_spacer5,       1, 13, 3, 1);
 
-	gtk_grid_attach(GTK_GRID(grid), button_add_event,  1, 13, 4, 1);
+	gtk_grid_attach(GTK_GRID(grid), button_add_event,  1, 14, 4, 1);
 
     gtk_window_set_child (GTK_WINDOW (dialog), grid);	
 	gtk_window_present(GTK_WINDOW(dialog));	
@@ -1736,6 +2042,12 @@ static void callbk_update_event(GtkButton *button, gpointer user_data)
 	GtkWidget *spin_button_end_hour = g_object_get_data(G_OBJECT(button), "spin-end-hour-key");
 	GtkWidget *spin_button_end_min = g_object_get_data(G_OBJECT(button), "spin-end-min-key");
 	
+	//reminder	
+	GtkWidget *check_button_hasreminder = g_object_get_data(G_OBJECT(button), "check-button-hasreminder-key");
+	GtkWidget *spin_button_reminder_hour = g_object_get_data(G_OBJECT(button), "spin-reminder-hour-key");
+	GtkWidget *spin_button_reminder_min = g_object_get_data(G_OBJECT(button), "spin-reminder-min-key");
+	
+	
 	buffer_summary = gtk_entry_get_buffer(GTK_ENTRY(entry_summary));
 	m_summary = gtk_entry_buffer_get_text(buffer_summary);
 		
@@ -1775,6 +2087,18 @@ static void callbk_update_event(GtkButton *button, gpointer user_data)
 	m_end_month=m_start_month;
 	m_end_year=m_start_year;
 		
+	m_has_reminder = gtk_check_button_get_active(GTK_CHECK_BUTTON(check_button_hasreminder));
+	m_reminder_hour= gtk_spin_button_get_value(GTK_SPIN_BUTTON(spin_button_reminder_hour));
+	m_reminder_min= gtk_spin_button_get_value(GTK_SPIN_BUTTON(spin_button_reminder_min));
+	
+	//reminder checks
+	if(m_reminder_hour >m_start_hour) m_reminder_hour=m_start_hour;	
+	if ((m_reminder_hour == m_start_hour) &&(m_reminder_min >m_start_min)) m_reminder_min=m_start_min;
+	
+	//g_print("Has reminder = %d\n", m_has_reminder);
+	//g_print("Reminder hour= %d\n", m_reminder_hour);
+	//g_print("Reminder min = %d\n",m_reminder_min);
+			
 	g_object_set(selected_evt, "summary", g_strdup(m_summary), NULL);
 	g_object_set(selected_evt, "location", g_strdup(m_location), NULL);
 	g_object_set(selected_evt, "description", g_strdup(m_description), NULL);
@@ -1791,8 +2115,9 @@ static void callbk_update_event(GtkButton *button, gpointer user_data)
 	g_object_set(selected_evt, "isyearly", m_is_yearly, NULL);
 	g_object_set(selected_evt, "isallday", m_is_allday, NULL);	
 	g_object_set(selected_evt, "ispriority", m_priority, NULL);
-	g_object_set(selected_evt, "hasnotification", m_notification, NULL);
+	
 	g_object_set(selected_evt, "hasreminder", m_has_reminder, NULL);
+	g_object_set(selected_evt, "reminderhour", m_reminder_hour, NULL);
 	g_object_set(selected_evt, "remindermin", m_reminder_min, NULL);
 	
 	db_update_event(selected_evt);
@@ -1846,6 +2171,7 @@ static void callbk_edit_event(GSimpleAction *action, GVariant *parameter,  gpoin
 	GtkWidget *label_spacer3;
 	GtkWidget *label_spacer4;
 	GtkWidget *label_spacer5;
+	GtkWidget *label_spacer6;
 	
 	GtkWidget *dropdown_month_start;
 	
@@ -1862,7 +2188,7 @@ static void callbk_edit_event(GSimpleAction *action, GVariant *parameter,  gpoin
 	//Adjustments
 	// value,lower,upper,step_increment,page_increment,page_size
 	GtkAdjustment *adjustment_day_start = gtk_adjustment_new(1.00, 0.0, 31.00, 1.0, 1.0, 0.0);	
-	GtkAdjustment *adjustment_year_start = gtk_adjustment_new(2024.00, 0.0, 5000.00, 1.0, 1.0, 0.0);
+	GtkAdjustment *adjustment_year_start = gtk_adjustment_new(2024.00, 0.0, 5024.00, 1.0, 1.0, 0.0);
 	
 	//start time
 	GtkWidget *label_start_time;
@@ -1873,17 +2199,27 @@ static void callbk_edit_event(GSimpleAction *action, GVariant *parameter,  gpoin
 	GtkWidget *spin_button_end_hour;	
 	GtkWidget *spin_button_end_min;	
 	
+	//reminder time
+	GtkWidget *check_button_hasreminder;
+	GtkWidget *label_reminder_time;	
+	GtkWidget *spin_button_reminder_hour;	
+	GtkWidget *spin_button_reminder_min;	
+	
 	GtkAdjustment *adjustment_start_hour = gtk_adjustment_new(1.00, 0.0, 23.00, 1.0, 1.0, 0.0);
 	GtkAdjustment *adjustment_start_min= gtk_adjustment_new(1.00, 0.0, 59.00, 1.0, 1.0, 0.0);
 	
 	GtkAdjustment *adjustment_end_hour = gtk_adjustment_new(1.00, 0.0, 23.00, 1.0, 1.0, 0.0);
 	GtkAdjustment *adjustment_end_min = gtk_adjustment_new(1.00, 0.0, 59.00, 1.0, 1.0, 0.0);
 	
+	GtkAdjustment *adjustment_reminder_hour = gtk_adjustment_new(1.00, 0.0, 23.00, 1.0, 1.0, 0.0);
+	GtkAdjustment *adjustment_reminder_min= gtk_adjustment_new(1.00, 0.0, 59.00, 1.0, 1.0, 0.0);
+	
 	label_spacer1 = gtk_label_new("");
 	label_spacer2 = gtk_label_new("");
 	label_spacer3 = gtk_label_new("");
 	label_spacer4 = gtk_label_new("");
 	label_spacer5 = gtk_label_new("");
+	label_spacer6 = gtk_label_new("");
 	
 	m_current_month=m_start_month;
 	
@@ -1913,8 +2249,9 @@ static void callbk_edit_event(GSimpleAction *action, GVariant *parameter,  gpoin
 	gint is_yearly = 0;
 	gint is_allday = 0;
 	gint is_priority = 0;
-	gint has_notification = 0;
+	
 	gint has_reminder = 0;
+	gint reminder_hour = 0;
 	gint reminder_min = 0;
 	
 	//if(selected_evt ==NULL) return; //to do
@@ -1935,8 +2272,9 @@ static void callbk_edit_event(GSimpleAction *action, GVariant *parameter,  gpoin
 	g_object_get(selected_evt, "isyearly", &is_yearly, NULL);
 	g_object_get(selected_evt, "isallday", &is_allday, NULL);	
 	g_object_get(selected_evt, "ispriority", &is_priority, NULL);
-	g_object_get (selected_evt, "hasnotification", &has_notification, NULL);	
+		
 	g_object_get (selected_evt, "hasreminder", &has_reminder, NULL);
+	g_object_get (selected_evt, "reminderhour", &reminder_hour, NULL);
 	g_object_get (selected_evt, "remindermin", &reminder_min, NULL);
 	
 	m_summary = g_strdup(summary_str);
@@ -1953,7 +2291,9 @@ static void callbk_edit_event(GSimpleAction *action, GVariant *parameter,  gpoin
 	m_is_allday = is_allday;	
 	m_priority = is_priority;
 	
-	m_notification=0;
+	m_has_reminder=has_reminder;
+	m_reminder_hour=reminder_hour;
+	m_reminder_min=reminder_min;
 	
 	//Summary
 	label_summary = gtk_label_new("Summary: ");
@@ -2020,6 +2360,31 @@ static void callbk_edit_event(GSimpleAction *action, GVariant *parameter,  gpoin
 	gtk_spin_button_set_value(GTK_SPIN_BUTTON(spin_button_end_min), m_end_min); //end min
 	g_signal_connect(GTK_SPIN_BUTTON(spin_button_end_min), "value_changed", G_CALLBACK(callbk_spin_min_end), NULL);
 	
+	//reminder time
+	label_reminder_time =gtk_label_new("Reminder Time:");
+	
+	
+	spin_button_reminder_hour = gtk_spin_button_new(adjustment_reminder_hour, 1.0, 0);	
+	g_signal_connect(GTK_SPIN_BUTTON(spin_button_reminder_hour), "value_changed", G_CALLBACK(callbk_spin_hour_reminder), NULL);	
+	gtk_spin_button_set_value(GTK_SPIN_BUTTON(spin_button_reminder_hour), m_reminder_hour);
+	
+	spin_button_reminder_min = gtk_spin_button_new(adjustment_reminder_min, 1.0, 0);		
+	g_signal_connect(GTK_SPIN_BUTTON(spin_button_reminder_min), "value_changed", G_CALLBACK(callbk_spin_min_reminder), NULL);	
+	gtk_spin_button_set_value(GTK_SPIN_BUTTON(spin_button_reminder_min), m_reminder_min);	
+		
+	
+	check_button_hasreminder=gtk_check_button_new_with_label("Has Reminder");
+	gtk_check_button_set_active(GTK_CHECK_BUTTON(check_button_hasreminder), m_has_reminder);
+	
+	g_signal_connect_swapped(GTK_CHECK_BUTTON(check_button_hasreminder), "toggled",
+							 G_CALLBACK(callbk_check_button_hasreminder_toggled), check_button_hasreminder);
+			
+	
+	g_object_set_data(G_OBJECT(check_button_hasreminder), "cb_hasreminder_spin_reminder_hour_key", spin_button_reminder_hour);
+	g_object_set_data(G_OBJECT(check_button_hasreminder), "cb_hasreminder_spin_reminder_min_key", spin_button_reminder_min);						 
+	
+	
+	
 	check_button_allday = gtk_check_button_new_with_label("Is All Day");
 	gtk_check_button_set_active(GTK_CHECK_BUTTON(check_button_allday), m_is_allday);
 	g_signal_connect_swapped(GTK_CHECK_BUTTON(check_button_allday), "toggled",
@@ -2064,6 +2429,13 @@ static void callbk_edit_event(GSimpleAction *action, GVariant *parameter,  gpoin
 	g_object_set_data(G_OBJECT(button_update), "spin-end-hour-key", spin_button_end_hour);
 	g_object_set_data(G_OBJECT(button_update), "spin-end-min-key", spin_button_end_min);
 	
+	//reminder
+	g_object_set_data(G_OBJECT(button_update), "check-button-hasreminder-key", check_button_hasreminder);
+	g_object_set_data(G_OBJECT(button_update), "spin-reminder-hour-key", spin_button_reminder_hour);
+	g_object_set_data(G_OBJECT(button_update), "spin-reminder-min-key", spin_button_reminder_min);
+		
+	
+	
 	g_object_set_data(G_OBJECT(button_update), "spin-day-start-key", spin_button_start_day);	
 	g_object_set_data(G_OBJECT(button_update), "spin-year-start-key", spin_button_start_year);	
 	
@@ -2099,15 +2471,24 @@ static void callbk_edit_event(GSimpleAction *action, GVariant *parameter,  gpoin
 	gtk_grid_attach(GTK_GRID(grid), spin_button_end_hour,  2, 8, 1, 1);
 	gtk_grid_attach(GTK_GRID(grid), spin_button_end_min,   3, 8, 1, 1);
 	
-	gtk_grid_attach(GTK_GRID(grid), label_spacer4,       1, 9, 3, 1);
-
-	gtk_grid_attach(GTK_GRID(grid), check_button_allday,        1, 10, 1, 1);
-    gtk_grid_attach(GTK_GRID(grid), check_button_isyearly,      2, 10, 1, 1);  
-    gtk_grid_attach(GTK_GRID(grid), check_button_priority,      3, 10, 1, 1);
-       
-    gtk_grid_attach(GTK_GRID(grid), label_spacer5,       1, 11, 3, 1);
+	gtk_grid_attach(GTK_GRID(grid), label_spacer3,       1, 9, 3, 1);
+		
+	//reminder time
+	gtk_grid_attach(GTK_GRID(grid), check_button_hasreminder,       1, 10, 1, 1);
+	gtk_grid_attach(GTK_GRID(grid), label_reminder_time,            2, 10, 1, 1);
+	gtk_grid_attach(GTK_GRID(grid), spin_button_reminder_hour,      3, 10, 1, 1);
+	gtk_grid_attach(GTK_GRID(grid), spin_button_reminder_min,        4, 10, 1, 1);
 	
-	gtk_grid_attach(GTK_GRID(grid), button_update,  1, 12, 4, 1);
+	gtk_grid_attach(GTK_GRID(grid), label_spacer4,       1, 11, 3, 1); 
+	
+
+	gtk_grid_attach(GTK_GRID(grid), check_button_allday,        1, 12, 1, 1);
+    gtk_grid_attach(GTK_GRID(grid), check_button_isyearly,      2, 12, 1, 1);  
+    gtk_grid_attach(GTK_GRID(grid), check_button_priority,      3, 12, 1, 1);
+       
+    gtk_grid_attach(GTK_GRID(grid), label_spacer5,       1, 13, 3, 1);
+	
+	gtk_grid_attach(GTK_GRID(grid), button_update,  1, 14, 4, 1);
 
     gtk_window_set_child (GTK_WINDOW (dialog), grid);	
 	gtk_window_present(GTK_WINDOW(dialog));   	
@@ -2231,6 +2612,7 @@ static void callbk_calendar_day_selected(CustomCalendar *calendar, gpointer user
 	
 	char *display_str="";
 	char *time_str = "";
+	char *end_time_str = "";
 	char *starthour_str = "";
 	char *startmin_str = "";
 	char *endhour_str = "";
@@ -2240,99 +2622,104 @@ static void callbk_calendar_day_selected(CustomCalendar *calendar, gpointer user
 	if(!is_allday)
 	{
 	//if not all_day then add start time
-	if (m_12hour_format)
-	{
+	//if (m_12hour_format)
+	//{
 	
-	if (start_hour >= 13 && start_hour <= 23)
-	{
-	int shour = start_hour;
-	shour = shour - 12;
-	ampm_str = "pm ";
-	starthour_str = g_strdup_printf("%d", shour);
-	}
-	if(start_hour == 12)
-	{
-	ampm_str = "pm ";					
-	starthour_str = g_strdup_printf("%d", start_hour);
-	 }
-	if(start_hour <12)
-	{
-	ampm_str = "am ";					
-	starthour_str = g_strdup_printf("%d", start_hour);
-	}
+	//if (start_hour >= 13 && start_hour <= 23)
+	//{
+	//int shour = start_hour;
+	//shour = shour - 12;
+	//ampm_str = "pm ";
+	//starthour_str = g_strdup_printf("%d", shour);
+	//}
+	//if(start_hour == 12)
+	//{
+	//ampm_str = "pm ";					
+	//starthour_str = g_strdup_printf("%d", start_hour);
+	 //}
+	//if(start_hour <12)
+	//{
+	//ampm_str = "am ";					
+	//starthour_str = g_strdup_printf("%d", start_hour);
+	//}
 	
-	} // 12 hour format
+	//} // 12 hour format
 	
 	
-	else //24 hour
-	{
-	starthour_str = g_strdup_printf("%d", start_hour);
-	} // 24
+	//else //24 hour
+	//{
+	//starthour_str = g_strdup_printf("%d", start_hour);
+	//} // 24
 	
-	startmin_str = g_strdup_printf("%d", start_min);
+	//startmin_str = g_strdup_printf("%d", start_min);
 	
-	if (start_min < 10)
-	{
-	time_str = g_strconcat(time_str, starthour_str, ":0", startmin_str, NULL);
-	}
-	else
-	{
-	time_str = g_strconcat(time_str, starthour_str, ":", startmin_str, NULL);
-	}
+	//if (start_min < 10)
+	//{
+	//time_str = g_strconcat(time_str, starthour_str, ":0", startmin_str, NULL);
+	//}
+	//else
+	//{
+	//time_str = g_strconcat(time_str, starthour_str, ":", startmin_str, NULL);
+	//}
 	
-	time_str = g_strconcat(time_str, ampm_str, NULL);
+	//time_str = g_strconcat(time_str, ampm_str, NULL);
+	
+	time_str =get_time_str(start_hour,start_min);
 	
 	//------------------------------------------------------------------
 	if (m_show_end_time)
-	{
-	
-	if (m_12hour_format)
-	{
-	ampm_str = "";
-	
-	if (end_hour >= 13 && end_hour <= 23)
-	{
-	end_hour = end_hour - 12;
-	ampm_str = "pm ";
-	endhour_str = g_strdup_printf("%d", end_hour);
-	}
-	
-	if(end_hour == 12)
-	{
-	ampm_str = "pm ";					
-	endhour_str = g_strdup_printf("%d", end_hour);
-	 }
-	if(end_hour <12)
-	{
-	ampm_str = "am ";					
-	endhour_str = g_strdup_printf("%d", end_hour);
-	}
-	
-	//else
+	{	
+	//if (m_12hour_format)
 	//{
-	//ampm_str = "am ";
+	//ampm_str = "";
+	
+	//if (end_hour >= 13 && end_hour <= 23)
+	//{
+	//end_hour = end_hour - 12;
+	//ampm_str = "pm ";
 	//endhour_str = g_strdup_printf("%d", end_hour);
 	//}
-	} // 12
-	else
-	{
-	endhour_str = g_strdup_printf("%d", end_hour);
-	} // 24
 	
-	endmin_str = g_strdup_printf("%d", end_min);
+	//if(end_hour == 12)
+	//{
+	//ampm_str = "pm ";					
+	//endhour_str = g_strdup_printf("%d", end_hour);
+	 //}
+	//if(end_hour <12)
+	//{
+	//ampm_str = "am ";					
+	//endhour_str = g_strdup_printf("%d", end_hour);
+	//}
 	
-	if (end_min < 10)
-	{
-	time_str = g_strconcat(time_str, "to ", endhour_str, ":0", endmin_str, NULL);
-	}
-	else
-	{
-	time_str = g_strconcat(time_str, "to ", endhour_str, ":", endmin_str, NULL);
-	}
-	time_str = g_strconcat(time_str, ampm_str, NULL);
-	} // show_end_time	
+	////else
+	////{
+	////ampm_str = "am ";
+	////endhour_str = g_strdup_printf("%d", end_hour);
+	////}
+	//} // 12
+	//else
+	//{
+	//endhour_str = g_strdup_printf("%d", end_hour);
+	//} // 24
 	
-	time_str = g_strconcat(time_str, NULL);	
+	//endmin_str = g_strdup_printf("%d", end_min);
+	
+	//if (end_min < 10)
+	//{
+	//time_str = g_strconcat(time_str, "to ", endhour_str, ":0", endmin_str, NULL);
+	//}
+	//else
+	//{
+	//time_str = g_strconcat(time_str, "to ", endhour_str, ":", endmin_str, NULL);
+	//}
+	//time_str = g_strconcat(time_str, ampm_str, NULL);
+	//} // show_end_time	
+	
+	//time_str = g_strconcat(time_str, NULL);
+	
+	end_time_str =get_time_str(end_hour,end_min);
+	time_str = g_strconcat(time_str, "to ", end_time_str, NULL);
+	}	
 	display_str = g_strconcat(display_str, time_str, summary_str, "\n", NULL);	
 		
 	}//if not allday
@@ -2633,8 +3020,9 @@ void export_file(char *file_name)
 		gint is_allday = 0;
 		gint is_multiday = 0;
 		gint is_priority = 0;
-		gint has_notification = 0;
+		
 		gint has_reminder = 0;
+		gint reminder_hour = 0;
 		gint reminder_min = 0;
 		char* recurrence_str="RRULE:";
 
@@ -2657,8 +3045,9 @@ void export_file(char *file_name)
 		g_object_get(evt, "isyearly", &is_yearly, NULL);
 		g_object_get(evt, "isallday", &is_allday, NULL);		
 		g_object_get(evt, "ispriority", &is_priority, NULL);
-		g_object_get(evt, "hasnotification", &has_notification, NULL);
+		
 		g_object_get(evt, "hasreminder", &has_reminder, NULL);
+		g_object_get(evt, "reminderhour", &reminder_hour, NULL);
 		g_object_get(evt, "remindermin", &reminder_min, NULL);
 	
 		char* start_day_str = g_strdup_printf("%02d",start_day);
@@ -2812,6 +3201,12 @@ gboolean import_ical_file(char* file_name, gpointer user_data)
 	int is_allday = 0;		
 	int is_priority = 0;
 	int is_yearly=0;
+	
+	int has_reminder=0; //todo
+	int reminder_hour=0;
+	int reminder_min=0;
+		
+	
 	gboolean is_timezone=0;
 	char *timezone_str="";
 	
@@ -3003,13 +3398,15 @@ gboolean import_ical_file(char* file_name, gpointer user_data)
 				g_object_set(evt, "isyearly", is_yearly, NULL);
 				g_object_set(evt, "isallday", is_allday, NULL);			
 				g_object_set(evt, "ispriority", is_priority, NULL);
-				g_object_set(evt, "hasnotification", 0, NULL);
-				g_object_set(evt, "hasreminder", 0, NULL); //todo VALARM
-				g_object_set(evt, "remindermin", 30, NULL);	
+				
+				g_object_set(evt, "hasreminder", has_reminder, NULL); //todo
+				g_object_set(evt, "reminderhour",reminder_hour, NULL);
+				g_object_set(evt, "remindermin", reminder_min, NULL);	
 				
 				db_insert_event(evt); //insert event into database	
 				
 				//reset is_yearly for next event
+				is_allday=0;
 				is_yearly=0;
 				is_priority=0;	
 			}	//VEVENT END	
@@ -3177,17 +3574,18 @@ gboolean import_ical_file(char* file_name, gpointer user_data)
 				g_object_set(evt, "endmin", end_min, NULL);
 				g_object_set(evt, "isyearly", is_yearly, NULL);
 				g_object_set(evt, "isallday", is_allday, NULL);			
-				g_object_set(evt, "ispriority", is_priority, NULL);
-				g_object_set(evt, "hasnotification", 0, NULL);
-				g_object_set(evt, "hasreminder", 0, NULL); //todo VALARM
-				g_object_set(evt, "remindermin", 30, NULL);	
+				g_object_set(evt, "ispriority", is_priority, NULL);			
+				
+				g_object_set(evt, "hasreminder", has_reminder, NULL); //todo
+				g_object_set(evt, "reminderhour",reminder_hour, NULL);
+				g_object_set(evt, "remindermin", reminder_min, NULL);
 				
 				db_insert_event(evt); //insert event into database	
 				
 				//reset is_yearly for next event
 				is_yearly=0;
 				is_priority=0;
-				is_allday=1;	
+				is_allday=0;	
 				
 										
 				
@@ -3313,7 +3711,7 @@ static void callbk_about(GSimpleAction * action, GVariant *parameter, gpointer u
 	gtk_widget_set_size_request(about_dialog, 200,200);
     gtk_window_set_modal(GTK_WINDOW(about_dialog),TRUE);
 	gtk_about_dialog_set_program_name(GTK_ABOUT_DIALOG(about_dialog), "Talk Calendar");
-	gtk_about_dialog_set_version (GTK_ABOUT_DIALOG(about_dialog), "Version 0.2.9");
+	gtk_about_dialog_set_version (GTK_ABOUT_DIALOG(about_dialog), "Version 0.3.0");
 	gtk_about_dialog_set_copyright(GTK_ABOUT_DIALOG(about_dialog),"Copyright © 2024");
 	gtk_about_dialog_set_comments(GTK_ABOUT_DIALOG(about_dialog),"Talking calendar");
 	gtk_about_dialog_set_license_type (GTK_ABOUT_DIALOG(about_dialog), GTK_LICENSE_LGPL_2_1);
@@ -3326,6 +3724,51 @@ static void callbk_about(GSimpleAction * action, GVariant *parameter, gpointer u
 
 //======================================================================
 // Speaking
+//======================================================================
+static void speak_reminder()
+{
+	if(m_talk==0) return;
+	if (m_speaking ==TRUE) return;
+	
+	GList *diphone_list=NULL;
+	diphone_list =g_list_concat(word_to_diphones("Talk"),word_to_diphones("Calendar"));
+	diphone_list =g_list_concat(diphone_list,word_to_diphones("Reminder"));	
+    diphone_list =g_list_concat(diphone_list,word_to_diphones("pau"));
+    gpointer diphone_list_pointer;
+	gchar* diphone_str;		
+	gint diphone_number  =g_list_length(diphone_list);
+	//g_print("diphone_number = %i\n", diphone_number);
+	//create diphone array using list length
+	unsigned char *diphone_arrays[diphone_number]; 
+	unsigned int diphone_arrays_sizes[diphone_number];
+		
+	//load diphone arrays
+	for(int i=0; i <diphone_number; i++)
+	{
+		diphone_list_pointer=g_list_nth_data(diphone_list,i);
+		diphone_str=(gchar *)diphone_list_pointer;					
+		//g_print("diphone = %s\n",diphone_str);		
+		diphone_arrays[i] = load_diphone_arry(diphone_str);
+		//g_print("diphone length = %i\n",load_diphone_len(diphone_str));
+		diphone_arrays_sizes[i]=load_diphone_len(diphone_str);		
+	}	
+	
+	//concatenate using raw cat
+	unsigned char *data = rawcat(diphone_arrays, diphone_arrays_sizes, diphone_number);	
+	unsigned int data_len = get_merge_size(diphone_arrays_sizes,diphone_number);	
+    	
+	FILE* f = fopen(m_raw_file, "w"); //m_raw_file local
+    fwrite(data, data_len, 1, f);
+    fclose(f); 
+    
+	GTask* task = g_task_new(NULL, NULL, NULL, NULL);
+    g_task_run_in_thread(task, play_audio_async);     
+    g_object_unref(task);
+	//clean up 
+	g_list_free(diphone_list);	
+	free(data);	//prevent memory leak
+}
+
 //======================================================================
 // Speak time
 //======================================================================
@@ -3431,7 +3874,7 @@ static void speak_time(gint hour, gint min)
     g_object_unref(task);
 	//clean up 
 	g_list_free(diphone_list);	
-	free(data);	//prevent memory leak as malloc used
+	free(data);	//prevent memory leak
 	
 }
 //======================================================================
@@ -4754,9 +5197,9 @@ static void callbk_set_preferences(GtkButton *button, gpointer  user_data)
 	//talking
 	m_talk=1;	
 	m_talk_rate=16000;
-	m_talk_event_number=0;
+	m_talk_event_number=1;
 	m_talk_location=1;	
-	m_talk_at_startup=1;
+	m_talk_at_startup=0;
 	m_talk_upcoming=0;
 	m_upcoming_days=7;
 	m_talk_priority=0;
@@ -5139,7 +5582,7 @@ static void startup(GtkApplication *app)
 void callbk_shutdown(GtkWindow *window, gint response_id, gpointer user_data)
 {
 	//g_print("shutdown called\n");	
-	config_write();		
+	config_write();			
 }
 
 
@@ -5249,7 +5692,7 @@ static void activate (GtkApplication *app, gpointer  user_data)
 	// create a new window, and set its title
 	window = gtk_application_window_new (app);
 	gtk_window_set_title (GTK_WINDOW (window), "Talk Calendar "); 		
-	g_signal_connect (window, "destroy", G_CALLBACK (callbk_shutdown), NULL);
+	g_signal_connect (window, "destroy", G_CALLBACK (callbk_shutdown),app);
 	window_header(GTK_WINDOW(window));
 			
 	//Keyboard accelerators
@@ -5262,10 +5705,14 @@ static void activate (GtkApplication *app, gpointer  user_data)
 	const gchar * quit_accels[2] = { "<Ctrl>Q", NULL };
 		
 	calendar = custom_calendar_new();
-	
+	//custom_calendar_goto_today(CUSTOM_CALENDAR(calendar));
 	m_start_day = custom_calendar_get_day(CUSTOM_CALENDAR(calendar));
 	m_start_month = custom_calendar_get_month(CUSTOM_CALENDAR(calendar));
 	m_start_year = custom_calendar_get_year(CUSTOM_CALENDAR(calendar));
+		
+	m_today_day = custom_calendar_get_day(CUSTOM_CALENDAR(calendar));
+	m_today_month = custom_calendar_get_month(CUSTOM_CALENDAR(calendar));
+	m_today_year = custom_calendar_get_year(CUSTOM_CALENDAR(calendar));	
 		
 	g_signal_connect(CUSTOM_CALENDAR(calendar), "day-selected", G_CALLBACK(callbk_calendar_day_selected), window);
 	g_signal_connect(CUSTOM_CALENDAR(calendar), "next-month", G_CALLBACK(callbk_calendar_next_month), NULL);
@@ -5382,11 +5829,16 @@ static void activate (GtkApplication *app, gpointer  user_data)
 	gtk_application_set_accels_for_action(GTK_APPLICATION(app),"app.preferences", preferences_accels);
 	gtk_application_set_accels_for_action(GTK_APPLICATION(app),"app.quit", quit_accels);
 	
+	g_timeout_add_seconds(1, callbk_timer_update, NULL);
+	
+	//send_notification((gpointer) "testing");
+	
 	
 	if(m_talk && m_talk_at_startup) {
 		speak_events();		
 	}
 		
+	//speak_reminder();
 	gtk_window_maximize(GTK_WINDOW(window));
 	
 	gtk_window_set_child(GTK_WINDOW(window),GTK_WIDGET(calendar));

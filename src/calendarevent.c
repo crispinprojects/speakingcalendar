@@ -40,8 +40,9 @@ struct _CalendarEvent
     gint    isyearly; //field
     gint    isallday; //field    
     gint    ispriority; //field
-    gint    hasnotification; //field
+   
     gint    hasreminder; //field
+     gint   reminderhour; //field
     gint    remindermin; //field
 };
 
@@ -66,9 +67,9 @@ enum {
     PROP_ENDMIN,
     PROP_ISYEARLY,
     PROP_ISALLDAY,  
-    PROP_ISPRIORITY,
-    PROP_HASNOTIFICATION,
+    PROP_ISPRIORITY,    
     PROP_HASREMINDER,
+    PROP_REMINDERHOUR,
     PROP_REMINDERMIN,
     LAST_PROP
 };
@@ -141,11 +142,13 @@ static void calendar_event_get_property(GObject *object,
          case PROP_ISPRIORITY:
              g_value_set_int(value, calendar_event_get_is_priority(self)); //boxing
             break;
-          case PROP_HASNOTIFICATION:
-             g_value_set_int(value, calendar_event_get_has_notification(self)); //boxing
-            break;
+          //-------------  
+          
          case PROP_HASREMINDER:
              g_value_set_int(value, calendar_event_get_has_reminder(self)); //boxing
+            break;
+        case PROP_REMINDERHOUR:
+             g_value_set_int(value, calendar_event_get_reminder_hour(self)); //boxing
             break;
         case PROP_REMINDERMIN:
              g_value_set_int(value, calendar_event_get_reminder_min(self)); //boxing
@@ -217,11 +220,12 @@ static void calendar_event_set_property(GObject *object,
          case PROP_ISPRIORITY:
             calendar_event_set_is_priority(self, g_value_get_int(value));
             break;
-         case PROP_HASNOTIFICATION:
-            calendar_event_set_has_notification(self, g_value_get_int(value));
-            break;
+        
         case PROP_HASREMINDER:
             calendar_event_set_has_reminder(self, g_value_get_int(value));
+            break;
+         case PROP_REMINDERHOUR:
+            calendar_event_set_reminder_hour(self, g_value_get_int(value));
             break;
          case PROP_REMINDERMIN:
             calendar_event_set_reminder_min(self, g_value_get_int(value));
@@ -367,19 +371,20 @@ static void calendar_event_class_init (CalendarEventClass *klass)
                      0,G_MAXINT,0,
                      G_PARAM_READWRITE);
                      
-	properties[PROP_HASNOTIFICATION] =
-    g_param_spec_int("hasnotification",
-                     "hasnotification",
-                     "The event has a notifcation",
-                     0,G_MAXINT,0,
-                     G_PARAM_READWRITE);
-                     
+	                     
     properties[PROP_HASREMINDER] =
     g_param_spec_int("hasreminder",
                      "hasreminder",
                      "The event has a reminder",
                      0,G_MAXINT,0,
                      G_PARAM_READWRITE);
+    
+    properties[PROP_REMINDERHOUR] =
+    g_param_spec_int("reminderhour",
+                     "reminderhour",
+                     "The reminder hour",
+                     0,G_MAXINT,0,
+                     G_PARAM_READWRITE);                
 
     properties[PROP_REMINDERMIN] =
     g_param_spec_int("remindermin",
@@ -578,13 +583,6 @@ void calendar_event_set_is_priority(CalendarEvent *self, gint is_priority)
     self->ispriority =is_priority;
 }
 
-gint calendar_event_get_has_notification(CalendarEvent *self){
-    return self->hasnotification;
-}
-void calendar_event_set_has_notification(CalendarEvent *self, gint has_notification)
-{
-    self->hasnotification =has_notification;
-}
 
 gint calendar_event_get_has_reminder(CalendarEvent *self){
     return self->hasreminder;
@@ -592,6 +590,14 @@ gint calendar_event_get_has_reminder(CalendarEvent *self){
 void calendar_event_set_has_reminder(CalendarEvent *self, gint has_reminder)
 {
     self->hasreminder =has_reminder;
+}
+
+gint calendar_event_get_reminder_hour(CalendarEvent *self){
+    return self->reminderhour;
+}
+void calendar_event_set_reminder_hour(CalendarEvent *self, gint reminder_hour)
+{
+    self->reminderhour =reminder_hour;
 }
 
 gint calendar_event_get_reminder_min(CalendarEvent *self){

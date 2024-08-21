@@ -6,12 +6,15 @@ It has been developed using C and [GTK4](https://docs.gtk.org/gtk4/). A screensh
 
 ![](talkcalendar.png)
 
+Time and events are what drives life.
+
 ## Core Features
 
 * built with C and GTK 4.14.4 (Fedora 40)
 * month-view calendar 
 * event details, location, start and end time can be entered and edited
 * export and import iCalendar files (backup and restore)
+* event time reminder alarms (sent as system notifications and audio alert)
 * Sqlite3 database used to store events
 * built-in diphone speech synthesizer
 
@@ -27,13 +30,13 @@ Extract the downloaded file which contains the Talk Calendar executable. Assumin
 
 or double click on the "talkcalendar" file. Talk Calendar must have executable permissions to execute. Right click it and choose Properties->Permissions and tick allow "Executable as Program".
 
-To add Talk Calendar to the system menu modify the "talkcalendar.desktop" file provided in the download. A desktop file has a .desktop extension and provides metadata about an application such as its name, icon, command to execute and other properties. For user-specific applications desktop files can be located locally in the ~/.local/share/applications/ directory. Local user entries take precedence over system entries. 
+To add Talk Calendar to the system menu modify the Talk Calendar desktop file provided in the download. A desktop file has a .desktop extension and provides metadata about an application such as its name, icon, command to execute and other properties. For user-specific applications desktop files can be located locally in the ~/.local/share/applications/ directory. Local user entries take precedence over system entries. For the GNOME desktop, the desktop file should be named using the [application ID](https://developer.gnome.org/documentation/tutorials/application-id.html), that is <application_id>.desktop, which in this case is "org.gtk.talkcalendar.desktop" 
 
-The "talkcalendar.desktop" file is shown below. You need to modify this using your own user name and directory locations. For example, if your user name is "tiki" and you install local applications in a folder called "Software" and you create a folder called "talkcalendar " to store the Talk Calendar binary executable then the executable path would be "Exec=/home/tiki/Software/talkcalendar/talkcalendar". The Exec variable defines the command to execute when launching an application, in this case, the talkcalendar binary executable. The Path variable tells the system where to look for the executable and the calendar database. The Icon variable specifies the path to the icon file associated with application. In a .desktop file, you need to use absolute and full paths.
+The "org.gtk.talkcalendar.desktop" file is shown below. You need to modify this using your own user name and directory locations. For example, if your user name is "tiki" and you install local applications in a folder called "Software" and you create a folder called "talkcalendar " to store the Talk Calendar binary executable then the executable path would be "Exec=/home/tiki/Software/talkcalendar/talkcalendar". The Exec variable defines the command to execute when launching an application, in this case, the talkcalendar binary executable. The Path variable tells the system where to look for the executable and the calendar database. The Icon variable specifies the path to the icon file associated with application. In a .desktop file, you need to use absolute and full paths.
 
 ```
 [Desktop Entry]
-Version=0.2.9
+Version=0.3.0
 Type=Application
 Name=Talk Calendar
 Comment=Talking calendar
@@ -45,7 +48,7 @@ Categories=Calendar;Office;
 MimeType=text/calendar;
 ```
 
-Copy your modified  "talkcalendar.desktop" file to the ***~/.local/share/applications/***  hiden directory (tick the "Show Hidden Files" option in the file explorer). Create the ~/.local/share/applications/ directory if it does not already exist. This way of locally installing Talk Calendar should be universal across different Linux distributions.
+Copy your modified  "org.gtk.talkcalendar.desktop" file to the ***~/.local/share/applications/***  hiden directory (tick the "Show Hidden Files" option in the file explorer). Create the ~/.local/share/applications/ directory if it does not already exist. This way of locally installing Talk Calendar should be universal across different Linux distributions.
 
 ## Calendar Usage
 
@@ -65,6 +68,16 @@ If you have used a calendar application before then using Talk Calendar will be 
 A screenshot of the new event dialog is shown below.
 
 ![](talkcalendar-new-event.png)
+
+### Reminders
+
+Talk Calendar supports the use of reminders. A reminders is an alarm triggered at a specified time before an event starts.
+
+* Check the "Reminder" check box and set the reminder time (hour, minute) which should be a time before the event starts.
+
+When a reminder is triggered a notification is sent to the system and an audio message played
+
+![](talkcalendar-reminder.png)
 
 ### Display and Speak Events
 
@@ -150,9 +163,13 @@ The parser will be updated with new features in future releases.
 
 The only recurring event type that is currently supported by Talk Calendar is yearly. This is required for events such as birthdays and anniversaries. The parser uses icalendar [RRULE](https://icalendar.org/iCalendar-RFC-5545/3-8-5-3-recurrence-rule.html) to determine if an event is yearly (e.g. birthday).
 
+### Upgrading To Newer version
+
+It is strongly suggested that you save your current calendar in "ical" format before updating to a newer version of Talk Calendar. Install Talk Calendar with a new "calendar.db" database and import the ical file to this.
+
 ## Build From Source
 
-The C source code for the Talk Calendar application is provided in the src directory. Fedora 40 has been used to compile the project. Fedora 40 uses GTK 4.14.
+The C source code for the Talk Calendar application is provided in the src directory. Fedora 40 has been used to develop and compile the project. Fedora 40 uses GTK 4.14.
 
 [Geany](https://www.geany.org/) can be used as a source code editor for opening, viewing and then compiling the Talk Calendar C code. Geany is lightweight and has an integrated terminal for building the application.
 
@@ -169,6 +186,7 @@ sudo dnf install gtk4-devel-docs
 sudo dnf install glib-devel
 sudo dnf install alsa-lib-devel
 sudo dnf install sqlite-devel
+sudo dnf install libnotify-devel
 ```
 
 To check the installed Sqlite 3 version use the command below.
@@ -205,6 +223,7 @@ sudo apt install libgtk-4-dev
 sudo apt install libasound2-dev
 sudo apt install sqlite3
 sudo apt install libsqlite3-dev
+sudo apt install libnotify-dev
 ```
 
 The packages:

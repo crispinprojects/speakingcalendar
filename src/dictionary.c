@@ -60,6 +60,18 @@ typedef struct pair {
 // Key strings must be in strcmp() sorted order!
 pair_t table[] = {
 
+{"1","w-ah ah-n n-pau"},
+{"2","t-uw uw-pau"},
+{"3","th-r r-iy iy-pau"},
+{"4","f-ao ao-r r-pau"},
+{"5","f-aa aa-iy iy-v v-pau"},
+{"6","s-ih ih-k k-s s-pau"},
+{"7","s-eh eh-v v-ah ah-n n-pau"},
+
+{"8","eh-iy iy-t t-pau"}, //??
+{"9","n-aa aa-iy iy-n n-pau"},
+{"10","t-eh eh-n n-pau"},
+
 {"a","ah-ah"},
 {"aaraaf","aa-r r-aa aa-f"},
 {"aaron","eh-r r-ah ah-n"},
@@ -3148,6 +3160,7 @@ pair_t table[] = {
 //s","aa-d d-iy iy-ah ah-n n-s s-ah ah-z"},
 {"audiences","aa-d d-iy iy-ah ah-n n-s s-ah ah-z"},
 {"audio","aa-d d-iy iy-ao ao-uh"},
+{"audiology","aa-d d-iy iy-ao ao-uh uh-l l-ah ah-jh jh-iy"},
 {"audit","ao-d d-ih ih-t"},
 {"auditing","aa-d d-ah ah-t t-ih ih-ng"},
 {"auditor","ao-d d-ih ih-t t-uh uh-r"},
@@ -17423,7 +17436,7 @@ pair_t table[] = {
 {"eventful","ih-v v-eh eh-n n-t t-f f-ah ah-l"},
 {"eventide","ih-v v-eh eh-n n-t t-aa aa-iy iy-d"},
 {"eventless","ih-v v-eh eh-n n-t t-l l-ah ah-s"},
-{"events","ih-v v-eh eh-n n-t t-s"},
+{"events","ih-v v-eh eh-n n-t t-z z-pau"},
 {"eventual","ah-v v-eh eh-n n-ch ch-uw uw-ah ah-l"},
 {"eventualities","iy-v v-eh eh-n n-ch ch-uw uw-ae ae-l l-ah ah-t t-iy iy-z"},
 {"eventuality","ah-v v-eh eh-n n-ch ch-uw uw-ae ae-l l-ih ih-t t-iy"},
@@ -45243,6 +45256,7 @@ pair_t table[] = {
 {"shifts","sh-ih ih-f f-t t-s"},
 {"shifty","sh-ih ih-f f-t t-iy"},
 {"shikar","sh-ih ih-k k-aa aa-r"},
+{"shilbottle","sh-ih ih-l l-b b-aa aa-t t-ah ah-l l-pau"},
 {"shill","sh-ih ih-l"},
 {"shilling","sh-ih ih-l l-ih ih-ng"},
 {"shillings","sh-ih ih-l l-ih ih-ng ng-z"},
@@ -48320,7 +48334,7 @@ pair_t table[] = {
 {"streamlined","s-t t-r r-iy iy-m m-l l-aa aa-iy iy-n n-d"},
 {"streams","s-t t-r r-iy iy-m m-z"},
 {"streatham","s-t t-r r-iy iy-th th-ah ah-m"},
-{"street","s-t t-r r-iy iy-t"},
+{"street","s-t t-r r-iy iy-t t-pau"},
 //s","s-t t-r r-iy iy-t t-uh uh-r r-z"},
 {"streets","s-t t-r r-iy iy-t t-s"},
 {"streicher","s-t t-r r-aa aa-iy iy-k k-uh uh-r"},

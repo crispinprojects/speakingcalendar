@@ -119,9 +119,9 @@ char *sql;
         "ISYEARLY			INT,"\
 	    "ISALLDAY			INT,"\
         "ISPRIORITY			INT,"\
-        "HASNOTIFICATION	INT,"\
         "HASREMINDER		INT,"\
-        "REMINDERMINS		INT);" ;
+        "REMINDERHOUR		INT,"\
+        "REMINDERMIN		INT);" ;
         
       
    //printf("Execute sql to create tables\n"); 
@@ -133,7 +133,7 @@ char *sql;
       printf("Sql1 message: %s\n", zErrMsg);
       sqlite3_free(zErrMsg);
    } else {
-      printf(" Events table created successfully\n");
+      printf("Events table created successfully\n");
    }
       
    sqlite3_close(db); 
@@ -146,7 +146,7 @@ char *sql;
  
 int db_insert_event(CalendarEvent *evt) {
 	
-	//printf("dbmanger: inserting event\n");
+	printf("dbmanger: inserting event\n");
 	
 	gint evt_id=0;
 	gchar *summary_str="";
@@ -168,9 +168,9 @@ int db_insert_event(CalendarEvent *evt) {
 	gint is_allday=0;
 	gint is_multiday =0;
 	gint is_priority =0;
-	gint has_notification=0;
-	
+		
 	gint has_reminder=0;
+	gint reminder_hour=0;
 	gint reminder_min=0;
 	
 	g_object_get (evt, "eventid", &evt_id, NULL);
@@ -193,10 +193,14 @@ int db_insert_event(CalendarEvent *evt) {
 	g_object_get(evt, "isyearly", &is_yearly, NULL);
 	g_object_get(evt, "isallday", &is_allday, NULL);	
 	g_object_get(evt, "ispriority", &is_priority, NULL);
-	g_object_get (evt, "hasnotification", &has_notification, NULL);
 	
 	g_object_get (evt, "hasreminder", &has_reminder, NULL);
+	g_object_get (evt, "reminderhour", &reminder_hour, NULL);
 	g_object_get (evt, "remindermin", &reminder_min, NULL);
+	
+	printf("dbmanger: has_reminder = %d\n",has_reminder);
+	printf("dbmanger: reminder_hour = %d\n",reminder_hour);
+	printf("dbmanger: reminder_min = %d\n",reminder_min);
 
 sqlite3 *db;
 int rc=0;
@@ -219,11 +223,11 @@ sqlite3_stmt *stmt;
 sprintf(sql_query, "INSERT INTO EVENTS (SUMMARY,LOCATION,DESCRIPTION,\
 STARTYEAR,STARTMONTH,STARTDAY,STARTHOUR,STARTMIN,\
 ENDYEAR,ENDMONTH,ENDDAY,ENDHOUR,ENDMIN,\
-ISYEARLY,ISALLDAY,ISPRIORITY,HASNOTIFICATION,HASREMINDER,REMINDERMINS)\
+ISYEARLY,ISALLDAY,ISPRIORITY,HASREMINDER,REMINDERHOUR,REMINDERMIN)\
 VALUES  ('%s','%s','%s', %d,%d,%d,%d,%d, %d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d);",
         summary_str,location_str,desc_str,start_year,start_month,start_day,start_hour,start_min,\
         end_year, end_month, end_day, end_hour,end_min,\
-        is_yearly,is_allday, is_priority,has_notification, has_reminder,reminder_min);
+        is_yearly,is_allday, is_priority,has_reminder,reminder_hour, reminder_min);
 
 //printf("sql = %s\n",sql_query);
 //printf("Length of sql_query =%ld\n",strlen(sql_query));
@@ -271,8 +275,9 @@ void db_update_event(CalendarEvent *evt){
 	gint is_yearly=0;
 	gint is_allday=0;
 	gint is_priority =0;
-	gint has_notification=0;
+	
 	gint has_reminder=0;
+	gint reminder_hour=0;
 	gint reminder_min=0;
 	
 	g_object_get (evt, "eventid", &evt_id, NULL);
@@ -299,8 +304,10 @@ void db_update_event(CalendarEvent *evt){
 	g_object_get(evt, "isyearly", &is_yearly, NULL);
 	g_object_get(evt, "isallday", &is_allday, NULL);	
 	g_object_get(evt, "ispriority", &is_priority, NULL);
-	g_object_get (evt, "hasnotification", &has_notification, NULL);
+	
+	
 	g_object_get (evt, "hasreminder", &has_reminder, NULL);
+	g_object_get (evt, "reminderhour", &reminder_hour, NULL);
 	g_object_get (evt, "remindermin", &reminder_min, NULL);
 
 sqlite3 *db;
@@ -322,10 +329,10 @@ char query[2048] = "";
 sprintf(query, "UPDATE EVENTS SET SUMMARY ='%s',LOCATION ='%s', DESCRIPTION='%s',\
 STARTYEAR=%i,STARTMONTH=%i,STARTDAY=%i,STARTHOUR=%i,STARTMIN=%i,\
          ENDYEAR=%i,ENDMONTH=%i,ENDDAY=%i,ENDHOUR=%i,ENDMIN=%i,\
-         ISYEARLY=%i,ISALLDAY=%i,ISPRIORITY=%i,HASNOTIFICATION=%i,HASREMINDER=%i,REMINDERMINS=%i\
+         ISYEARLY=%i,ISALLDAY=%i,ISPRIORITY=%i,HASREMINDER=%i,REMINDERHOUR=%i,REMINDERMIN=%i\
          WHERE ID ='%i'",summary_str,location_str,desc_str,start_year,start_month,start_day,start_hour,start_min,\
          end_year, end_month, end_day, end_hour,end_min,\
-         is_yearly,is_allday,is_priority,has_notification,has_reminder,reminder_min,idx);
+         is_yearly,is_allday,is_priority,has_reminder,reminder_hour,reminder_min,idx);
   
 //sprintf(query, "UPDATE EVENTS SET TITLE ='%s',PRIORITY =%i, DESCRIPTION='%s',\
         //STARTHOUR=%i, STARTMIN=%i, ENDHOUR=%i, ENDMIN=%i, ISYEARLY=%i, ISALLDAY=%i\
@@ -397,9 +404,10 @@ gint is_yearly=sqlite3_column_int(stmt, 14);
 gint is_allday=sqlite3_column_int(stmt, 15);
 
 gint is_priority =sqlite3_column_int(stmt, 16);
-gint has_notification=sqlite3_column_int(stmt, 17);
-gint has_reminder=sqlite3_column_int(stmt, 18);
-gint reminder_mins=sqlite3_column_int(stmt, 19);
+
+gint has_reminder=sqlite3_column_int(stmt, 17);
+gint reminder_hour=sqlite3_column_int(stmt, 18);
+gint reminder_min=sqlite3_column_int(stmt, 19);
 
 g_object_set(evt, "eventid",evt_id, NULL);
 g_object_set(evt, "summary", g_strdup(summary_str), NULL);
@@ -419,9 +427,10 @@ g_object_set(evt, "isyearly", is_yearly, NULL);
 g_object_set(evt, "isallday", is_allday, NULL);
 
 g_object_set(evt, "ispriority", is_priority, NULL);
-g_object_set(evt, "hasnotification", has_notification, NULL);
-g_object_set(evt, "hasreminder", 0, NULL);
-g_object_set(evt, "remindermin", 0, NULL);
+
+g_object_set(evt, "hasreminder", has_reminder, NULL);
+g_object_set(evt, "reminderhour", reminder_hour, NULL);
+g_object_set(evt, "remindermin", reminder_min, NULL);
 	
 sqlite3_finalize(stmt); 
 sqlite3_close(db);  
@@ -645,8 +654,9 @@ void db_get_all_events(GArray *evt_arry) {
 	
 	g_object_set(tmp_evt, "ispriority", sqlite3_column_int(stmt, 16), NULL);
 	
-	g_object_set(tmp_evt, "hasnotification", sqlite3_column_int(stmt, 17), NULL);
-	g_object_set(tmp_evt, "hasreminder", sqlite3_column_int(stmt, 18), NULL);
+	
+	g_object_set(tmp_evt, "hasreminder", sqlite3_column_int(stmt, 17), NULL);
+	g_object_set(tmp_evt, "reminderhour", sqlite3_column_int(stmt, 18), NULL);
 	g_object_set(tmp_evt, "remindermin", sqlite3_column_int(stmt, 19), NULL);	
 	g_array_append_val(evt_arry, tmp_evt);	
 	} //while
@@ -702,9 +712,11 @@ void db_get_all_events_year_month(GArray *evt_arry, int year, int month)
 	g_object_set(tmp_evt, "isyearly", sqlite3_column_int(stmt, 14), NULL);
 	g_object_set(tmp_evt, "isallday", sqlite3_column_int(stmt, 15), NULL);
 	
-	g_object_set(tmp_evt, "ispriority", sqlite3_column_int(stmt, 16), NULL);	
-	g_object_set(tmp_evt, "hasnotification", sqlite3_column_int(stmt, 17), NULL);
-	g_object_set(tmp_evt, "hasreminder", sqlite3_column_int(stmt, 18), NULL);
+	g_object_set(tmp_evt, "ispriority", sqlite3_column_int(stmt, 16), NULL);
+		
+	
+	g_object_set(tmp_evt, "hasreminder", sqlite3_column_int(stmt, 17), NULL);
+	g_object_set(tmp_evt, "reminderhour", sqlite3_column_int(stmt, 18), NULL);
 	g_object_set(tmp_evt, "remindermin", sqlite3_column_int(stmt, 19), NULL);	
 	g_array_append_val(evt_arry, tmp_evt);	
 	
@@ -767,8 +779,10 @@ void db_get_all_enddate_events_year_month(GArray *evt_arry, int year, int month)
 	g_object_set(tmp_evt, "isyearly", sqlite3_column_int(stmt, 14), NULL);
 	g_object_set(tmp_evt, "isallday", sqlite3_column_int(stmt, 15), NULL);	
 	g_object_set(tmp_evt, "ispriority", sqlite3_column_int(stmt, 16), NULL);	
-	g_object_set(tmp_evt, "hasnotification", sqlite3_column_int(stmt, 17), NULL);
-	g_object_set(tmp_evt, "hasreminder", sqlite3_column_int(stmt, 18), NULL);
+	
+	
+	g_object_set(tmp_evt, "hasreminder", sqlite3_column_int(stmt, 17), NULL);
+	g_object_set(tmp_evt, "reminderhour", sqlite3_column_int(stmt, 18), NULL);
 	g_object_set(tmp_evt, "remindermin", sqlite3_column_int(stmt, 19), NULL);	
 	g_array_append_val(evt_arry, tmp_evt);	
 	
@@ -825,8 +839,9 @@ void db_get_all_events_year_month_day(GArray *evt_arry, int year, int month, int
 	g_object_set(tmp_evt, "isallday", sqlite3_column_int(stmt, 15), NULL);
 	
 	g_object_set(tmp_evt, "ispriority", sqlite3_column_int(stmt, 16), NULL);	
-	g_object_set(tmp_evt, "hasnotification", sqlite3_column_int(stmt, 17), NULL);
-	g_object_set(tmp_evt, "hasreminder", sqlite3_column_int(stmt, 18), NULL);
+	
+	g_object_set(tmp_evt, "hasreminder", sqlite3_column_int(stmt, 17), NULL);
+	g_object_set(tmp_evt, "reminderhour", sqlite3_column_int(stmt, 18), NULL);
 	g_object_set(tmp_evt, "remindermin", sqlite3_column_int(stmt, 19), NULL);		
 	g_array_append_val(evt_arry, tmp_evt);	
 	} 
@@ -878,12 +893,13 @@ void db_get_isyearly_events_day(GArray *evt_arry, int month, int day)
 	g_object_set(tmp_evt, "endday", sqlite3_column_int(stmt, 11), NULL);
 	g_object_set(tmp_evt, "endhour", sqlite3_column_int(stmt, 12), NULL);
 	g_object_set(tmp_evt, "endmin", sqlite3_column_int(stmt, 13), NULL);
-	g_object_set(tmp_evt, "isyearly", sqlite3_column_int(stmt, 14), NULL);
-	g_object_set(tmp_evt, "isallday", sqlite3_column_int(stmt, 15), NULL);
 	
+	g_object_set(tmp_evt, "isyearly", sqlite3_column_int(stmt, 14), NULL);
+	g_object_set(tmp_evt, "isallday", sqlite3_column_int(stmt, 15), NULL);	
 	g_object_set(tmp_evt, "ispriority", sqlite3_column_int(stmt, 16), NULL);	
-	g_object_set(tmp_evt, "hasnotification", sqlite3_column_int(stmt, 17), NULL);
-	g_object_set(tmp_evt, "hasreminder", sqlite3_column_int(stmt, 18), NULL);
+	
+	g_object_set(tmp_evt, "hasreminder", sqlite3_column_int(stmt, 17), NULL);
+	g_object_set(tmp_evt, "reminderhour", sqlite3_column_int(stmt, 18), NULL);
 	g_object_set(tmp_evt, "remindermin", sqlite3_column_int(stmt, 19), NULL);
 		
 	g_array_append_val(evt_arry, tmp_evt);	
@@ -941,11 +957,12 @@ void db_get_isyearly_events_month(GArray *evt_arry, int month)
 	g_object_set(tmp_evt, "endhour", sqlite3_column_int(stmt, 12), NULL);
 	g_object_set(tmp_evt, "endmin", sqlite3_column_int(stmt, 13), NULL);
 	g_object_set(tmp_evt, "isyearly", sqlite3_column_int(stmt, 14), NULL);
-	g_object_set(tmp_evt, "isallday", sqlite3_column_int(stmt, 15), NULL);
-		
+	g_object_set(tmp_evt, "isallday", sqlite3_column_int(stmt, 15), NULL);		
 	g_object_set(tmp_evt, "ispriority", sqlite3_column_int(stmt, 16), NULL);	
-	g_object_set(tmp_evt, "hasnotification", sqlite3_column_int(stmt, 17), NULL);
-	g_object_set(tmp_evt, "hasreminder", sqlite3_column_int(stmt, 18), NULL);
+	
+	
+	g_object_set(tmp_evt, "hasreminder", sqlite3_column_int(stmt, 17), NULL);
+	g_object_set(tmp_evt, "reminderhour", sqlite3_column_int(stmt, 18), NULL);
 	g_object_set(tmp_evt, "remindermin", sqlite3_column_int(stmt, 19), NULL);
 	
 	g_array_append_val(evt_arry, tmp_evt);	
@@ -999,12 +1016,14 @@ void db_get_upcoming_events(GArray *evt_arry, int year, int month, int from ,int
 	g_object_set(tmp_evt, "endday", sqlite3_column_int(stmt, 11), NULL);
 	g_object_set(tmp_evt, "endhour", sqlite3_column_int(stmt, 12), NULL);
 	g_object_set(tmp_evt, "endmin", sqlite3_column_int(stmt, 13), NULL);
-	g_object_set(tmp_evt, "isyearly", sqlite3_column_int(stmt, 14), NULL);
-	g_object_set(tmp_evt, "isallday", sqlite3_column_int(stmt, 15), NULL);
 	
+	g_object_set(tmp_evt, "isyearly", sqlite3_column_int(stmt, 14), NULL);
+	g_object_set(tmp_evt, "isallday", sqlite3_column_int(stmt, 15), NULL);	
 	g_object_set(tmp_evt, "ispriority", sqlite3_column_int(stmt, 16), NULL);	
-	g_object_set(tmp_evt, "hasnotification", sqlite3_column_int(stmt, 17), NULL);
-	g_object_set(tmp_evt, "hasreminder", sqlite3_column_int(stmt, 18), NULL);
+	
+	
+	g_object_set(tmp_evt, "hasreminder", sqlite3_column_int(stmt, 17), NULL);
+	g_object_set(tmp_evt, "reminderhour", sqlite3_column_int(stmt, 18), NULL);
 	g_object_set(tmp_evt, "remindermin", sqlite3_column_int(stmt, 19), NULL);	
 	g_array_append_val(evt_arry, tmp_evt);	
 	} //while
