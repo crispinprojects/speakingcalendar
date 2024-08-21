@@ -3,7 +3,7 @@ PKGCONFIG = $(shell which pkg-config)
 CFLAGS = $(shell $(PKGCONFIG) --cflags gtk4)
 LIBS = $(shell $(PKGCONFIG) --libs gtk4) -lm -lasound -lsqlite3 -lnotify
 
-SRC = main.c customcalendar.c calendarevent.c dbmanager.c dictionary.c diphone.c
+SRC = main.c customcalendar.c calendarevent.c dbmanager.c
 
 OBJS = $(SRC:.c=.o)
 

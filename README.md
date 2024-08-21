@@ -1,6 +1,6 @@
 # Talk Calendar
 
-Talk Calendar is a personal desktop calendar for Linux which has some speech capability using its own built-in text-to-speech synthesizer. It can read out current day events and upcoming events (if required) at start up.
+Talk Calendar is a personal desktop calendar for Linux which has some speech capability using its own built-in speech engine for speaking dates, times and event keywords.
 
 It has been developed using C and [GTK4](https://docs.gtk.org/gtk4/). A screenshot is shown below.
 
@@ -16,7 +16,7 @@ Time and events are what drives life.
 * export and import iCalendar files (backup and restore)
 * event time reminder alarms (sent as system notifications and audio alert)
 * Sqlite3 database used to store events
-* built-in diphone speech synthesizer
+* built-in word concatenation speech synthesizer (date, time and event word reader)
 
 ### Local Install Using Prebuilt Binary
 
@@ -57,11 +57,12 @@ If you have used a calendar application before then using Talk Calendar will be 
 ### Adding New Event
 
 * Click on the new event button in the header bar or press Ctrl+n to invoke the "New Event" window
-* Enter the event summary (e.g. birthday)
-* Enter the description 
+* Select the event speech word (summary) using the dropdown
+* Enter the event description 
 * Enter the location
 * Enter the start date by setting the day, month and year values 
 * Enter start and end times (or tick the all day check box)
+* Times are entered as hour and minute values using the 24-hour time notation
 * Events are sorted by start time when displayed
 * Check the "Is Yearly" check box if the event repeats every year (e.g. birthdays and anniversaries)
 
@@ -114,10 +115,10 @@ When a reminder is triggered a notification is sent to the system and an audio m
 
 ## Talking
 
-* Events are spoken when a day in the month-view calendar is selected (assuming that talking is selected in the preferences).
-* Speaking the selected day events can also be done by pressing the "s" key or using the menu item "Speak Selected Day".
+* Speaking the selected day events is done by pressing the "s" key or using the menu item "Speak Selected Day".
+* Selecting a day in the month-view calendar will speak the date, event times and words (assuming that talking is selected in the preferences).
 * Talk Calendar will tell you the time if you press the "t" key.
-* Change the "Talk Rate" value in the Preferences dialog to speed up talking. (if required)
+* Change the "Talk Rate" value in the Preferences dialog to speed up talking (if required).
 
 ### Information
 
@@ -165,7 +166,7 @@ The only recurring event type that is currently supported by Talk Calendar is ye
 
 ### Upgrading To Newer version
 
-It is strongly suggested that you save your current calendar in "ical" format before updating to a newer version of Talk Calendar. Install Talk Calendar with a new "calendar.db" database and import the ical file to this.
+It is strongly suggested that you save your current calendar in "ical" format before updating to a newer version of Talk Calendar. Calendar "ical" files can be edited using a standard text editor. To upgrade install Talk Calendar with a new "calendar.db" database and import the saved  ical file to this.
 
 ## Build From Source
 
@@ -261,21 +262,11 @@ The Calendar itself has received a number of updates including using tooltips to
 
 ## Speech Synthesis
 
-Talk Calendar uses its own built-in diphone speech synthesizer.  A diphone is a sound unit composed of two adjacent partial phonemes i.e. the second half of the first phoneme and the first half of the second phoneme. Words are formed as sequences of elementary speech units called phonemes. A phoneme is the smallest unit of sound that distinguishes one word from another word and there are 44 phonemes in the English language. The synthesizer uses a set of pre-recorded diphone sound samples and concatenates these to produce synthesized speech output for a given text input.
-
-The voice used by Talk Calendar is based on the diphone collection created by Alan W Black and Kevin Lenzo which is free for use for any purpose (commercial or otherwise) and subject to the pretty light restrictions [detailed here](https://github.com/hypnaceae/DiphoneSynth/blob/master/diphones_license.txt). I have used the same licence for the voice that I have created. There is information about recording your own diphones [here](http://festvox.org/bsv/x2401.html) and in the speech synthesis lecture by Professor Alan W Black [here](https://www.youtube.com/watch?v=eDjtEsOvouM&t=1459s).
-
-My diphone speech synthesizer has a number of limitations. 
-
-1. It uses a small dictionary of approximately 56,600 English words. If a word is not recognised by the dictionary it is skipped over. 
-
-2. Apostrophes and other special characters are not used as inserting these into the database can cause errors. There are two types of apostrophes. Apostrophes of possession and contraction. Possessive apostrophes indicate ownership of something, like in the following sentence: "Dog's birthday". You have to enter the word name without an apostrophe e.g. dogs. Contraction apostrophes are used to shorten words. For example, "It's a nice day outside" which is expanded as "It is a nice day outside". Use the expanded version with the Talk Calendar diphone speech synthesizer. 
-
-3. The pronunciation of some words is poor. There is very little information on-line about how to convert words to a diphone list. In many cases I have made an educated guess. More work is needed on word pronunciation.
+Talk Calendar incorporates a small word-based speech synthesizer used to concatenate and play-back pre-recorded English words using the computer speaker. The voice used by this version of Talk Calendar is based on my own recordings and so is subject to same license as the project. The voice will be improved and updated in future versions of the project.
 
 Many open source and commercial speech synthesizers use the formant speech synthesis approach. For example, the excellent [eSpeak](https://espeak.sourceforge.net/) open source speech synthesizer for Linux and Windows uses a formant synthesis method. I had considered using eSpeak rather than code my own speech synthesizer but I discovered that some of its components may not be compatible with the GTK LGPL v2.1 license. For example, the IEEE80.c file [license](https://github.com/espeak-ng/espeak-ng/blob/c1d9341f86eee4b7a0da50712b627d8a76e92fea/src/libespeak-ng/ieee80.c) says "Copyright (C) 1989-1991 Apple Computer, Inc." which is very strange given that espeak has a GPL v3 [license](https://espeak.sourceforge.net/license.html). This is discussed further in the forum post [here](https://opensource.stackexchange.com/questions/11545/possibilities-to-use-a-gpl-v3-licensed-library-in-a-closed-source-game). 
 
-Consequently, as Talk Calendar is a hobby project I would rather just use my own diphone-based speech synthesizer to avoid any potential license compatibility issues with using eSpeak. Even with its limitations, my diphone speech synthesizer is functional and has been coded from scratch using C and GTK4. It is more versatile than my previous speech synthesizer which was based on concatenating and playing back pre-recorded English words. 
+Consequently, as Talk Calendar is a hobby project I would rather just use my own small word-based speech synthesizer  to avoid any potential license compatibility issues with using eSpeak. 
 
 I have also been working on a formant speech synthesizer the details of which can be found [here](https://github.com/crispinprojects/formant-synthesizer) but the sound quality is very robotic with buzzing and humming background noise.
 
