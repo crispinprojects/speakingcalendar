@@ -34,8 +34,8 @@
 //voice 2024
 #include "voice2.h"
 
-#define CONFIG_DIRNAME "talk-calendar-myvoice"
-#define CONFIG_FILENAME "talk-calendar-myvoice"
+#define CONFIG_DIRNAME "talk-calendar"
+#define CONFIG_FILENAME "talk-calendar"
 static char * m_config_file = NULL;
 
 //Declarations
