@@ -74,6 +74,9 @@ void custom_calendar_set_holiday_colour(CustomCalendar *self, const gchar* colou
 const gchar* custom_calendar_get_holiday_colour(CustomCalendar *self);
 
 
+void custom_calendar_set_show_tooltips(CustomCalendar *self, gboolean show_tooltips);
+gboolean custom_calendar_get_show_tooltips(CustomCalendar *self);
+
 //not public
 static void custom_calendar_select_day (CustomCalendar *calendar, guint day, guint month, guint year);
 static void callbk_next_month(CustomCalendar *calendar);

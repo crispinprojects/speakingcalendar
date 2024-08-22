@@ -92,7 +92,7 @@ When a reminder is triggered a notification is sent to the system and an audio m
 
 ### Tooltips
 
-* Talk Calendar also supports tooltips so that if you hover over a date in the month-view calendar the event details are displayed.
+A tooltip is a text bubble that displays event details when the mouse hovers over a day in the month-view calendar. I introduced tooltips because they can be a good accessibility feature. However, with some forms of visual impairment they can be problematic. Consequently, I have added an option in the preferences dialog to turn them off.
 
 ### Searching For Events
 
@@ -111,7 +111,7 @@ When a reminder is triggered a notification is sent to the system and an audio m
 ![](talkcalendar-preferences.png)
 
 * Check "Show Public Holidays" to display the main UK public holidays on the Calendar.
-* Click on the colour buttons to change the today, event-day and public holiday calendar colours.
+* Click on the colour buttons to change the today, event-day and public holiday calendar background colours to aid readability.
 
 ![](talkcalendar-colour-dialog.png)
 
@@ -169,6 +169,8 @@ The only recurring event type that is currently supported by Talk Calendar is ye
 ### Upgrading To Newer version
 
 It is strongly suggested that you save your current calendar in "ical" format before updating to a newer version of Talk Calendar. Calendar "ical" files can be edited using a standard text editor. To upgrade install Talk Calendar with a new "calendar.db" database and import the saved  ical file to this.
+
+For a clean install also delete the talk-calendar config folder and file located at ~/.config/talk-calendar.
 
 ## Build From Source
 
@@ -271,6 +273,10 @@ Many open source and commercial speech synthesizers use the formant speech synth
 Consequently, as Talk Calendar is a hobby project I would rather just use my own small word-based speech synthesizer  to avoid any potential license compatibility issues with using eSpeak. 
 
 I have also been working on a formant speech synthesizer the details of which can be found [here](https://github.com/crispinprojects/formant-synthesizer) but the sound quality is very robotic with buzzing and humming background noise.
+
+### Voice Control
+
+Not implemented. 
 
 ## Versioning
 

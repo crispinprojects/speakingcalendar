@@ -69,7 +69,7 @@ struct _CustomCalendar
 	int day_month[6][7];
 	int days[6][7];	
 	char *eventday_array[32];
-	char *tooltip_array[32];
+	char *tooltip_array[32];	
 	int num_marked_days;
 	int marked_day[32];
 	char *holiday_array[32];
@@ -77,7 +77,8 @@ struct _CustomCalendar
 	int marked_holiday[32];
 	const gchar* today_colour;
 	const gchar* event_colour;
-	const gchar* holiday_colour;		
+	const gchar* holiday_colour;
+	gboolean show_tooltips;		
 };
 
 //=====================================================================
@@ -100,7 +101,8 @@ enum {
     PROP_0,
     PROP_TODAYCOLOUR, 
     PROP_EVENTCOLOUR, 
-    PROP_HOLIDAYCOLOUR,        
+    PROP_HOLIDAYCOLOUR, 
+    PROP_SHOWTOOLTIPS,         
     LAST_PROP
 };
 
@@ -124,7 +126,10 @@ static void custom_calendar_set_property(GObject *object,
             break;
         case PROP_HOLIDAYCOLOUR:
             custom_calendar_set_holiday_colour(self, g_value_get_string(value));
-            break;            
+            break; 
+         case PROP_SHOWTOOLTIPS:
+            custom_calendar_set_show_tooltips(self, g_value_get_boolean(value));
+            break;           
        
       default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -151,7 +156,11 @@ static void custom_calendar_get_property(GObject *object,
     case PROP_HOLIDAYCOLOUR:
       g_value_set_string(value, custom_calendar_get_holiday_colour(self));
       break;
-    
+    case PROP_SHOWTOOLTIPS:
+      //g_value_set_boolean (value, calendar->frame);
+      g_value_set_boolean  (value, custom_calendar_get_show_tooltips(self));
+      break;
+      
       default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break; 
@@ -202,6 +211,14 @@ static void custom_calendar_class_init(CustomCalendarClass *klass)
                         "blue",
                         (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
       
+    properties[PROP_SHOWTOOLTIPS] =
+    g_param_spec_boolean("showtooltips",
+                     "showtooltips",
+                     "sets if calendar has tooltips",
+                     TRUE, 
+                     (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+      
+     
      g_object_class_install_properties(object_class, LAST_PROP, properties);                  
 		
 	//Signals emitted on user actions
@@ -598,11 +615,11 @@ static void custom_calendar_init(CustomCalendar *calendar)
 	int week_start = 0; // local
 	
 	//Set colour defaults to prevent theme parser error
-	//Is this the right place? (more research needed)
-			
+	//Is this the right place to intialise? (more research needed)		
 	calendar->today_colour="rgb(173,216,230)";
 	calendar->event_colour="rgb(222,184,135)";	
 	calendar->holiday_colour="rgb(102,205,170)";
+	calendar->show_tooltips =1;	//true
 		
 	
 	int n_cols = 7;
@@ -836,12 +853,20 @@ static void custom_calendar_select_day(CustomCalendar *calendar, guint dday, gui
 				char* holiday_str =calendar->holiday_array[aday];
 				
 				char* title_str =calendar->eventday_array[aday];
-				char* tooltip_str =calendar->tooltip_array[aday];
-				//g_print("tooltip = %s\n",tooltip_str);
+							
 								
 				aday_str = g_strconcat(aday_str ,day_num_str," ", holiday_str, "\n ",title_str, NULL);
+				char* tooltip_str ="";
 				
+				if(calendar->show_tooltips==1)
+				{
+				tooltip_str =calendar->tooltip_array[aday];
 				gtk_widget_set_tooltip_text(GTK_WIDGET(calendar->day_number_labels[y][x]), tooltip_str);
+			    }
+			    else{
+			    tooltip_str ="";
+				gtk_widget_set_tooltip_text(GTK_WIDGET(calendar->day_number_labels[y][x]), tooltip_str);
+				}
 				
 				gtk_label_set_label(GTK_LABEL(calendar->day_number_labels[y][x]), aday_str);
 					
@@ -1004,6 +1029,21 @@ void custom_calendar_update(CustomCalendar *calendar)
 }
 //======================================================================
 //properties
+
+
+//======================================================================
+gboolean custom_calendar_get_show_tooltips(CustomCalendar *self)
+{
+	
+	return self->show_tooltips;
+}
+//======================================================================
+void custom_calendar_set_show_tooltips(CustomCalendar *self, gboolean show_tooltips)
+{
+	self->show_tooltips=show_tooltips;
+	//g_print("custom calendar: show_tooltips = %d\n", self->show_tooltips);	
+}
+
 //======================================================================
 void custom_calendar_set_today_colour(CustomCalendar *self, const gchar* colour_str)
 {
