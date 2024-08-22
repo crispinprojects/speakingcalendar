@@ -14,7 +14,7 @@ Time and events are what drives life.
 * month-view calendar 
 * event details, location, start and end time can be entered and edited
 * export and import iCalendar files (backup and restore)
-* event time reminder alarms (sent as system notifications and audio alert)
+* event time reminder alarms (sent as system notifications and audio alerts)
 * Sqlite3 database used to store events
 * built-in word concatenation speech synthesizer (date, time and event word reader)
 
@@ -28,11 +28,11 @@ Extract the downloaded file which contains the Talk Calendar executable. Assumin
 ./talkcalendar
 ```
 
-or double click on the "talkcalendar" file. Talk Calendar must have executable permissions to execute. Right click it and choose Properties->Permissions and tick allow "Executable as Program".
+or double click on the "talkcalendar" file. Talk Calendar must have executable permissions to execute. If it does not then right click on the Talk Calendar binary file and choose Properties->Permissions and tick allow "Executable as Program".
 
 To add Talk Calendar to the system menu modify the Talk Calendar desktop file provided in the download. A desktop file has a .desktop extension and provides metadata about an application such as its name, icon, command to execute and other properties. For user-specific applications desktop files can be located locally in the ~/.local/share/applications/ directory. Local user entries take precedence over system entries. For the GNOME desktop, the desktop file should be named using the [application ID](https://developer.gnome.org/documentation/tutorials/application-id.html), that is <application_id>.desktop, which in this case is "org.gtk.talkcalendar.desktop" 
 
-The "org.gtk.talkcalendar.desktop" file is shown below. You need to modify this using your own user name and directory locations. For example, if your user name is "tiki" and you install local applications in a folder called "Software" and you create a folder called "talkcalendar " to store the Talk Calendar binary executable then the executable path would be "Exec=/home/tiki/Software/talkcalendar/talkcalendar". The Exec variable defines the command to execute when launching an application, in this case, the talkcalendar binary executable. The Path variable tells the system where to look for the executable and the calendar database. The Icon variable specifies the path to the icon file associated with application. In a .desktop file, you need to use absolute and full paths.
+The "org.gtk.talkcalendar.desktop" file is shown below. You need to modify this using your own user name and directory locations. For example, if your user name is "tiki" and you install local applications in a folder called "Software" and you create a folder called "talkcalendar " to store the Talk Calendar binary executable then the executable path would be "Exec=/home/tiki/Software/talkcalendar/talkcalendar". The Exec variable defines the command to execute when launching an application, in this case, the talkcalendar binary executable. The Path variable tells the system where to look for the executable and the calendar database. The Icon variable specifies the path to the icon file associated with the application. In a .desktop file, you need to use absolute and full paths.
 
 ```
 [Desktop Entry]
@@ -56,7 +56,7 @@ If you have used a calendar application before then using Talk Calendar will be 
 
 ### Adding New Event
 
-* Click on the new event button in the header bar or press Ctrl+n to invoke the "New Event" window
+* Click on the "New Event" button in the header bar or press Ctrl+n to invoke the "New Event" window
 * Select the event speech word (summary) using the dropdown
 * Enter the event description 
 * Enter the location
@@ -86,9 +86,11 @@ When a reminder is triggered a notification is sent to the system and an audio m
 
 ![](talkcalendar-day-events.png)
 
-* Event details are spoken when the day events list view is invoked (assuming that talking is selected in the preferences).
+* The date and any event details are read out when the day events list view is invoked (assuming that talking is selected in the preferences).
 
 * The day events list view allows individual events to be selected so that they can be edited or deleted (make sure you click on the event before using either the "Edit Event" or "Delete Event" button).
+
+### Tooltips
 
 * Talk Calendar also supports tooltips so that if you hover over a date in the month-view calendar the event details are displayed.
 
@@ -116,7 +118,7 @@ When a reminder is triggered a notification is sent to the system and an audio m
 ## Talking
 
 * Speaking the selected day events is done by pressing the "s" key or using the menu item "Speak Selected Day".
-* Selecting a day in the month-view calendar will speak the date, event times and words (assuming that talking is selected in the preferences).
+* Selecting a day in the month-view calendar will read out the date and any event details (e.g. time and event words) assuming that talking is selected in the preferences.
 * Talk Calendar will tell you the time if you press the "t" key.
 * Change the "Talk Rate" value in the Preferences dialog to speed up talking (if required).
 
@@ -133,7 +135,7 @@ When a reminder is triggered a notification is sent to the system and an audio m
 
 ## Startup Applications
 
-With GNOME based desktops you can use the GNOME "Tweak Tool" to add Talk Calendar to your startup applications. Talk Calendar will then read out the current date and days events and any future upcoming events (see preferences settings) when the computer is switched on.
+With GNOME based desktops you can use the GNOME "Tweak Tool" to add Talk Calendar to your startup applications. Talk Calendar can then read out the current date, details of day events and any future upcoming events (see preferences settings) when the computer is switched on.
 
 ### Events Database
 
@@ -143,11 +145,11 @@ Events are stored in an [Sqlite](https://www.sqlite.org/index.html) database. SQ
 
 Talk Calendar allows a personal calendar to be exported as an iCalendar file. These typically use the file extension ".ical" or ".ics". The [iCalendar standard](https://icalendar.org/) is an open standard for exchanging calendar and scheduling information between users and computers.  An icalendar file is a plain text file and so can be modified using a standard text editor. 
 
-The export to icalendar file does not currently support time zones and so the DTSTART and DTEND properties contain dates with local time and have no reference to a time zone. For example, the following represents an event starting on January, 1st, 2024 at 11.30am and ending at 2pm.
+The export to icalendar file does not currently support time zones and so the DTSTART and DTEND properties contain dates with local time and have no reference to a time zone. For example, the following represents an event starting on 14th August 2024 at 11.30am and ending at 2pm.
 
 ```
-DTSTART:20240101T113000
-DTEND:20240101T140000
+DTSTART:20240814T113000
+DTEND:20240814T140000
 ```
 
 A file chooser dialog is used to allow the save directory location to be chosen by the user as shown below.
@@ -303,10 +305,6 @@ GTK is released under the terms of the [GNU Lesser General Public License versio
 * [Geany](https://www.geany.org/) is a lightweight source-code editor (version 2 now uses GTK3). [GPL v2 license](https://www.gnu.org/licenses/old-licenses/gpl-2.0.txt)
 
 * [Sqlite](https://www.sqlite.org/index.html) is open source and in the [public domain](https://www.sqlite.org/copyright.html).
-
-* [Diphone License](https://github.com/hypnaceae/DiphoneSynth/blob/master/diphones_license.txt)
-
-* Diphone collection and synthesis Alan W. Black and Kevin Lenzo [2000](https://www.cs.cmu.edu/~awb/papers/ICSLP2000_diphone.pdf)
 
 * [Fedora](https://fedoraproject.org/)
 
