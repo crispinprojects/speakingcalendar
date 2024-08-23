@@ -1,14 +1,12 @@
-# Talk Calendar
+# Speaking Calendar
 
-Talk Calendar is a personal desktop calendar for Linux which has some speech capability using its own built-in speech engine for speaking dates, times and event keywords.
+Speaking Calendar is a personal desktop calendar for Linux which has some speech capability using its own built-in speech engine for speaking dates, times and event words.
 
-It has been developed using C and [GTK4](https://docs.gtk.org/gtk4/). A screenshot is shown below.
+The Linux Speaking Calendar has been developed using C and [GTK4](https://docs.gtk.org/gtk4/). A screenshot is shown below.
 
-![](talkcalendar.png)
+![](speakingcalendar.png)
 
-Time and events are what drives life.
-
-## Core Features
+## Core Features (Linux Speaking Calendar)
 
 * built with C and GTK 4.14.4 (Fedora 40)
 * month-view calendar 
@@ -20,39 +18,39 @@ Time and events are what drives life.
 
 ### Local Install Using Prebuilt Binary
 
-A 64-bit prebuilt binary for the latest version of Talk Calendar is available and can be downloaded from the binary directory. This has been built using GTK 4.14 and tested with Fedora 40 and Ubuntu 24.04 LTS. 
+A 64-bit prebuilt binary for the latest version of Speaking Calendar is available and can be downloaded from the binary directory. This has been built using GTK 4.14 and tested with Fedora 40 and Ubuntu 24.04 LTS. 
 
-Extract the downloaded file which contains the Talk Calendar executable. Assuming that the GTK4 base libraries are installed the Talk Calendar binary can be run from the terminal using:
+Extract the downloaded file which contains the Speaking Calendar executable. Assuming that the GTK4 base libraries are installed the Speaking Calendar binary can be run from the terminal using:
 
 ```
-./talkcalendar
+./speakingcalendar
 ```
 
-or double click on the "talkcalendar" file. Talk Calendar must have executable permissions to execute. If it does not then right click on the Talk Calendar binary file and choose Properties->Permissions and tick allow "Executable as Program".
+or double click on the "speakingcalendar" file. Speaking Calendar must have executable permissions to execute. If it does not then right click on the Speaking Calendar binary file and choose Properties->Permissions and tick allow "Executable as Program".
 
-To add Talk Calendar to the system menu modify the Talk Calendar desktop file provided in the download. A desktop file has a .desktop extension and provides metadata about an application such as its name, icon, command to execute and other properties. For user-specific applications desktop files can be located locally in the ~/.local/share/applications/ directory. Local user entries take precedence over system entries. For the GNOME desktop, the desktop file should be named using the [application ID](https://developer.gnome.org/documentation/tutorials/application-id.html), that is <application_id>.desktop, which in this case is "org.gtk.talkcalendar.desktop" 
+To add the Linux Speaking Calendar to the system menu modify the Speaking Calendar desktop file provided in the download. A desktop file has a .desktop extension and provides metadata about an application such as its name, icon, command to execute and other properties. For user-specific applications desktop files can be located locally in the ~/.local/share/applications/ directory. Local user entries take precedence over system entries. For the GNOME desktop, the desktop file should be named using the [application ID](https://developer.gnome.org/documentation/tutorials/application-id.html), that is <application_id>.desktop, which in this case is "org.gtk.speakingcalendar.desktop" 
 
-The "org.gtk.talkcalendar.desktop" file is shown below. You need to modify this using your own user name and directory locations. For example, if your user name is "tiki" and you install local applications in a folder called "Software" and you create a folder called "talkcalendar " to store the Talk Calendar binary executable then the executable path would be "Exec=/home/tiki/Software/talkcalendar/talkcalendar". The Exec variable defines the command to execute when launching an application, in this case, the talkcalendar binary executable. The Path variable tells the system where to look for the executable and the calendar database. The Icon variable specifies the path to the icon file associated with the application. In a .desktop file, you need to use absolute and full paths.
+The "org.gtk.speakingcalendar.desktop" file is shown below. You need to modify this using your own user name and directory locations. For example, if your user name is "tiki" and you install local applications in a folder called "Software" and you create a folder called "speakingcalendar " to store the Speaking Calendar binary executable then the executable path would be "Exec=/home/tiki/Software/speakingcalendar/speakingcalendar". The Exec variable defines the command to execute when launching an application, in this case, the speakingcalendar binary executable. The Path variable tells the system where to look for the executable and the calendar database. The Icon variable specifies the path to the icon file associated with the application. In a .desktop file, you need to use absolute and full paths.
 
 ```
 [Desktop Entry]
-Version=0.3.0
+Version=0.1.0
 Type=Application
-Name=Talk Calendar
-Comment=Talking calendar
-Icon=/home/your-user-name/folder/talkcalendar/calendar.png
-Exec=/home/your-user-name/folder/talkcalendar/talkcalendar
-Path=/home/your-user-name/folder/talkcalendar
+Name=Speaking Calendar
+Comment=Linux Speaking Calendar
+Icon=/home/your-user-name/folder/speakingcalendar/calendar.png
+Exec=/home/your-user-name/folder/speakingcalendar/speakingcalendar
+Path=/home/your-user-name/folder/speakingcalendar
 X-GNOME-UsesNotifications=true
 Categories=Calendar;Office;
 MimeType=text/calendar;
 ```
 
-Copy your modified  "org.gtk.talkcalendar.desktop" file to the ***~/.local/share/applications/***  hiden directory (tick the "Show Hidden Files" option in the file explorer). Create the ~/.local/share/applications/ directory if it does not already exist. This way of locally installing Talk Calendar should be universal across different Linux distributions.
+Copy your modified  "org.gtk.speakingcalendar.desktop" file to the ***~/.local/share/applications/***  hiden directory (tick the "Show Hidden Files" option in the file explorer). Create the ~/.local/share/applications/ directory if it does not already exist. This way of locally installing Speaking Calendar should be universal across different Linux distributions.
 
 ## Calendar Usage
 
-If you have used a calendar application before then using Talk Calendar will be straight forward. 
+If you have used a calendar application before then using Speaking Calendar will be straight forward. 
 
 ### Adding New Event
 
@@ -68,74 +66,72 @@ If you have used a calendar application before then using Talk Calendar will be 
 
 A screenshot of the new event dialog is shown below.
 
-![](talkcalendar-new-event.png)
+![](speakingcalendar-new-event.png)
 
 ### Reminders
 
-Talk Calendar supports the use of reminders. A reminders is an alarm triggered at a specified time before an event starts.
+Speaking Calendar supports the use of reminders. A reminders is an alarm triggered at a specified time before an event starts.
 
 * Check the "Reminder" check box and set the reminder time (hour, minute) which should be a time before the event starts.
 
 When a reminder is triggered a notification is sent to the system and an audio message played
 
-![](talkcalendar-reminder.png)
+![](speakingcalendar-reminder.png)
 
 ### Display and Speak Events
 
 * Click on a date in the month-view calendar which has events and this will invoke the day events list view as shown below.
 
-![](talkcalendar-day-events.png)
+![](speakingcalendar-day-events.png)
 
-* The date and any event details are read out when the day events list view is invoked (assuming that talking is selected in the preferences).
+* The date and any event details are read out when the day events list view is invoked assuming that speaking is selected in the preferences.
 
 * The day events list view allows individual events to be selected so that they can be edited or deleted (make sure you click on the event before using either the "Edit Event" or "Delete Event" button).
 
 ### Tooltips
 
-A tooltip is a text bubble that displays event details when the mouse hovers over a day in the month-view calendar. I introduced tooltips because they can be a good accessibility feature. However, with some forms of visual impairment they can be problematic. Consequently, I have added an option in the preferences dialog to turn them off.
+A tooltip is a text bubble that displays event details when the mouse hovers over a day in the month-view calendar. I introduced tooltips because they can be a good accessibility feature. However, with some forms of visual impairment tooltips on hover can be problematic. Consequently, I have added an option in the preferences dialog to turn them off.
 
 ### Searching For Events
 
 * Select "Search For Events" from the hamburger menu .
 * Enter a search term or location.
 
-![](talkcalendar-search.png)
-
-![](talkcalendar-search-results.png)
+![](speakingcalendar-search.png)
 
 ### Preferences
 
 * Select "Preferences" from the hamburger menu or use Ctrl+Alt+p to invoke the preferences window (see screenshot below).
 * Change options as required.
 
-![](talkcalendar-preferences.png)
+![](speakingcalendar-preferences.png)
 
 * Check "Show Public Holidays" to display the main UK public holidays on the Calendar.
 * Click on the colour buttons to change the today, event-day and public holiday calendar background colours to aid readability.
 
-![](talkcalendar-colour-dialog.png)
+![](speakingcalendar-colour-dialog.png)
 
-## Talking
+## Speaking
 
 * Speaking the selected day events is done by pressing the "s" key or using the menu item "Speak Selected Day".
-* Selecting a day in the month-view calendar will read out the date and any event details (e.g. time and event words) assuming that talking is selected in the preferences.
-* Talk Calendar will tell you the time if you press the "t" key.
-* Change the "Talk Rate" value in the Preferences dialog to speed up talking (if required).
+* Selecting a day in the month-view calendar will read out the date and any event details (e.g. time and event words) assuming that speaking is selected in the preferences.
+* The Linux Speaking Calendar will tell you the time if you press the "t" key (i.e. a speaking clock).
+* Change the "Speech Rate" value in the Preferences dialog to speed up speaking (if required).
 
 ### Information
 
 * Select "Information"  from the hamburger menu or press F1
 * the information window shows the keyboard shoutcuts, how many records are in the database, the Sqlite version being used on the system, the desktop font and scale factor.
 
-![](talkcalendar-information.png)
+![](speakingcalendar-information.png)
 
 * Use the About dialog to display current version.
 
-![](talkcalendar-about.png)
+![](speakingcalendar-about.png)
 
 ## Startup Applications
 
-With GNOME based desktops you can use the GNOME "Tweak Tool" to add Talk Calendar to your startup applications. Talk Calendar can then read out the current date, details of day events and any future upcoming events (see preferences settings) when the computer is switched on.
+With GNOME based desktops you can use the GNOME "Tweak Tool" to add Speaking Calendar to your startup applications. Speaking Calendar can then read out the current date, details of day events and any future upcoming events (see preferences settings) when the computer is switched on.
 
 ### Events Database
 
@@ -143,7 +139,7 @@ Events are stored in an [Sqlite](https://www.sqlite.org/index.html) database. SQ
 
 ### Export and Import iCalendar Files
 
-Talk Calendar allows a personal calendar to be exported as an iCalendar file. These typically use the file extension ".ical" or ".ics". The [iCalendar standard](https://icalendar.org/) is an open standard for exchanging calendar and scheduling information between users and computers.  An icalendar file is a plain text file and so can be modified using a standard text editor. 
+Speaking Calendar allows a personal calendar to be exported as an iCalendar file. These typically use the file extension ".ical" or ".ics". The [iCalendar standard](https://icalendar.org/) is an open standard for exchanging calendar and scheduling information between users and computers.  An icalendar file is a plain text file and so can be modified using a standard text editor. 
 
 The export to icalendar file does not currently support time zones and so the DTSTART and DTEND properties contain dates with local time and have no reference to a time zone. For example, the following represents an event starting on 14th August 2024 at 11.30am and ending at 2pm.
 
@@ -154,35 +150,35 @@ DTEND:20240814T140000
 
 A file chooser dialog is used to allow the save directory location to be chosen by the user as shown below.
 
-![](talkcalendar-export-ical.png)
+![](speakingcalendar-export-ical.png)
 
 The icalendar import parser allows the date and local time to be imported and checks if a time zone has been specified using the [TZID](https://icalendar.org/iCalendar-RFC-5545/3-2-19-time-zone-identifier.html) property. A file chooser dialog is used to allow the file to be chosen by the user as shown below. File filters can be used.
 
-![](talkcalendar-import-ical.png)
+![](speakingcalendar-import-ical.png)
 
 The parser will be updated with new features in future releases.
 
 ### Recurring Events
 
-The only recurring event type that is currently supported by Talk Calendar is yearly. This is required for events such as birthdays and anniversaries. The parser uses icalendar [RRULE](https://icalendar.org/iCalendar-RFC-5545/3-8-5-3-recurrence-rule.html) to determine if an event is yearly (e.g. birthday).
+The only recurring event type that is currently supported by Speaking Calendar is yearly. This is required for events such as birthdays and anniversaries. The parser uses icalendar [RRULE](https://icalendar.org/iCalendar-RFC-5545/3-8-5-3-recurrence-rule.html) to determine if an event is yearly (e.g. birthday).
 
 ### Upgrading To Newer version
 
-It is strongly suggested that you save your current calendar in "ical" format before updating to a newer version of Talk Calendar. Calendar "ical" files can be edited using a standard text editor. To upgrade install Talk Calendar with a new "calendar.db" database and import the saved  ical file to this.
+It is strongly suggested that you save your current calendar in "ical" format before updating to a newer version of the Linux Speaking Calendar. Calendar "ical" files can be edited using a standard text editor. To upgrade install Speaking Calendar with a new "calendar.db" database and import the saved  ical file to this.
 
-For a clean install also delete the talk-calendar config folder and file located at ~/.config/talk-calendar.
+For a clean install also delete the speaking-calendar config folder and file located at ~/.config/speaking-calendar.
 
 ## Build From Source
 
-The C source code for the Talk Calendar application is provided in the src directory. Fedora 40 has been used to develop and compile the project. Fedora 40 uses GTK 4.14.
+The C source code for the Speaking Calendar application is provided in the src directory. Fedora 40 has been used to develop and compile the project. Fedora 40 uses GTK 4.14.
 
-[Geany](https://www.geany.org/) can be used as a source code editor for opening, viewing and then compiling the Talk Calendar C code. Geany is lightweight and has an integrated terminal for building the application.
+[Geany](https://www.geany.org/) can be used as a source code editor for opening, viewing and then compiling the Speaking Calendar C code. Geany is lightweight and has an integrated terminal for building the application.
 
-To build Talk Calendar from source you need the gcc compiler, GTK4, GLIB and SQLITE  development libraries. 
+To build Speaking Calendar from source you need the gcc compiler, GTK4, GLIB and SQLITE  development libraries. 
 
 ### Building on Fedora 40
 
-With Fedora you need to install the following packages to compile Talk Calendar.
+With Fedora you need to install the following packages to compile Speaking Calendar.
 
 ```
 sudo dnf install gcc make
@@ -212,15 +208,15 @@ Use the MAKEFILE to compile.
 make
 ```
 
-To run Talk Calendar from the terminal use
+To run Speaking Calendar from the terminal use
 
 ```
-./talkcalendar
+./speakingcalendar
 ```
 
 ### Building on Ubuntu 24.04 LTS
 
-With Ubuntu and you need to install the following packages to compile Talk Calendar.
+With Ubuntu and you need to install the following packages to compile Speaking Calendar.
 
 ```
 sudo apt install build-essential
@@ -244,7 +240,7 @@ You may need to use the [Ubuntu snap store](https://snapcraft.io/) to install th
 
 ### Building on Debian 12 Bookworm
 
-Debian 12 Bookworm uses GTK4.8. The Talk Calendar source code has been developed using GTK4.14 (Fedora 40) and so it will not compile using GTK4.8 without making a number of changes (see code notes below). Debian testing (Trixie) is the current development state of the next stable Debian distribution. According to the [Debian GTK4 tracker](https://tracker.debian.org/pkg/gtk4) Trixie currently has GTK4.12 in its repositories. Debian experimental is using GTK4.14. Talk Calendar code will most likely compile using Debian testing and experimental but I have not tried this.
+Debian 12 Bookworm uses GTK4.8. The Speaking Calendar source code has been developed using GTK4.14 (Fedora 40) and so it will not compile using GTK4.8 without making a number of changes (see code notes below). Debian testing (Trixie) is the current development state of the next stable Debian distribution. According to the [Debian GTK4 tracker](https://tracker.debian.org/pkg/gtk4) Trixie currently has GTK4.12 in its repositories. Debian experimental is using GTK4.14. Speaking Calendar code will most likely compile using Debian testing and experimental but I have not tried this.
 
 To determine which version of GTK4 is running on a Debian system use the following terminal command.
 
@@ -254,7 +250,7 @@ dpkg -l | grep libgtk*
 
 ## Code Notes
 
-I am now using Fedora 40 to develop the Talk Calendar application and not Debian 12 Bookworm. Fedora 40 uses GTK4.14 as opposed to the older GTK 4.8 used by Debian 12 Bookworm. This mean that the code will not compile with Debian 12 Bookworm without making changes to the source code. For example, Talk Calendar now uses "gtk_css_provider_load_from_string" rather than "gtk_css_provider_load_from_data" which was depreciated in GTK 4.12.
+I am now using Fedora 40 to develop the Speaking Calendar application and not Debian 12 Bookworm. Fedora 40 uses GTK4.14 as opposed to the older GTK 4.8 used by Debian 12 Bookworm. This mean that the code will not compile with Debian 12 Bookworm without making changes to the source code. For example, Speaking Calendar now uses "gtk_css_provider_load_from_string" rather than "gtk_css_provider_load_from_data" which was depreciated in GTK 4.12.
 
 A bigger change is that the GtkFileDialog API is no longer signal based. With GTK4.12 and above it is callback based which should match a GAsyncReadyCallback function (async/await pattern). In computer programming, the async/await pattern is a syntactic feature that allows an asynchronous, non-blocking function to be structured in a way similar to an ordinary synchronous function. With my Debian 12 (GTK4.8) projects I used the older function "gtk_file_chooser_dialog_new" with a response callback but this approach has been depreciated.
 
@@ -266,21 +262,23 @@ The Calendar itself has received a number of updates including using tooltips to
 
 ## Speech Synthesis
 
-Talk Calendar incorporates a small word-based speech synthesizer used to concatenate and play-back pre-recorded English words using the computer speaker. The voice used by this version of Talk Calendar is based on my own recordings and so is subject to same license as the project. The voice will be improved and updated in future versions of the project.
+Speaking Calendar incorporates a small word-based speech synthesizer used to concatenate and play-back pre-recorded English words using the computer speaker. The voice used by this version of Speaking Calendar is based on my own recordings and so is subject to same license as the project. Words are recorded in a headless RAW audio format so that they can be converted to hexadecimal values and stored in an array and added to a voice header file. The voice will be improved and updated in future versions of the project.
 
 Many open source and commercial speech synthesizers use the formant speech synthesis approach. For example, the excellent [eSpeak](https://espeak.sourceforge.net/) open source speech synthesizer for Linux and Windows uses a formant synthesis method. I had considered using eSpeak rather than code my own speech synthesizer but I discovered that some of its components may not be compatible with the GTK LGPL v2.1 license. For example, the IEEE80.c file [license](https://github.com/espeak-ng/espeak-ng/blob/c1d9341f86eee4b7a0da50712b627d8a76e92fea/src/libespeak-ng/ieee80.c) says "Copyright (C) 1989-1991 Apple Computer, Inc." which is very strange given that espeak has a GPL v3 [license](https://espeak.sourceforge.net/license.html). This is discussed further in the forum post [here](https://opensource.stackexchange.com/questions/11545/possibilities-to-use-a-gpl-v3-licensed-library-in-a-closed-source-game). 
 
-Consequently, as Talk Calendar is a hobby project I would rather just use my own small word-based speech synthesizer  to avoid any potential license compatibility issues with using eSpeak. 
+Consequently, as Speaking Calendar is a hobby project I would rather just use my own small word-based speech synthesizer  to avoid any potential license compatibility issues with using eSpeak. 
 
 I have also been working on a formant speech synthesizer the details of which can be found [here](https://github.com/crispinprojects/formant-synthesizer) but the sound quality is very robotic with buzzing and humming background noise.
 
-### Voice Control
+### History
 
-Not implemented. 
+The original project was named Talk Calendar but feedback suggested that the project would have some sort of voice control which is not the case.  The name "Speaking Calendar" better conveys the purpose of the application. Also early versions of this project required that the eSpeak speech synthesizer be installed separately so that commands could be send to it to handle speech output.  However, I dropped this approach in favour of my own integral speech engine. I also discovered a potential eSpeak license compatibilty issue discussed above.
 
 ## Versioning
 
 [SemVer](http://semver.org/) is used for versioning. The version number has the form 0.0.0 representing major, minor and bug fix changes.
+
+Speaking Calendar was renamed from my previous project called Talk Calendar in August 2024 and the version number was reset to 0.1.0.
 
 ## Author
 
@@ -292,7 +290,7 @@ Active and under development.
 
 ## License
 
-GTK is released under the terms of the [GNU Lesser General Public License version 2.1](https://www.gnu.org/licenses/old-licenses/lgpl-2.1.html). Consequenty, Talk Calendar is licensed under the same LGPL v2.1 license.
+GTK is released under the terms of the [GNU Lesser General Public License version 2.1](https://www.gnu.org/licenses/old-licenses/lgpl-2.1.html). Consequenty, The Linux Speaking Calendar is licensed under the same LGPL v2.1 license.
 
 ## Acknowledgements
 
@@ -317,3 +315,5 @@ GTK is released under the terms of the [GNU Lesser General Public License versio
 * [Ubuntu](https://ubuntu.com/download/desktop)
 
 * [Debian](https://www.debian.org/)
+
+* [Formant speech synthesizer](https://github.com/crispinprojects/formant-synthesizer) 

@@ -146,7 +146,7 @@ char *sql;
  
 int db_insert_event(CalendarEvent *evt) {
 	
-	printf("dbmanger: inserting event\n");
+	//printf("dbmanger: inserting event\n");
 	
 	gint evt_id=0;
 	gchar *summary_str="";
@@ -198,9 +198,9 @@ int db_insert_event(CalendarEvent *evt) {
 	g_object_get (evt, "reminderhour", &reminder_hour, NULL);
 	g_object_get (evt, "remindermin", &reminder_min, NULL);
 	
-	printf("dbmanger: has_reminder = %d\n",has_reminder);
-	printf("dbmanger: reminder_hour = %d\n",reminder_hour);
-	printf("dbmanger: reminder_min = %d\n",reminder_min);
+	//printf("dbmanger: has_reminder = %d\n",has_reminder);
+	//printf("dbmanger: reminder_hour = %d\n",reminder_hour);
+	//printf("dbmanger: reminder_min = %d\n",reminder_min);
 
 sqlite3 *db;
 int rc=0;

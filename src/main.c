@@ -16,7 +16,7 @@
  ***************************************************************************/
 
 //====================================================================
-// GTK4 Talk Calendar
+// GTK4 Speaking Calendar
 // Author: Alan Crispin <crispinalan@gmail.com> 
 // Date: August 2024
 // use make file to compile
@@ -34,17 +34,16 @@
 //voice 2024
 #include "voice2.h"
 
-#define CONFIG_DIRNAME "talk-calendar"
-#define CONFIG_FILENAME "talk-calendar"
+#define CONFIG_DIRNAME "speaking-calendar"
+#define CONFIG_FILENAME "speaking-calendar"
 static char * m_config_file = NULL;
 
 //Declarations
 
-//static void callbk_new_event(GtkButton *button, gpointer  user_data);
+
 static void callbk_new_event(GSimpleAction *action, GVariant *parameter,  gpointer user_data);
 static void callbk_add_new_event(GtkButton *button, gpointer user_data);
 
-//static void callbk_edit_event(GtkButton *button, gpointer  user_data);
 static void callbk_edit_event(GSimpleAction *action, GVariant *parameter,  gpointer user_data);
 static void callbk_update_event(GtkButton *button, gpointer user_data);
 
@@ -227,20 +226,20 @@ static  char* m_todaycolour="rgb(173,216,230)";
 static  char* m_eventcolour="rgb(222,184,135)";
 static char* m_holidaycolour="rgb(102,205,170)"; 
 
-//Talking
-//talk preferences
-static int m_talk =1;
-static int m_talk_at_startup =0;
-static int m_talk_upcoming=0;
-static int m_talk_event_number=1;
-static int m_talk_time=1;
-static int m_talk_event_words=1; 
-static int m_talk_rate=7000;
+//Speaking
+//speak preferences
+static int m_speak =1;
+static int m_speak_at_startup =0;
+static int m_speak_upcoming=0;
+static int m_speak_event_number=1;
+static int m_speak_time=1;
+static int m_speak_event_words=1; 
+static int m_speak_rate=7000;
 static int m_reset_preferences=0;
 
 
-//static int m_talk_overlap=0;
-static int m_talk_priority=0;
+//static int m_speak_overlap=0;
+static int m_speak_priority=0;
 
 gboolean m_speaking=FALSE;
 static gchar* m_raw_file ="/tmp/textout.raw";
@@ -248,7 +247,7 @@ static gchar* m_raw_file ="/tmp/textout.raw";
 static int m_upcoming_days=7;
 
 //static int m_reset_preferences=0;
-//static int m_talk_rate=7000;
+//static int m_speak_rate=7000;
 
 const char * const events[] = { 
 	"Activity",	
@@ -565,6 +564,7 @@ static gboolean callbk_timer_update(gpointer data)
 	int has_reminder=0;
 	int reminder_hour=0;
 	int reminder_min=0;
+	int is_allday=0;
 	
 	g_object_get (evt_day, "startday", &start_day, NULL);
 	g_object_get (evt_day, "startmonth", &start_month, NULL);
@@ -573,24 +573,36 @@ static gboolean callbk_timer_update(gpointer data)
 	g_object_get(evt_day, "description", &description_str, NULL);
 	g_object_get(evt_day, "location", &location_str, NULL);		
 	g_object_get(evt_day, "starthour", &start_hour, NULL);
-	g_object_get(evt_day, "startmin", &start_min, NULL);	
+	g_object_get(evt_day, "startmin", &start_min, NULL);
+	g_object_get(evt_day, "isallday", &is_allday, NULL);		
 	
 	g_object_get(evt_day, "hasreminder", &has_reminder, NULL);
 	g_object_get(evt_day, "reminderhour", &reminder_hour, NULL);
 	g_object_get(evt_day, "remindermin", &reminder_min, NULL);
 		
-	if(reminder_hour==now_hour && reminder_min==now_min && sec==0)
+	if(has_reminder ==1 && reminder_hour==now_hour && reminder_min==now_min && sec==0)
 	{
-		//g_print("Reminder Notification\n");
+		g_print("Reminder Notification\n");
 		
-		char* time_str =get_time_str(start_hour,start_min);
+		char* time_str ="";
 		
+		if(is_allday)
+		{
+			time_str ="All Day";
+		}
+		else
+		{
+			time_str =get_time_str(start_hour,start_min);
+		}
+						
 		char *notify_str="";
 				
 		notify_str =g_strconcat(notify_str,
-		time_str, " ",
-		description_str, " ",location_str, NULL); 		
+		time_str, " ",summary_str, " ",
+		description_str, " ",location_str, NULL);
+		 		
 		send_notification((gpointer) notify_str);
+		
 		speak_reminder();		
 	} //if reminder
     } //day_events
@@ -608,7 +620,7 @@ static void send_notification(gpointer  user_data)
 	//g_print("send notification using libnotify\n");	
 	char* user_str =(gpointer) user_data;
 		
-	const char* title= "Talk Calendar Reminder";
+	const char* title= "Calendar Reminder";
 	const char* body=g_strdup(user_str);
 	
 	NotifyNotification *notify;
@@ -627,15 +639,15 @@ static void send_notification(gpointer  user_data)
 
 static void config_load_default()
 {
-	//talking	
-	//talking	
-	m_talk=1;
-	m_talk_at_startup=0;
-	m_talk_upcoming=0;
-	m_talk_event_number=1;
-	m_talk_event_words=1;
-	m_talk_time=1;
-	m_talk_rate=7000;
+		
+	//speaking	
+	m_speak=1;
+	m_speak_at_startup=0;
+	m_speak_upcoming=0;
+	m_speak_event_number=1;
+	m_speak_event_words=1;
+	m_speak_time=1;
+	m_speak_rate=7000;
 		
 		
 	//calendar
@@ -655,14 +667,14 @@ static void config_load_default()
 static void config_read()
 {
 	// Clean up previously loaded configuration values	
-	//talking	
-	m_talk=1;
-	m_talk_at_startup=0;
-	m_talk_upcoming=0;
-	m_talk_event_number=1;
-	m_talk_event_words=1;
-	m_talk_time=1;
-	m_talk_rate=7000;		
+	//speaking	
+	m_speak=1;
+	m_speak_at_startup=0;
+	m_speak_upcoming=0;
+	m_speak_event_number=1;
+	m_speak_event_words=1;
+	m_speak_time=1;
+	m_speak_rate=7000;		
 	
 	m_upcoming_days=7;
 		
@@ -680,14 +692,14 @@ static void config_read()
 	GKeyFile * kf = g_key_file_new();
 	g_key_file_load_from_file(kf, m_config_file, G_KEY_FILE_NONE, NULL);
 
-	//talk	
-	m_talk = g_key_file_get_integer(kf, "calendar_settings", "talk", NULL);
-	m_talk_at_startup=g_key_file_get_integer(kf, "calendar_settings", "talk_startup", NULL);
-	m_talk_upcoming=g_key_file_get_integer(kf, "calendar_settings", "talk_upcoming", NULL);
-	m_talk_event_number=g_key_file_get_integer(kf, "calendar_settings", "talk_event_number", NULL);
-	m_talk_event_words=g_key_file_get_integer(kf, "calendar_settings", "talk_event_words", NULL);
-	m_talk_time=g_key_file_get_integer(kf, "calendar_settings", "talk_time", NULL);
-	m_talk_rate=g_key_file_get_integer(kf, "calendar_settings", "talk_rate", NULL);
+	//speaking	
+	m_speak = g_key_file_get_integer(kf, "calendar_settings", "speak", NULL);
+	m_speak_at_startup=g_key_file_get_integer(kf, "calendar_settings", "speak_startup", NULL);
+	m_speak_upcoming=g_key_file_get_integer(kf, "calendar_settings", "speak_upcoming", NULL);
+	m_speak_event_number=g_key_file_get_integer(kf, "calendar_settings", "speak_event_number", NULL);
+	m_speak_event_words=g_key_file_get_integer(kf, "calendar_settings", "speak_event_words", NULL);
+	m_speak_time=g_key_file_get_integer(kf, "calendar_settings", "speak_time", NULL);
+	m_speak_rate=g_key_file_get_integer(kf, "calendar_settings", "speak_rate", NULL);
 		
 	m_upcoming_days=g_key_file_get_integer(kf, "calendar_settings", "upcoming_days", NULL);
 		
@@ -710,14 +722,14 @@ void config_write()
 
 	GKeyFile * kf = g_key_file_new();
 
-	//talk	
-	g_key_file_set_integer(kf, "calendar_settings", "talk", m_talk);
-	g_key_file_set_integer(kf, "calendar_settings", "talk_startup", m_talk_at_startup);
-	g_key_file_set_integer(kf, "calendar_settings", "talk_upcoming", m_talk_upcoming);
-	g_key_file_set_integer(kf, "calendar_settings", "talk_event_number", m_talk_event_number);
-	g_key_file_set_integer(kf, "calendar_settings", "talk_event_words", m_talk_event_words);
-	g_key_file_set_integer(kf, "calendar_settings", "talk_time", m_talk_time);
-	g_key_file_set_integer(kf, "calendar_settings", "talk_rate", m_talk_rate);
+	//speak	
+	g_key_file_set_integer(kf, "calendar_settings", "speak", m_speak);
+	g_key_file_set_integer(kf, "calendar_settings", "speak_startup", m_speak_at_startup);
+	g_key_file_set_integer(kf, "calendar_settings", "speak_upcoming", m_speak_upcoming);
+	g_key_file_set_integer(kf, "calendar_settings", "speak_event_number", m_speak_event_number);
+	g_key_file_set_integer(kf, "calendar_settings", "speak_event_words", m_speak_event_words);
+	g_key_file_set_integer(kf, "calendar_settings", "speak_time", m_speak_time);
+	g_key_file_set_integer(kf, "calendar_settings", "speak_rate", m_speak_rate);
 	
 	g_key_file_set_integer(kf, "calendar_settings", "upcoming_days", m_upcoming_days);	
 	
@@ -1584,11 +1596,18 @@ static void callbk_check_button_allday_toggled(GtkCheckButton *check_button, gpo
 	GtkWidget *spin_button_start_min;
 	GtkWidget *spin_button_end_hour;
 	GtkWidget *spin_button_end_min;
+	GtkWidget *check_button_reminder;
 		
 	spin_button_start_hour = g_object_get_data(G_OBJECT(user_data), "cb_allday_spin_start_hour_key");
 	spin_button_start_min = g_object_get_data(G_OBJECT(user_data), "cb_allday_spin_start_min_key");
 	spin_button_end_hour = g_object_get_data(G_OBJECT(user_data), "cb_allday_spin_end_hour_key");
 	spin_button_end_min = g_object_get_data(G_OBJECT(user_data), "cb_allday_spin_end_min_key");
+	
+	//check_button_reminder=g_object_get_data(G_OBJECT(user_data),"cb_has_reminder_key");
+	
+	//GtkWidget *spin_button_reminder_hour =g_object_get_data(G_OBJECT(user_data), "cb_hasreminder_spin_reminder_hour_key");
+	//GtkWidget *spin_button_reminder_min=g_object_get_data(G_OBJECT(user_data), "cb_hasreminder_spin_reminder_min_key");
+	
 
 	if (gtk_check_button_get_active(GTK_CHECK_BUTTON(check_button)))
 	{
@@ -1596,6 +1615,10 @@ static void callbk_check_button_allday_toggled(GtkCheckButton *check_button, gpo
 		gtk_widget_set_sensitive(spin_button_start_min, FALSE);
 		gtk_widget_set_sensitive(spin_button_end_hour, FALSE);
 		gtk_widget_set_sensitive(spin_button_end_min, FALSE);
+		
+		//gtk_widget_set_sensitive(check_button_reminder, FALSE);
+		
+		
 	}
 	else
 	{
@@ -1603,6 +1626,9 @@ static void callbk_check_button_allday_toggled(GtkCheckButton *check_button, gpo
 		gtk_widget_set_sensitive(spin_button_start_min, TRUE);
 		gtk_widget_set_sensitive(spin_button_end_hour, TRUE);
 		gtk_widget_set_sensitive(spin_button_end_min, TRUE);
+		
+		//gtk_widget_set_sensitive(check_button_reminder, TRUE);
+		
 	}
 }
 //======================================================================
@@ -1699,6 +1725,10 @@ static void callbk_add_new_event(GtkButton *button, gpointer user_data)
 	m_end_month=m_start_month;
 	m_end_year=m_start_year;
 	
+	m_has_reminder=0;
+	m_reminder_hour=0;
+	m_reminder_min =0;
+	
 	m_has_reminder = gtk_check_button_get_active(GTK_CHECK_BUTTON(check_button_hasreminder));
 	m_reminder_hour= gtk_spin_button_get_value(GTK_SPIN_BUTTON(spin_button_reminder_hour));
 	m_reminder_min= gtk_spin_button_get_value(GTK_SPIN_BUTTON(spin_button_reminder_min));
@@ -1707,8 +1737,8 @@ static void callbk_add_new_event(GtkButton *button, gpointer user_data)
 	//m_reminder_min=m_start_min;
 	
 	//reminder checks
-	if(m_reminder_hour >m_start_hour) m_reminder_hour=m_start_hour;	
-	if ((m_reminder_hour == m_start_hour) &&(m_reminder_min >m_start_min)) m_reminder_min=m_start_min;
+	//if(m_reminder_hour >m_start_hour) m_reminder_hour=m_start_hour;	
+	//if ((m_reminder_hour == m_start_hour) &&(m_reminder_min >m_start_min)) m_reminder_min=m_start_min;
 	
 	//g_print("Has reminder = %d\n", m_has_reminder);
 	//g_print("Reminder hour= %d\n", m_reminder_hour);
@@ -1757,8 +1787,7 @@ static void callbk_add_new_event(GtkButton *button, gpointer user_data)
 
 static void callbk_new_event(GSimpleAction *action, GVariant *parameter,  gpointer user_data)
 {
-	
-	
+		
 	GtkWidget *window = user_data;
 	GtkWidget *dialog;
 	
@@ -1890,8 +1919,7 @@ static void callbk_new_event(GSimpleAction *action, GVariant *parameter,  gpoint
 	spin_button_year_start = gtk_spin_button_new(adjustment_year, 1.0, 0);
 	g_signal_connect(GTK_SPIN_BUTTON(spin_button_year_start), "value_changed", G_CALLBACK(callbk_spin_year_start), NULL);		
 	gtk_spin_button_set_value(GTK_SPIN_BUTTON(spin_button_year_start), m_start_year);
-	
-	
+		
 	//Times
 	//start time
 	label_start_time =gtk_label_new("Start Time: ");	
@@ -1925,18 +1953,22 @@ static void callbk_new_event(GSimpleAction *action, GVariant *parameter,  gpoint
 	gtk_spin_button_set_value(GTK_SPIN_BUTTON(spin_button_reminder_min), m_reminder_min);	
 	
 	label_reminder_time =gtk_label_new("Reminder Time:");
+	
 	check_button_hasreminder=gtk_check_button_new_with_label("Has Reminder");
+	
 	
 	gtk_widget_set_sensitive(spin_button_reminder_hour, FALSE);
 	gtk_widget_set_sensitive(spin_button_reminder_min, FALSE);
 	
+	//check button hasreminder
 	g_signal_connect_swapped(GTK_CHECK_BUTTON(check_button_hasreminder), "toggled",
 							 G_CALLBACK(callbk_check_button_hasreminder_toggled), check_button_hasreminder);
 	
 	g_object_set_data(G_OBJECT(check_button_hasreminder), "cb_hasreminder_spin_reminder_hour_key", spin_button_reminder_hour);
 	g_object_set_data(G_OBJECT(check_button_hasreminder), "cb_hasreminder_spin_reminder_min_key", spin_button_reminder_min);						 
 	
-	// check buttons
+	
+	// check button allday
 	check_button_allday = gtk_check_button_new_with_label("Is All Day");
 	g_signal_connect_swapped(GTK_CHECK_BUTTON(check_button_allday), "toggled",
 							 G_CALLBACK(callbk_check_button_allday_toggled), check_button_allday);
@@ -1947,12 +1979,11 @@ static void callbk_new_event(GSimpleAction *action, GVariant *parameter,  gpoint
 		
 	check_button_isyearly = gtk_check_button_new_with_label("Is Yearly");
 	check_button_priority = gtk_check_button_new_with_label("Is High Priority");
-	//check_button_notification = gtk_check_button_new_with_label("Send Notification");
-		
+	
 	g_object_set_data(G_OBJECT(button_add_event), "dialog-key", dialog);
-	//g_object_set_data(G_OBJECT(button_add_event), "entry-summary-key", entry_summary);
+
 	g_object_set_data(G_OBJECT(button_add_event), "entry-location-key", entry_location);
-	//g_object_set_data(G_OBJECT(button_add), "dialog-window-key", window);
+	
 	g_object_set_data(G_OBJECT(button_add_event), "entry-description-key", entry_description);
 	
 	//need to capture spin button values in case these are typed
@@ -2214,8 +2245,8 @@ static void callbk_update_event(GtkButton *button, gpointer user_data)
 	m_reminder_min= gtk_spin_button_get_value(GTK_SPIN_BUTTON(spin_button_reminder_min));
 	
 	//reminder checks
-	if(m_reminder_hour >m_start_hour) m_reminder_hour=m_start_hour;	
-	if ((m_reminder_hour == m_start_hour) &&(m_reminder_min >m_start_min)) m_reminder_min=m_start_min;
+	//if(m_reminder_hour >m_start_hour) m_reminder_hour=m_start_hour;	
+	//if ((m_reminder_hour == m_start_hour) &&(m_reminder_min >m_start_min)) m_reminder_min=m_start_min;
 	
 	//g_print("Has reminder = %d\n", m_has_reminder);
 	//g_print("Reminder hour= %d\n", m_reminder_hour);
@@ -3142,7 +3173,7 @@ static void callbk_export(GSimpleAction *action, GVariant *parameter,  gpointer 
 	 GtkFileDialog *dialog; //export file dialog
      dialog = gtk_file_dialog_new(); 
      gtk_file_dialog_set_title (dialog,"Export ical calendar file");  
-     gtk_file_dialog_set_initial_name (dialog, "talkcalendar.ical");
+     gtk_file_dialog_set_initial_name (dialog, "speakingcalendar.ical");
      
     GtkFileFilter *filefilter0 = gtk_file_filter_new();
 	gtk_file_filter_set_name(filefilter0,"All Files");
@@ -3948,13 +3979,13 @@ static void callbk_about(GSimpleAction * action, GVariant *parameter, gpointer u
 	gtk_window_set_transient_for(GTK_WINDOW(about_dialog),GTK_WINDOW(window));
 	gtk_widget_set_size_request(about_dialog, 200,200);
     gtk_window_set_modal(GTK_WINDOW(about_dialog),TRUE);
-	gtk_about_dialog_set_program_name(GTK_ABOUT_DIALOG(about_dialog), "Talk Calendar");
-	gtk_about_dialog_set_version (GTK_ABOUT_DIALOG(about_dialog), "Version 0.3.2");
+	gtk_about_dialog_set_program_name(GTK_ABOUT_DIALOG(about_dialog), "Speaking Calendar");
+	gtk_about_dialog_set_version (GTK_ABOUT_DIALOG(about_dialog), "Version 0.1.0");
 	gtk_about_dialog_set_copyright(GTK_ABOUT_DIALOG(about_dialog),"Copyright © 2024");
-	gtk_about_dialog_set_comments(GTK_ABOUT_DIALOG(about_dialog),"Talking calendar");
+	gtk_about_dialog_set_comments(GTK_ABOUT_DIALOG(about_dialog),"Linux Speaking Calendar");
 	gtk_about_dialog_set_license_type (GTK_ABOUT_DIALOG(about_dialog), GTK_LICENSE_LGPL_2_1);
 	gtk_about_dialog_set_website(GTK_ABOUT_DIALOG(about_dialog),"https://github.com/crispinprojects/");
-	gtk_about_dialog_set_website_label(GTK_ABOUT_DIALOG(about_dialog),"Talk Calendar Website");
+	gtk_about_dialog_set_website_label(GTK_ABOUT_DIALOG(about_dialog),"Speaking Calendar Website");
 	gtk_about_dialog_set_authors(GTK_ABOUT_DIALOG(about_dialog), authors);
 	gtk_about_dialog_set_logo_icon_name(GTK_ABOUT_DIALOG(about_dialog), "x-office-calendar");
 	gtk_widget_set_visible (about_dialog, TRUE);
@@ -3966,11 +3997,10 @@ static void callbk_about(GSimpleAction * action, GVariant *parameter, gpointer u
 static void speak_reminder()
 {
 	
-	if(m_talk==0) return;
+	if(m_speak==0) return;
 	if (m_speaking ==TRUE) return;
 	
-	GList *speak_word_list = NULL;
-	speak_word_list = g_list_append(speak_word_list, "talk");
+	GList *speak_word_list = NULL;	
 	speak_word_list = g_list_append(speak_word_list, "calendar");
 	speak_word_list = g_list_append(speak_word_list, "reminder");
 	
@@ -3999,12 +4029,7 @@ static void speak_reminder()
 	word_arrays[i] = empty_raw;
 	word_arrays_sizes[i]=empty_raw_len; 
 	
-	//words
-	if (g_strcmp0(word_str_lower,"talk")==0) {
-	word_arrays[i] = (unsigned char*)malloc(talk_raw_len * sizeof(unsigned char));
-	word_arrays[i] = talk_raw;
-	word_arrays_sizes[i]=talk_raw_len;
-	}
+	//words	
 	
 	if (g_strcmp0(word_str_lower,"calendar")==0) {
 	word_arrays[i] = (unsigned char*)malloc(calendar_raw_len * sizeof(unsigned char));
@@ -4043,7 +4068,7 @@ static void speak_reminder()
 
 static void speak_time(gint hour, gint min) 
 {	
-	if(m_talk==0) return;
+	if(m_speak==0) return;
 	if (m_speaking ==TRUE) return;
 	
 	gchar* hour_str="";
@@ -4487,7 +4512,7 @@ static void play_audio_async (GTask *task,
    
     m_speaking=TRUE; 
        
-    gchar *m_sample_rate_str = g_strdup_printf("%i", m_talk_rate); 
+    gchar *m_sample_rate_str = g_strdup_printf("%i", m_speak_rate); 
     gchar *sample_rate_str ="-r ";    
     sample_rate_str= g_strconcat(sample_rate_str,m_sample_rate_str, NULL);     
     //gchar * command_str ="aplay -c 1 -f S16_LE";
@@ -5023,7 +5048,7 @@ static char* get_cardinal_string(int number)
 //======================================================================
 static void speak_events() {
 
-	if(m_talk==0) return;
+	if(m_speak==0) return;
 	if (m_speaking ==TRUE) return;
 	
 	GList *speak_word_list = NULL;
@@ -5173,9 +5198,9 @@ static void speak_events() {
 	db_get_all_events_year_month_day(day_events_arry , m_start_year,m_start_month, m_start_day);
 	int event_count = day_events_arry->len;
 	
-	//Talk event number if required
+	//Speak event number if required
 	
-	if(m_talk_event_number) {
+	if(m_speak_event_number) {
 	int event_number = day_events_arry->len;		
 	if (event_number ==0) {			
 	speak_word_list = g_list_append(speak_word_list, "no");
@@ -5206,9 +5231,9 @@ static void speak_events() {
 	speak_word_list = g_list_append(speak_word_list, "many");
 	speak_word_list = g_list_append(speak_word_list, "events");
 	}	    	
-	} //m_talk_event_number
+	} //m_speak_event_number
 	
-	//Talk time and event word if required	
+	//Speak time and event word if required	
 	for (int i = 0; i < day_events_arry->len; i++)
 	{
 		gint evt_id = 0;
@@ -5231,7 +5256,7 @@ static void speak_events() {
 		gchar* min_str="";
 		gchar* ampm_str="";
 		
-		if(m_talk_time) {
+		if(m_speak_time) {
 		
 		if(is_allday)
 		{
@@ -5291,14 +5316,14 @@ static void speak_events() {
 		speak_word_list = g_list_append(speak_word_list, min_str);			    				
 		} //24 hour format	
 		} //else not all_day		
-		}//m_talk_time
+		}//m_speak_time
 		
 		//now add event title
-		if(m_talk_event_words) {
+		if(m_speak_event_words) {
 		gchar* summary_lower= g_ascii_strdown(summary_str,-1);		
 		gchar *event_title =get_event_title_word(summary_lower);		
 		speak_word_list = g_list_append(speak_word_list, event_title);
-		}//m_talk_event_words	
+		}//m_speak_event_words	
 		
 	} //for
 	
@@ -5312,7 +5337,7 @@ static void speak_events() {
 		g_date_free(today_date); // freeit quick
 		
 		//find upcoming for today
-		if(m_talk_upcoming && m_start_day==today && m_start_month ==month && m_start_year==year)  
+		if(m_speak_upcoming && m_start_day==today && m_start_month ==month && m_start_year==year)  
 		{		
 			
 			GArray *evts_upcoming = get_upcoming_array(7); //next 7 days		
@@ -5370,7 +5395,7 @@ static void speak_events() {
 				}				
 			}
 					
-		}//m_talk_upcoming	
+		}//m_speak_upcoming	
 	
 	//print out word list	
 	//cycle through the event type word list
@@ -6225,26 +6250,29 @@ static void search_events(const char* search_str)
 	for (int i = 0; i < all_events_arry->len; i++)
 	{
 		gint evt_id = 0;
-		gchar *summary_str = "";		
+		gchar *summary_str = "";
+		gchar *description_str = "";		
 		gchar *location_str = "";
 				
 		//get each event
 		CalendarEvent *evt = g_array_index(all_events_arry, CalendarEvent *, i);
 		
 		g_object_get(evt, "summary", &summary_str, NULL);
+		g_object_get(evt, "description", &description_str, NULL);
 		g_object_get(evt, "location", &location_str, NULL);		
 		
-		char* summary_str_lower= g_ascii_strdown(summary_str,-1);		
+		char* summary_str_lower= g_ascii_strdown(summary_str,-1);
+		char* description_str_lower= g_ascii_strdown(description_str,-1);		
 		char* location_str_lower= g_ascii_strdown(location_str,-1);	
 		//contains substring
 		
-		char *summary_location_str="";
+		char *event_str="";
 		
-		summary_location_str= g_strconcat(summary_location_str,summary_str_lower, " ", location_str_lower, NULL);	
+		event_str= g_strconcat(event_str,summary_str_lower, " ",description_str_lower," ", location_str_lower, NULL);	
 		
 		char * result;
 		//result = strstr (summary_str_lower,search_str_lower);
-		result = strstr (summary_location_str,search_str_lower);
+		result = strstr (event_str,search_str_lower);
 		if (result != NULL)
 		{
 		g_array_append_val(search_events_arry, evt);
@@ -6538,15 +6566,15 @@ static void callbk_set_preferences(GtkButton *button, gpointer  user_data)
 	m_holidaycolour = gdk_rgba_to_string (rgba_holiday);			
 	//g_print("holiday colour =%s\n",m_holidaycolour);
 		
-	//talking
+	//speaking
 	
-	GtkWidget *check_button_talk= g_object_get_data(G_OBJECT(button), "check-button-talk-key");
-    GtkWidget *check_button_talk_startup= g_object_get_data(G_OBJECT(button), "check-button-talk-startup-key");
-    GtkWidget *check_button_talk_upcoming= g_object_get_data(G_OBJECT(button), "check-button-talk-upcoming-key");
-    GtkWidget *check_button_talk_event_number= g_object_get_data(G_OBJECT(button), "check-button-talk-event-number-key");
-	GtkWidget *check_button_talk_time= g_object_get_data(G_OBJECT(button), "check-button-talk-time-key");
-	GtkWidget *check_button_talk_event_words=g_object_get_data(G_OBJECT(button), "check-button-talk-event-words-key");	
-	GtkWidget *spin_button_talk_rate = g_object_get_data(G_OBJECT(button), "spin-talk-rate-key");	
+	GtkWidget *check_button_speak= g_object_get_data(G_OBJECT(button), "check-button-speak-key");
+    GtkWidget *check_button_speak_startup= g_object_get_data(G_OBJECT(button), "check-button-speak-startup-key");
+    GtkWidget *check_button_speak_upcoming= g_object_get_data(G_OBJECT(button), "check-button-speak-upcoming-key");
+    GtkWidget *check_button_speak_event_number= g_object_get_data(G_OBJECT(button), "check-button-speak-event-number-key");
+	GtkWidget *check_button_speak_time= g_object_get_data(G_OBJECT(button), "check-button-speak-time-key");
+	GtkWidget *check_button_speak_event_words=g_object_get_data(G_OBJECT(button), "check-button-speak-event-words-key");	
+	GtkWidget *spin_button_speak_rate = g_object_get_data(G_OBJECT(button), "spin-speak-rate-key");	
 	
 	GtkWidget *spin_button_upcoming_days = g_object_get_data(G_OBJECT(button), "spin-upcoming-days-key");
 		
@@ -6557,16 +6585,16 @@ static void callbk_set_preferences(GtkButton *button, gpointer  user_data)
 	m_holidays=gtk_check_button_get_active (GTK_CHECK_BUTTON(check_button_holidays));
 	m_show_tooltips=gtk_check_button_get_active(GTK_CHECK_BUTTON(check_button_show_tooltips));
 	//g_print("set preferences: m_show_tooltips =%d\n",m_show_tooltips);
-	//talk
-	m_talk=gtk_check_button_get_active (GTK_CHECK_BUTTON(check_button_talk));
-	m_talk_at_startup=gtk_check_button_get_active (GTK_CHECK_BUTTON(check_button_talk_startup));
-	m_talk_upcoming =gtk_check_button_get_active (GTK_CHECK_BUTTON(check_button_talk_upcoming));
-	m_talk_event_number=gtk_check_button_get_active (GTK_CHECK_BUTTON(check_button_talk_event_number));
-	m_talk_time =gtk_check_button_get_active (GTK_CHECK_BUTTON(check_button_talk_time));
-	m_talk_event_words =gtk_check_button_get_active (GTK_CHECK_BUTTON(check_button_talk_event_words));
+	//speak
+	m_speak=gtk_check_button_get_active (GTK_CHECK_BUTTON(check_button_speak));
+	m_speak_at_startup=gtk_check_button_get_active (GTK_CHECK_BUTTON(check_button_speak_startup));
+	m_speak_upcoming =gtk_check_button_get_active (GTK_CHECK_BUTTON(check_button_speak_upcoming));
+	m_speak_event_number=gtk_check_button_get_active (GTK_CHECK_BUTTON(check_button_speak_event_number));
+	m_speak_time =gtk_check_button_get_active (GTK_CHECK_BUTTON(check_button_speak_time));
+	m_speak_event_words =gtk_check_button_get_active (GTK_CHECK_BUTTON(check_button_speak_event_words));
 			
 	//capture these in case typed
-	m_talk_rate = gtk_spin_button_get_value(GTK_SPIN_BUTTON(spin_button_talk_rate));	
+	m_speak_rate = gtk_spin_button_get_value(GTK_SPIN_BUTTON(spin_button_speak_rate));	
 	m_upcoming_days = gtk_spin_button_get_value(GTK_SPIN_BUTTON(spin_button_upcoming_days));
 		
 	m_reset_preferences=gtk_check_button_get_active(GTK_CHECK_BUTTON(check_button_reset_all));
@@ -6581,14 +6609,14 @@ static void callbk_set_preferences(GtkButton *button, gpointer  user_data)
 	m_todaycolour="rgb(173,216,230)";
 	m_eventcolour="rgb(222,184,135)";
 	m_holidaycolour="rgb(102,205,170)";
-	//talking
-	m_talk=1;	
-	m_talk_rate=7000;
-	m_talk_event_words=1;
-	m_talk_time=1;	
-	m_talk_at_startup=0;
-	m_talk_upcoming=0;
-	m_talk_event_number=1;
+	//speaking
+	m_speak=1;	
+	m_speak_rate=7000;
+	m_speak_event_words=1;
+	m_speak_time=1;	
+	m_speak_at_startup=0;
+	m_speak_upcoming=0;
+	m_speak_event_number=1;
 	
 	m_reset_preferences=0; //toggle
 	}
@@ -6629,17 +6657,17 @@ static void callbk_preferences(GSimpleAction* action, GVariant *parameter,gpoint
 	GtkWidget *check_button_holidays;
 	GtkWidget *check_button_show_tooltips;
 	
-	//talk
-	GtkWidget *check_button_talk;
-	GtkWidget *check_button_talk_startup;
-	GtkWidget *check_button_talk_upcoming;
-	GtkWidget *check_button_talk_event_number;
-	GtkWidget *check_button_talk_time;
-	GtkWidget *check_button_talk_event_words;	
+	//speak
+	GtkWidget *check_button_speak;
+	GtkWidget *check_button_speak_startup;
+	GtkWidget *check_button_speak_upcoming;
+	GtkWidget *check_button_speak_event_number;
+	GtkWidget *check_button_speak_time;
+	GtkWidget *check_button_speak_event_words;	
 	
 	
-	GtkWidget *label_talk_rate;
-	GtkWidget *spin_button_talk_rate;
+	GtkWidget *label_speak_rate;
+	GtkWidget *spin_button_speak_rate;
 
 	GtkWidget *label_upcoming_days;
 	GtkWidget *spin_button_upcoming_days;
@@ -6709,24 +6737,24 @@ static void callbk_preferences(GSimpleAction* action, GVariant *parameter,gpoint
 	label_eventcolour = gtk_label_new("Event Colour: ");
 	
 	
-	//talk
-	check_button_talk = gtk_check_button_new_with_label ("Talk");
-	check_button_talk_startup = gtk_check_button_new_with_label ("Talk At Startup");
-	check_button_talk_upcoming= gtk_check_button_new_with_label ("Talk Upcoming");
-	check_button_talk_event_number = gtk_check_button_new_with_label ("Talk Event Number");
-	check_button_talk_time= gtk_check_button_new_with_label ("Talk Time");
-	check_button_talk_event_words= gtk_check_button_new_with_label ("Talk Event Words");
+	//speech
+	check_button_speak = gtk_check_button_new_with_label ("Enable Speaking");
+	check_button_speak_startup = gtk_check_button_new_with_label ("Speak At Startup");
+	check_button_speak_upcoming= gtk_check_button_new_with_label ("Speak Upcoming");
+	check_button_speak_event_number = gtk_check_button_new_with_label ("Speak Event Number");
+	check_button_speak_time= gtk_check_button_new_with_label ("Speak Time");
+	check_button_speak_event_words= gtk_check_button_new_with_label ("Speak Event Words");
 		
 	check_button_reset_all = gtk_check_button_new_with_label ("Reset All");
 	
 	//sample rate
-	GtkAdjustment *adjustment_talk_rate;
+	GtkAdjustment *adjustment_speech_rate;
 	// value,lower,upper,step_increment,page_increment,page_size	
-	adjustment_talk_rate = gtk_adjustment_new(7000.00, 5000.00, 20000.00, 1000.0, 1000.0, 0.0);
+	adjustment_speech_rate = gtk_adjustment_new(7000.00, 5000.00, 20000.00, 1000.0, 1000.0, 0.0);
 	// start time spin
-	label_talk_rate = gtk_label_new("Talk Rate ");
-	spin_button_talk_rate = gtk_spin_button_new(adjustment_talk_rate, 7000, 0);
-	gtk_spin_button_set_value(GTK_SPIN_BUTTON(spin_button_talk_rate), m_talk_rate);
+	label_speak_rate = gtk_label_new("Speech Rate ");
+	spin_button_speak_rate = gtk_spin_button_new(adjustment_speech_rate, 7000, 0);
+	gtk_spin_button_set_value(GTK_SPIN_BUTTON(spin_button_speak_rate), m_speak_rate);
 	
 	//upcoming days
 	GtkAdjustment *adjustment_upcoming_days;
@@ -6737,15 +6765,15 @@ static void callbk_preferences(GSimpleAction* action, GVariant *parameter,gpoint
 	spin_button_upcoming_days = gtk_spin_button_new(adjustment_upcoming_days, 7, 0);
 	gtk_spin_button_set_value(GTK_SPIN_BUTTON(spin_button_upcoming_days), m_upcoming_days);
 	
-	check_button_talk_upcoming= gtk_check_button_new_with_label ("Talk Upcoming");
-	gtk_check_button_set_active (GTK_CHECK_BUTTON(check_button_talk_upcoming), m_talk_upcoming);
+	check_button_speak_upcoming= gtk_check_button_new_with_label ("Speak Upcoming Events");
+	gtk_check_button_set_active (GTK_CHECK_BUTTON(check_button_speak_upcoming), m_speak_upcoming);
 	
-	if(m_talk_upcoming) gtk_widget_set_sensitive(spin_button_upcoming_days, TRUE);
+	if(m_speak_upcoming) gtk_widget_set_sensitive(spin_button_upcoming_days, TRUE);
 	else gtk_widget_set_sensitive(spin_button_upcoming_days, FALSE);
 	
-	g_signal_connect_swapped(GTK_CHECK_BUTTON(check_button_talk_upcoming), "toggled",	
-							 G_CALLBACK(callbk_check_button_upcoming_toggled), check_button_talk_upcoming);	
-	g_object_set_data(G_OBJECT(check_button_talk_upcoming), "cb_upcoming_spin_upcoming_key",spin_button_upcoming_days);
+	g_signal_connect_swapped(GTK_CHECK_BUTTON(check_button_speak_upcoming), "toggled",	
+							 G_CALLBACK(callbk_check_button_upcoming_toggled), check_button_speak_upcoming);	
+	g_object_set_data(G_OBJECT(check_button_speak_upcoming), "cb_upcoming_spin_upcoming_key",spin_button_upcoming_days);
 						 
 	//set calendar preferences
 	gtk_check_button_set_active (GTK_CHECK_BUTTON(check_button_hour_format),m_12hour_format);
@@ -6753,13 +6781,13 @@ static void callbk_preferences(GSimpleAction* action, GVariant *parameter,gpoint
 	gtk_check_button_set_active (GTK_CHECK_BUTTON(check_button_holidays),m_holidays);	
 	gtk_check_button_set_active (GTK_CHECK_BUTTON(check_button_show_tooltips),m_show_tooltips);
 		
-	//set talk
-	gtk_check_button_set_active (GTK_CHECK_BUTTON(check_button_talk), m_talk);
-	gtk_check_button_set_active (GTK_CHECK_BUTTON(check_button_talk_startup), m_talk_at_startup);
-	gtk_check_button_set_active (GTK_CHECK_BUTTON(check_button_talk_upcoming), m_talk_upcoming);
-	gtk_check_button_set_active (GTK_CHECK_BUTTON(check_button_talk_event_number), m_talk_event_number);
-	gtk_check_button_set_active (GTK_CHECK_BUTTON(check_button_talk_time), m_talk_time);
-	gtk_check_button_set_active (GTK_CHECK_BUTTON(check_button_talk_event_words), m_talk_event_words);	
+	//set speak
+	gtk_check_button_set_active (GTK_CHECK_BUTTON(check_button_speak), m_speak);
+	gtk_check_button_set_active (GTK_CHECK_BUTTON(check_button_speak_startup), m_speak_at_startup);
+	gtk_check_button_set_active (GTK_CHECK_BUTTON(check_button_speak_upcoming), m_speak_upcoming);
+	gtk_check_button_set_active (GTK_CHECK_BUTTON(check_button_speak_event_number), m_speak_event_number);
+	gtk_check_button_set_active (GTK_CHECK_BUTTON(check_button_speak_time), m_speak_time);
+	gtk_check_button_set_active (GTK_CHECK_BUTTON(check_button_speak_event_words), m_speak_event_words);	
 		
 	gtk_check_button_set_active (GTK_CHECK_BUTTON(check_button_reset_all), m_reset_preferences);
 
@@ -6771,14 +6799,14 @@ static void callbk_preferences(GSimpleAction* action, GVariant *parameter,gpoint
 	g_object_set_data(G_OBJECT(button_set), "check-button-show-end-time-key",check_button_show_end_time);
 	g_object_set_data(G_OBJECT(button_set), "check-button-holidays-key",check_button_holidays);	
 	g_object_set_data(G_OBJECT(button_set), "check-button-show-tooltips-key",check_button_show_tooltips);		
-	//talk
-	g_object_set_data(G_OBJECT(button_set), "check-button-talk-key",check_button_talk);
-	g_object_set_data(G_OBJECT(button_set), "check-button-talk-startup-key",check_button_talk_startup);
-	g_object_set_data(G_OBJECT(button_set), "check-button-talk-upcoming-key",check_button_talk_upcoming);
-	g_object_set_data(G_OBJECT(button_set), "check-button-talk-event-number-key",check_button_talk_event_number);
-	g_object_set_data(G_OBJECT(button_set), "check-button-talk-time-key",check_button_talk_time);
-	g_object_set_data(G_OBJECT(button_set), "check-button-talk-event-words-key",check_button_talk_event_words);
-	g_object_set_data(G_OBJECT(button_set), "spin-talk-rate-key", spin_button_talk_rate);
+	//speaking
+	g_object_set_data(G_OBJECT(button_set), "check-button-speak-key",check_button_speak);
+	g_object_set_data(G_OBJECT(button_set), "check-button-speak-startup-key",check_button_speak_startup);
+	g_object_set_data(G_OBJECT(button_set), "check-button-speak-upcoming-key",check_button_speak_upcoming);
+	g_object_set_data(G_OBJECT(button_set), "check-button-speak-event-number-key",check_button_speak_event_number);
+	g_object_set_data(G_OBJECT(button_set), "check-button-speak-time-key",check_button_speak_time);
+	g_object_set_data(G_OBJECT(button_set), "check-button-speak-event-words-key",check_button_speak_event_words);
+	g_object_set_data(G_OBJECT(button_set), "spin-speak-rate-key", spin_button_speak_rate);
 		
 	g_object_set_data(G_OBJECT(button_set), "spin-upcoming-days-key", spin_button_upcoming_days);
 	
@@ -6810,18 +6838,18 @@ static void callbk_preferences(GSimpleAction* action, GVariant *parameter,gpoint
 	
 	gtk_grid_attach(GTK_GRID(grid), label_spacer2,       1, 7, 1, 1);
 	
-	//talk preferences
-	gtk_grid_attach(GTK_GRID(grid), check_button_talk,      1, 8, 1, 1);
-	gtk_grid_attach(GTK_GRID(grid), label_talk_rate,        2, 8, 1, 1);	
-	gtk_grid_attach(GTK_GRID(grid), spin_button_talk_rate,  3, 8, 1, 1);	
+	//speak preferences
+	gtk_grid_attach(GTK_GRID(grid), check_button_speak,      1, 8, 1, 1);
+	gtk_grid_attach(GTK_GRID(grid), label_speak_rate,        2, 8, 1, 1);	
+	gtk_grid_attach(GTK_GRID(grid), spin_button_speak_rate,  3, 8, 1, 1);	
 			
-	gtk_grid_attach(GTK_GRID(grid), check_button_talk_startup,       1, 9, 1, 1);		
-	gtk_grid_attach(GTK_GRID(grid), check_button_talk_event_number,  2, 9, 1, 1);	
-	gtk_grid_attach(GTK_GRID(grid), check_button_talk_time,          3, 9, 1, 1);		
+	gtk_grid_attach(GTK_GRID(grid), check_button_speak_startup,       1, 9, 1, 1);		
+	gtk_grid_attach(GTK_GRID(grid), check_button_speak_event_number,  2, 9, 1, 1);	
+	gtk_grid_attach(GTK_GRID(grid), check_button_speak_time,          3, 9, 1, 1);		
 	
-	gtk_grid_attach(GTK_GRID(grid), check_button_talk_event_words,   1, 10, 1, 1);	
+	gtk_grid_attach(GTK_GRID(grid), check_button_speak_event_words,   1, 10, 1, 1);	
 	
-	gtk_grid_attach(GTK_GRID(grid), check_button_talk_upcoming,      1, 11, 1, 1);	
+	gtk_grid_attach(GTK_GRID(grid), check_button_speak_upcoming,      1, 11, 1, 1);	
 	gtk_grid_attach(GTK_GRID(grid), label_upcoming_days,             2, 11, 1, 1);		
 	gtk_grid_attach(GTK_GRID(grid), spin_button_upcoming_days,       3, 11, 1, 1);
 		
@@ -7068,7 +7096,7 @@ static void window_header(GtkWindow *window)
 
 static void activate (GtkApplication *app, gpointer  user_data)
 {
-	g_print("Talk Calendar activated\n");
+	//g_print("Speaking Calendar activated\n");
 	
 	GtkWidget *window;
 	GtkWidget *header;
@@ -7076,7 +7104,7 @@ static void activate (GtkApplication *app, gpointer  user_data)
 	
 	// create a new window, and set its title
 	window = gtk_application_window_new (app);
-	gtk_window_set_title (GTK_WINDOW (window), "Talk Calendar "); 		
+	gtk_window_set_title (GTK_WINDOW (window), "Speaking Calendar "); 		
 	g_signal_connect (window, "destroy", G_CALLBACK (callbk_shutdown),app);
 	window_header(GTK_WINDOW(window));
 			
@@ -7222,7 +7250,7 @@ static void activate (GtkApplication *app, gpointer  user_data)
 	
 	 //speak_reminder();
 	
-	if(m_talk && m_talk_at_startup) {
+	if(m_speak && m_speak_at_startup) {
 		speak_events();		
 	}
 		
@@ -7242,7 +7270,7 @@ int main (int  argc, char **argv)
 	GtkApplication *app;
 	int status;
 
-	app = gtk_application_new ("org.gtk.talkcalendar", G_APPLICATION_DEFAULT_FLAGS);
+	app = gtk_application_new ("org.gtk.speakingcalendar", G_APPLICATION_DEFAULT_FLAGS);
 
 	g_signal_connect_swapped(app, "startup", G_CALLBACK (startup),app);
 
