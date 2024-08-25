@@ -31,15 +31,13 @@
 #include <math.h>  //compile with -lm
 #include <libnotify/notify.h>
 
-//voice 2024
-#include "voice2.h"
+#include "dictionary.h"
 
 #define CONFIG_DIRNAME "speaking-calendar"
 #define CONFIG_FILENAME "speaking-calendar"
 static char * m_config_file = NULL;
 
 //Declarations
-
 
 static void callbk_new_event(GSimpleAction *action, GVariant *parameter,  gpointer user_data);
 static void callbk_add_new_event(GtkButton *button, gpointer user_data);
@@ -48,19 +46,14 @@ static void callbk_edit_event(GSimpleAction *action, GVariant *parameter,  gpoin
 static void callbk_update_event(GtkButton *button, gpointer user_data);
 
 static void callbk_delete_event(GtkButton *button, gpointer  user_data);
-//static void callbk_delete_event(GSimpleAction *action, GVariant *parameter,  gpointer user_data);
 static void callbk_dropdown_summary(GtkDropDown* self, gpointer user_data); 
 //import/export
-
 static void callbk_import(GSimpleAction *action, GVariant *parameter,  gpointer user_data);
 static void file_chooser_response (GObject *source, GAsyncResult *result, void *user_data);
-
 gboolean import_ical_file(char* file_name, gpointer user_data);
-
 static void callbk_export(GSimpleAction *action, GVariant *parameter,  gpointer user_data);
 static void file_save_response (GObject *source, GAsyncResult *result, void *user_data);
-void export_file(char *file_name) ;
-
+void export_file(char *file_name);
 gboolean file_exists(const char *file_name);
 
 static void window_header(GtkWindow *window);
@@ -90,6 +83,7 @@ static void set_titles_on_calendar(CustomCalendar *calendar);
 char* get_public_holiday_str(int day); 
 gboolean is_public_holiday(int day);
 GDate* calculate_easter(gint year);
+GList *get_public_holiday_speak_list();
 
 static void callbk_spin_day_start(GtkSpinButton *button, gpointer user_data);
 static void callbk_dropdown_month_start(GtkDropDown* self, gpointer user_data);
@@ -141,6 +135,8 @@ static void search_events(const char* search_str);
 static void speak_events();
 static void callbk_speak(GSimpleAction* action, GVariant *parameter,gpointer user_data);
 static void callbk_speaktime(GSimpleAction * action, GVariant *parameter, gpointer user_data);
+
+static void callbk_reset_speaking(GSimpleAction *action, GVariant *parameter,  gpointer user_data);
 
 static guint get_dropdown_position_summary(const gchar* summary);
 
@@ -198,10 +194,6 @@ static int m_end_year=0;
 static int m_end_month=0;
 static int m_end_day=0;
 
-//static int m_present_day =0; //now
-//static int m_present_month=0;
-//static int m_present_year=0;
-
 static int m_current_month=0;
 
 static int m_start_hour=0;
@@ -237,7 +229,6 @@ static int m_speak_event_words=1;
 static int m_speak_rate=7000;
 static int m_reset_preferences=0;
 
-
 //static int m_speak_overlap=0;
 static int m_speak_priority=0;
 
@@ -245,53 +236,6 @@ gboolean m_speaking=FALSE;
 static gchar* m_raw_file ="/tmp/textout.raw";
 
 static int m_upcoming_days=7;
-
-//static int m_reset_preferences=0;
-//static int m_speak_rate=7000;
-
-const char * const events[] = { 
-	"Activity",	
-	"Anniversary",	
-	"Appointment",
-	"Birthday",
-	"Cabbie",
-	"Cafe",  
-	"Car", 
-	"Dentist", 
-	"Doctor", 
-	"Family", 
-	"Funeral",	
-	"Holiday",
-	"Hospital",	
-	"Meeting", 
-	"Meetup", 
-	"Payment",
-	"Reminder", 
-	"Restaurant", 
-	"Task", 		
-	"Travel",  
-	"Visit",
-	"Work",  
-	NULL };
-
-const char* m_summary ="Activity";
-
-
-
-const char * const month_strs[] = { 
-	"January",	
-	"February",	
-	"March",
-	"April",	
-	"May",  
-	"June", 
-	"July", 
-	"August", 
-	"September",
-	"October", 
-	"November",
-	"December",		 
-	NULL };
 
 //====================================================================
 
@@ -304,8 +248,43 @@ const GActionEntry app_actions[] = {
   { "preferences", callbk_preferences},
   { "quit", callbk_quit}
 };
-//===================================================================
 
+//======================================================================
+
+const char * const events[] = { 
+	"Activity",	//0
+	"Anniversary",	 //1
+	"Appointment",//2
+	"Birthday",	//3
+	"Cafe",  //4
+	"Car", //5
+	"Delivery", //6
+	"Dentist", //7
+	"Driver", //8
+	"Family", //9
+	"Funeral",	//10
+	"Holiday",//11
+	"Hospital",	//12
+	"Medical", //13
+	"Meeting", //14
+	"Meetup", //15
+	"Memo",//16
+	"Party",//17
+	"Payment",//18
+	"Project",	//19
+	"Restaurant", //20
+	"Sport", //21
+	"Task", //22
+	"Television", //23
+	"Theatre",	//24	
+	"Travel",  //25
+	"Visit",//26
+	"Work", //27 
+	NULL };
+
+const char* m_summary ="Activity";
+
+//===========================================================
 static guint get_dropdown_position_summary(const gchar* summary)
 {
 	
@@ -324,19 +303,20 @@ static guint get_dropdown_position_summary(const gchar* summary)
 	if (g_strcmp0(summary_lower,"birthday")==0) {
 	position=3;
 	}
-	if (g_strcmp0(summary_lower,"cabbie")==0) {
+	
+	if (g_strcmp0(summary_lower,"cafe")==0) {
 	position=4;
 	}
-	if (g_strcmp0(summary_lower,"cafe")==0) {
+	if (g_strcmp0(summary_lower,"car")==0) {
 	position=5;
 	}
-	if (g_strcmp0(summary_lower,"car")==0) {
+	if (g_strcmp0(summary_lower,"delivery")==0) {
 	position=6;
 	}
 	if (g_strcmp0(summary_lower,"dentist")==0) {
 	position=7;
 	}
-	if (g_strcmp0(summary_lower,"doctor")==0) {
+	if (g_strcmp0(summary_lower,"driver")==0) {
 	position=8;
 	}
 	if (g_strcmp0(summary_lower,"family")==0) {
@@ -350,127 +330,121 @@ static guint get_dropdown_position_summary(const gchar* summary)
 	}			
 	if (g_strcmp0(summary_lower,"hospital")==0) {
 	position=12;
-	}	
-	if (g_strcmp0(summary_lower,"meeting")==0) {
+	}
+	if (g_strcmp0(summary_lower,"medical")==0) {
 	position=13;
 	}
-	if (g_strcmp0(summary_lower,"meetup")==0) {
+	if (g_strcmp0(summary_lower,"meeting")==0) {
 	position=14;
 	}
-	if (g_strcmp0(summary_lower,"payment")==0) {
+	if (g_strcmp0(summary_lower,"meetup")==0) {
 	position=15;
 	}
-	if (g_strcmp0(summary_lower,"reminder")==0) {
+	if (g_strcmp0(summary_lower,"memo")==0) {
 	position=16;
 	}
-	if (g_strcmp0(summary_lower,"restaurant")==0) {
+	if (g_strcmp0(summary_lower,"party")==0) {
 	position=17;
-	}
-	if (g_strcmp0(summary_lower,"task")==0) {
+	}	
+	if (g_strcmp0(summary_lower,"payment")==0) {
 	position=18;
-	}
-	if (g_strcmp0(summary_lower,"travel")==0) {
+	}	
+	if (g_strcmp0(summary_lower,"project")==0) {
 	position=19;
 	}
-	if (g_strcmp0(summary_lower,"visit")==0) {
+	if (g_strcmp0(summary_lower,"restaurant")==0) {
 	position=20;
+	}
+	if (g_strcmp0(summary_lower,"sport")==0) {
+	position=21;
+	}
+	if (g_strcmp0(summary_lower,"task")==0) {
+	position=22;
+	}
+	if (g_strcmp0(summary_lower,"television")==0) {
+	position=23;
+	}
+	if (g_strcmp0(summary_lower,"theatre")==0) {
+	position=24;
+	}
+	if (g_strcmp0(summary_lower,"travel")==0) {
+	position=25;
+	}	
+	if (g_strcmp0(summary_lower,"visit")==0) {
+	position=26;
 	}	
 	if (g_strcmp0(summary_lower,"work")==0) {
-	position=21;
+	position=27;
+	}	
+	return position;
+}
+
+//===================================================================
+
+const char * const month_strs[] = { 
+	"January",	
+	"February",	
+	"March",
+	"April",	
+	"May",  
+	"June", 
+	"July", 
+	"August", 
+	"September",
+	"October", 
+	"November",
+	"December",		 
+	NULL };
+
+
+//===================================================================
+//======================================================================
+static guint get_dropdown_position_month(const char* month)
+{
+	
+	guint position=0;//starts at zero not one
+	gchar* summary_lower= g_ascii_strdown(month,-1);
+		
+	if (g_strcmp0(summary_lower,"january")==0) {
+	position=0;
+	}
+	if (g_strcmp0(summary_lower,"february")==0) {
+	position=1;
+	}	
+	if (g_strcmp0(summary_lower,"march")==0) {
+	position=2;
+	}
+	if (g_strcmp0(summary_lower,"april")==0) {
+	position=3;
+	}
+		if (g_strcmp0(summary_lower,"may")==0) {
+	position=4;
+	}
+	if (g_strcmp0(summary_lower,"june")==0) {
+	position=5;
+	}
+	if (g_strcmp0(summary_lower,"july")==0) {
+	position=6;
+	}
+	if (g_strcmp0(summary_lower,"august")==0) {
+	position=7;
+	}
+	if (g_strcmp0(summary_lower,"september")==0) {
+	position=8;
+	}
+	if (g_strcmp0(summary_lower,"october")==0) {
+	position=9;
+	}	
+	if (g_strcmp0(summary_lower,"november")==0) {
+	position=10;
+	}	
+	if (g_strcmp0(summary_lower,"december")==0) {
+	position=11;
 	}
 	
 	return position;
 }
 
-
-
-
-//=====================================================================
-// Debugging helper functions
-//====================================================================
-
-void print_array(GArray *a) {
-
-	gint evt_id=0;
-	gchar *summary_str="";
-	gchar *location_str="";
-
-	gint start_year=0;
-	gint start_month=0;
-	gint start_day=0;
-	gint start_hour=0;
-	gint start_min=0;
-	
-	gint end_year=0;
-	gint end_month=0;
-	gint end_day=0;
-	gint end_hour=0;
-	gint end_min=0;
-	
-
-	gchar *line="";
-
-    g_print("Array contents\n");
-
-    for (int i=0; i<a->len; i++) {
-
-		line="";
-
-		CalendarEvent *evt =g_array_index(a, CalendarEvent*, i);
-
-		g_object_get (evt, "eventid", &evt_id, NULL);
-		g_object_get (evt, "summary", &summary_str, NULL);
-		g_object_get (evt, "location", &location_str, NULL);
-
-		g_object_get (evt, "startyear", &start_year, NULL);
-		g_object_get (evt, "startmonth", &start_month, NULL);
-		g_object_get (evt, "startday", &start_day, NULL);
-		g_object_get (evt, "starthour", &start_hour, NULL);
-		g_object_get (evt, "startmin", &start_min, NULL);
-		
-		g_object_get (evt, "endyear", &end_year, NULL);
-		g_object_get (evt, "endmonth", &end_month, NULL);
-		g_object_get (evt, "endday", &end_day, NULL);
-		g_object_get (evt, "endhour", &end_hour, NULL);
-		g_object_get (evt, "endmin", &end_min, NULL);
-
-		gchar *id_str = g_strdup_printf("%d", evt_id);
-
-		gchar *start_year_str = g_strdup_printf("%d", start_year);
-		gchar *start_month_str = g_strdup_printf("%d", start_month);
-		gchar *start_day_str = g_strdup_printf("%d", start_day);
-		gchar *start_hour_str = g_strdup_printf("%d", start_hour);
-		gchar *start_min_str = g_strdup_printf("%d", start_min);
-		
-		gchar *end_year_str = g_strdup_printf("%d", end_year);
-		gchar *end_month_str = g_strdup_printf("%d", end_month);
-		gchar *end_day_str = g_strdup_printf("%d", end_day);
-		gchar *end_hour_str = g_strdup_printf("%d", end_hour);
-		gchar *end_min_str = g_strdup_printf("%d", end_min);
-
-		line= g_strconcat(
-			line,
-			id_str," ",
-			
-			start_day_str,"-",
-			start_month_str,"-",
-			start_year_str ," ",
-			start_hour_str,":",			
-			start_min_str," ",
-			" to ", " ",
-			end_day_str,"-",
-			end_month_str,"-",
-			end_year_str ," ",
-			end_hour_str,":",
-			end_min_str," ",			
-			summary_str," ",
-			location_str," ",
-			NULL);
-
-		g_print("%s\n",line);
-
-    }
-}
 
 //=====================================================================
 char* get_time_str(int hour, int min)
@@ -519,6 +493,7 @@ char* get_time_str(int hour, int min)
 	}
 	
 	if (m_12hour_format) time_str = g_strconcat(time_str, ampm_str, NULL);
+	else time_str = g_strconcat(time_str, " ", NULL);
 	
 	return time_str;
 	
@@ -616,8 +591,7 @@ static gboolean callbk_timer_update(gpointer data)
 //====================================================================
 
 static void send_notification(gpointer  user_data)
-{	
-	//g_print("send notification using libnotify\n");	
+{			
 	char* user_str =(gpointer) user_data;
 		
 	const char* title= "Calendar Reminder";
@@ -649,7 +623,6 @@ static void config_load_default()
 	m_speak_time=1;
 	m_speak_rate=7000;
 		
-		
 	//calendar
 	m_12hour_format=1;
 	m_show_end_time=0;
@@ -658,8 +631,6 @@ static void config_load_default()
 	m_todaycolour="rgb(173,216,230)";
 	m_eventcolour="rgb(222,184,135)";
 	m_holidaycolour="rgb(102,205,170)";
-
-	
 }
 
 //======================================================================
@@ -777,7 +748,6 @@ void config_initialize()
 }
 
 //======================================================================
-
 
 //======================================================================
 int  get_total_number_of_events(){
@@ -970,52 +940,6 @@ static char* replace_newlines(const char *text)
 }
 
 
-//======================================================================
-static guint get_dropdown_position_month(const char* month)
-{
-	
-	guint position=0;//starts at zero not one
-	gchar* summary_lower= g_ascii_strdown(month,-1);
-		
-	if (g_strcmp0(summary_lower,"january")==0) {
-	position=0;
-	}
-	if (g_strcmp0(summary_lower,"february")==0) {
-	position=1;
-	}	
-	if (g_strcmp0(summary_lower,"march")==0) {
-	position=2;
-	}
-	if (g_strcmp0(summary_lower,"april")==0) {
-	position=3;
-	}
-		if (g_strcmp0(summary_lower,"may")==0) {
-	position=4;
-	}
-	if (g_strcmp0(summary_lower,"june")==0) {
-	position=5;
-	}
-	if (g_strcmp0(summary_lower,"july")==0) {
-	position=6;
-	}
-	if (g_strcmp0(summary_lower,"august")==0) {
-	position=7;
-	}
-	if (g_strcmp0(summary_lower,"september")==0) {
-	position=8;
-	}
-	if (g_strcmp0(summary_lower,"october")==0) {
-	position=9;
-	}	
-	if (g_strcmp0(summary_lower,"november")==0) {
-	position=10;
-	}	
-	if (g_strcmp0(summary_lower,"december")==0) {
-	position=11;
-	}
-	
-	return position;
-}
 //=====================================================================
 static int get_month_number(const char* month_str) {
 	
@@ -1393,51 +1317,7 @@ static void set_titles_on_calendar(CustomCalendar *calendar)
 	summary_str11 =g_strconcat(summary_str11,"...",NULL);	
 	
 	if(!is_allday)
-	{
-	////if not all_day then add start time
-	//if (m_12hour_format)
-	//{
-	
-	//if (start_hour >= 13 && start_hour <= 23)
-	//{
-	//int shour = start_hour;
-	//shour = shour - 12;
-	//ampm_str = "pm ";
-	//starthour_str = g_strdup_printf("%d", shour);
-	//}
-	//if(start_hour == 12)
-	//{
-	//ampm_str = "pm ";					
-	//starthour_str = g_strdup_printf("%d", start_hour);
-	 //}
-	//if(start_hour <12)
-	//{
-	//ampm_str = "am ";					
-	//starthour_str = g_strdup_printf("%d", start_hour);
-	//}
-	
-	//} // 12 hour format
-	
-	
-	//else //24 hour
-	//{
-	//starthour_str = g_strdup_printf("%d", start_hour);
-	//} // 24
-	
-	//startmin_str = g_strdup_printf("%d", start_min);
-	
-	//if (start_min < 10)
-	//{
-	//time_str = g_strconcat(time_str, starthour_str, ":0", startmin_str, NULL);
-	//}
-	//else
-	//{
-	//time_str = g_strconcat(time_str, starthour_str, ":", startmin_str, NULL);
-	//}
-	
-	
-	//time_str = g_strconcat(time_str, ampm_str, NULL);
-	
+	{		
 	time_str =get_time_str(start_hour,start_min);
     display_str = g_strconcat(display_str, time_str, summary_str11, NULL);	
     //tooltip_str = g_strconcat(tooltip_str, time_str, summary_str, "\n",location_str, NULL);	
@@ -1457,11 +1337,8 @@ static void set_titles_on_calendar(CustomCalendar *calendar)
 	} //for day	events
 		
 	} //for each day in month
-	
-	
-	
-	
-	//markup holidays
+
+	//markup public holidays
 	if(m_holidays) {
 	guint8 month_days =g_date_get_days_in_month(m_start_month,m_start_year);	
 		
@@ -1545,15 +1422,12 @@ static void callbk_check_button_hasreminder_toggled2(GtkCheckButton *check_butto
 	if (gtk_check_button_get_active(GTK_CHECK_BUTTON(check_button)))
 	{
 		gtk_widget_set_sensitive(spin_button_reminder_hour, FALSE);
-		gtk_widget_set_sensitive(spin_button_reminder_min, FALSE);	
-		
-		//gtk_widget_set_sensitive(spin_button_reminder_hour, TRUE);
-		//gtk_widget_set_sensitive(spin_button_reminder_min, TRUE);
+		gtk_widget_set_sensitive(spin_button_reminder_min, FALSE);			
+
 	}
 	else
 	{
-		//gtk_widget_set_sensitive(spin_button_reminder_hour, FALSE);
-		//gtk_widget_set_sensitive(spin_button_reminder_min, FALSE);	
+		
 		gtk_widget_set_sensitive(spin_button_reminder_hour, TRUE);
 		gtk_widget_set_sensitive(spin_button_reminder_min, TRUE);
 	}
@@ -1572,18 +1446,13 @@ static void callbk_check_button_hasreminder_toggled(GtkCheckButton *check_button
 
 	if (gtk_check_button_get_active(GTK_CHECK_BUTTON(check_button)))
 	{
-		//gtk_widget_set_sensitive(spin_button_reminder_hour, FALSE);
-		//gtk_widget_set_sensitive(spin_button_reminder_min, FALSE);	
-		
 		gtk_widget_set_sensitive(spin_button_reminder_hour, TRUE);
 		gtk_widget_set_sensitive(spin_button_reminder_min, TRUE);
 	}
 	else
 	{
 		gtk_widget_set_sensitive(spin_button_reminder_hour, FALSE);
-		gtk_widget_set_sensitive(spin_button_reminder_min, FALSE);	
-		//gtk_widget_set_sensitive(spin_button_reminder_hour, TRUE);
-		//gtk_widget_set_sensitive(spin_button_reminder_min, TRUE);
+		gtk_widget_set_sensitive(spin_button_reminder_min, FALSE);			
 	}
 					
 	
@@ -1603,10 +1472,6 @@ static void callbk_check_button_allday_toggled(GtkCheckButton *check_button, gpo
 	spin_button_end_hour = g_object_get_data(G_OBJECT(user_data), "cb_allday_spin_end_hour_key");
 	spin_button_end_min = g_object_get_data(G_OBJECT(user_data), "cb_allday_spin_end_min_key");
 	
-	//check_button_reminder=g_object_get_data(G_OBJECT(user_data),"cb_has_reminder_key");
-	
-	//GtkWidget *spin_button_reminder_hour =g_object_get_data(G_OBJECT(user_data), "cb_hasreminder_spin_reminder_hour_key");
-	//GtkWidget *spin_button_reminder_min=g_object_get_data(G_OBJECT(user_data), "cb_hasreminder_spin_reminder_min_key");
 	
 
 	if (gtk_check_button_get_active(GTK_CHECK_BUTTON(check_button)))
@@ -1614,11 +1479,7 @@ static void callbk_check_button_allday_toggled(GtkCheckButton *check_button, gpo
 		gtk_widget_set_sensitive(spin_button_start_hour, FALSE);
 		gtk_widget_set_sensitive(spin_button_start_min, FALSE);
 		gtk_widget_set_sensitive(spin_button_end_hour, FALSE);
-		gtk_widget_set_sensitive(spin_button_end_min, FALSE);
-		
-		//gtk_widget_set_sensitive(check_button_reminder, FALSE);
-		
-		
+		gtk_widget_set_sensitive(spin_button_end_min, FALSE);		
 	}
 	else
 	{
@@ -1626,9 +1487,6 @@ static void callbk_check_button_allday_toggled(GtkCheckButton *check_button, gpo
 		gtk_widget_set_sensitive(spin_button_start_min, TRUE);
 		gtk_widget_set_sensitive(spin_button_end_hour, TRUE);
 		gtk_widget_set_sensitive(spin_button_end_min, TRUE);
-		
-		//gtk_widget_set_sensitive(check_button_reminder, TRUE);
-		
 	}
 }
 //======================================================================
@@ -1675,14 +1533,6 @@ static void callbk_add_new_event(GtkButton *button, gpointer user_data)
 	GtkWidget *spin_button_reminder_hour = g_object_get_data(G_OBJECT(button), "spin-reminder-hour-key");
 	GtkWidget *spin_button_reminder_min = g_object_get_data(G_OBJECT(button), "spin-reminder-min-key");
 	
-	//m_summary =""; //reset
-	//buffer_summary = gtk_entry_get_buffer(GTK_ENTRY(entry_summary));
-	//m_summary = gtk_entry_buffer_get_text(buffer_summary);
-	
-	//m_summary = remove_semicolons(m_summary);
-	//m_summary = remove_commas(m_summary);
-	//m_summary =remove_punctuations(m_summary);
-	
 	//m_summary set by dropdown
 	
 	m_description="";		
@@ -1709,16 +1559,23 @@ static void callbk_add_new_event(GtkButton *button, gpointer user_data)
 	//m_end_year= gtk_spin_button_get_value(GTK_SPIN_BUTTON(spin_button_year_end));
 	
 	m_start_hour= gtk_spin_button_get_value(GTK_SPIN_BUTTON(spin_button_start_hour));
-	m_start_min= gtk_spin_button_get_value(GTK_SPIN_BUTTON(spin_button_start_min));
-	
+	m_start_min= gtk_spin_button_get_value(GTK_SPIN_BUTTON(spin_button_start_min));	
 	m_end_hour= gtk_spin_button_get_value(GTK_SPIN_BUTTON(spin_button_end_hour));
 	m_end_min= gtk_spin_button_get_value(GTK_SPIN_BUTTON(spin_button_end_min));
 	
 	m_is_allday = gtk_check_button_get_active(GTK_CHECK_BUTTON(check_button_allday));
 	
+	if (m_is_allday) 
+	{
+		m_start_hour=0; //sorting to top
+		m_start_min=0;
+		m_end_hour=0;
+		m_end_min=0;
+	 }
+	
+	
 	m_is_yearly = gtk_check_button_get_active(GTK_CHECK_BUTTON(check_button_isyearly));	
 	m_priority = gtk_check_button_get_active(GTK_CHECK_BUTTON(check_button_priority));
-	//m_notification = gtk_check_button_get_active(GTK_CHECK_BUTTON(check_button_notification));
 	
 	//TODO multiday
 	m_end_day=m_start_day;
@@ -1732,18 +1589,6 @@ static void callbk_add_new_event(GtkButton *button, gpointer user_data)
 	m_has_reminder = gtk_check_button_get_active(GTK_CHECK_BUTTON(check_button_hasreminder));
 	m_reminder_hour= gtk_spin_button_get_value(GTK_SPIN_BUTTON(spin_button_reminder_hour));
 	m_reminder_min= gtk_spin_button_get_value(GTK_SPIN_BUTTON(spin_button_reminder_min));
-	//m_has_reminder=0;
-	//m_reminder_hour=m_start_hour;
-	//m_reminder_min=m_start_min;
-	
-	//reminder checks
-	//if(m_reminder_hour >m_start_hour) m_reminder_hour=m_start_hour;	
-	//if ((m_reminder_hour == m_start_hour) &&(m_reminder_min >m_start_min)) m_reminder_min=m_start_min;
-	
-	//g_print("Has reminder = %d\n", m_has_reminder);
-	//g_print("Reminder hour= %d\n", m_reminder_hour);
-	//g_print("Reminder min = %d\n",m_reminder_min);
-	
 	
 	//add event into db
 		
@@ -1798,8 +1643,7 @@ static void callbk_new_event(GSimpleAction *action, GVariant *parameter,  gpoint
 	
 	GtkWidget *grid;
 	
-	GtkWidget *label_summary;
-	//GtkWidget *entry_summary;	
+	GtkWidget *label_summary;	
 	GtkWidget *dropdown_summary;
 	
 	GtkWidget *label_description;
@@ -2171,9 +2015,6 @@ static void callbk_update_event(GtkButton *button, gpointer user_data)
 	GtkWidget *calendar = g_object_get_data(G_OBJECT(window), "window-calendar-key");
 	GtkWidget *dialog = g_object_get_data(G_OBJECT(button), "dialog-key");
 	
-	//GtkEntryBuffer *buffer_summary;
-	//GtkWidget *entry_summary = g_object_get_data(G_OBJECT(button), "entry-summary-key");
-
 	GtkEntryBuffer *buffer_location;
 	GtkWidget *entry_location = g_object_get_data(G_OBJECT(button), "entry-location-key");
 
@@ -2197,14 +2038,6 @@ static void callbk_update_event(GtkButton *button, gpointer user_data)
 	GtkWidget *check_button_hasreminder = g_object_get_data(G_OBJECT(button), "check-button-hasreminder-key");
 	GtkWidget *spin_button_reminder_hour = g_object_get_data(G_OBJECT(button), "spin-reminder-hour-key");
 	GtkWidget *spin_button_reminder_min = g_object_get_data(G_OBJECT(button), "spin-reminder-min-key");
-	
-	
-	//buffer_summary = gtk_entry_get_buffer(GTK_ENTRY(entry_summary));
-	//m_summary = gtk_entry_buffer_get_text(buffer_summary);
-		
-	//m_summary = remove_semicolons(m_summary);
-	//m_summary = remove_commas(m_summary);
-	//m_summary =remove_punctuations(m_summary);
 	
 	//m_summary set by dropdown
 		
@@ -2234,6 +2067,14 @@ static void callbk_update_event(GtkButton *button, gpointer user_data)
 	 m_start_min= gtk_spin_button_get_value(GTK_SPIN_BUTTON(spin_button_start_min));
 	 m_end_hour= gtk_spin_button_get_value(GTK_SPIN_BUTTON(spin_button_end_hour));
 	 m_end_min= gtk_spin_button_get_value(GTK_SPIN_BUTTON(spin_button_end_min));
+	 
+	if (m_is_allday) 
+	{
+		m_start_hour=0; //sorting to top
+		m_start_min=0;
+		m_end_hour=0;
+		m_end_min=0;
+	 }
 	
 	//TODO multiday
 	m_end_day=m_start_day;
@@ -2243,15 +2084,7 @@ static void callbk_update_event(GtkButton *button, gpointer user_data)
 	m_has_reminder = gtk_check_button_get_active(GTK_CHECK_BUTTON(check_button_hasreminder));
 	m_reminder_hour= gtk_spin_button_get_value(GTK_SPIN_BUTTON(spin_button_reminder_hour));
 	m_reminder_min= gtk_spin_button_get_value(GTK_SPIN_BUTTON(spin_button_reminder_min));
-	
-	//reminder checks
-	//if(m_reminder_hour >m_start_hour) m_reminder_hour=m_start_hour;	
-	//if ((m_reminder_hour == m_start_hour) &&(m_reminder_min >m_start_min)) m_reminder_min=m_start_min;
-	
-	//g_print("Has reminder = %d\n", m_has_reminder);
-	//g_print("Reminder hour= %d\n", m_reminder_hour);
-	//g_print("Reminder min = %d\n",m_reminder_min);
-			
+		
 	g_object_set(selected_evt, "summary", g_strdup(m_summary), NULL);
 	g_object_set(selected_evt, "location", g_strdup(m_location), NULL);
 	g_object_set(selected_evt, "description", g_strdup(m_description), NULL);
@@ -2308,8 +2141,7 @@ static void callbk_edit_event(GSimpleAction *action, GVariant *parameter,  gpoin
 	
 	GtkWidget *label_summary;
 	GtkWidget *dropdown_summary;
-	//GtkWidget *entry_summary;
-	
+		
 	GtkWidget *label_description;
 	GtkWidget *entry_description;
 	
@@ -2461,17 +2293,6 @@ static void callbk_edit_event(GSimpleAction *action, GVariant *parameter,  gpoin
 	
 	gtk_drop_down_set_selected(GTK_DROP_DOWN(dropdown_summary),position);
 		
-	
-	//label_summary = gtk_label_new("Summary: ");
-	//entry_summary = gtk_entry_new();
-	//gtk_entry_set_has_frame(GTK_ENTRY(entry_summary),TRUE); 
-	//gtk_entry_set_max_length(GTK_ENTRY(entry_summary), 20);
-	//gtk_entry_set_max_length(GTK_ENTRY(entry_summary), 11);
-	//gtk_entry_set_max_length(GTK_ENTRY(entry_summary), 11);
-	
-	//buffer_summary = gtk_entry_buffer_new(m_summary, -1); // show  event summary
-	//gtk_entry_set_buffer(GTK_ENTRY(entry_summary), buffer_summary);
-	
 	//description
 	label_description = gtk_label_new("Description: ");
 	entry_description = gtk_entry_new();
@@ -2585,8 +2406,7 @@ static void callbk_edit_event(GSimpleAction *action, GVariant *parameter,  gpoin
 	gtk_check_button_set_active(GTK_CHECK_BUTTON(check_button_isyearly), m_is_yearly);	
 	gtk_check_button_set_active(GTK_CHECK_BUTTON(check_button_priority), m_priority);
 	
-	g_object_set_data(G_OBJECT(button_update), "dialog-key", dialog);
-	//g_object_set_data(G_OBJECT(button_update), "entry-summary-key", entry_summary);
+	g_object_set_data(G_OBJECT(button_update), "dialog-key", dialog);	
 	//g_object_set_data(G_OBJECT(button_update), "dropdown-summary-key", dropdown_summary);
 	g_object_set_data(G_OBJECT(button_update), "entry-location-key", entry_location);	
 	g_object_set_data(G_OBJECT(button_update), "entry-description-key", entry_description);
@@ -2707,12 +2527,8 @@ static void callbk_calendar_day_selected(CustomCalendar *calendar, gpointer user
 	gtk_window_set_title (GTK_WINDOW (dialog_day_selected), "Day Events");
 	gtk_window_set_default_size(GTK_WINDOW(dialog_day_selected),600,300);
 	
-	//window stacking order determined by window manager
-	
-	//gtk_window_set_modal(GTK_WINDOW (dialog_day_selected),TRUE); //causes the update event dialog to freeze
-	
-	//need a new approach maybe a popover?
-	
+	//window stacking order determined by window manager	
+	//gtk_window_set_modal(GTK_WINDOW (dialog_day_selected),TRUE); //causes the update event dialog to freeze	
 	//centre dialog window?
 	gtk_window_set_transient_for(GTK_WINDOW (dialog_day_selected),GTK_WINDOW(window));	
 	
@@ -2723,8 +2539,7 @@ static void callbk_calendar_day_selected(CustomCalendar *calendar, gpointer user
 	header = gtk_header_bar_new ();  
 	gtk_window_set_titlebar (GTK_WINDOW (dialog_day_selected), header);
 	
-	g_object_set_data(G_OBJECT(window), "window-dialog-day-selected-key",dialog_day_selected);
-	  
+	g_object_set_data(G_OBJECT(window), "window-dialog-day-selected-key",dialog_day_selected);	  
 	
 	button_edit_event = gtk_button_new_with_label ("Edit Event");
 	g_signal_connect (button_edit_event, "clicked", G_CALLBACK (callbk_edit_event), window); 
@@ -2787,103 +2602,12 @@ static void callbk_calendar_day_selected(CustomCalendar *calendar, gpointer user
 	char *ampm_str = " ";
 	
 	if(!is_allday)
-	{
-	//if not all_day then add start time
-	//if (m_12hour_format)
-	//{
-	
-	//if (start_hour >= 13 && start_hour <= 23)
-	//{
-	//int shour = start_hour;
-	//shour = shour - 12;
-	//ampm_str = "pm ";
-	//starthour_str = g_strdup_printf("%d", shour);
-	//}
-	//if(start_hour == 12)
-	//{
-	//ampm_str = "pm ";					
-	//starthour_str = g_strdup_printf("%d", start_hour);
-	 //}
-	//if(start_hour <12)
-	//{
-	//ampm_str = "am ";					
-	//starthour_str = g_strdup_printf("%d", start_hour);
-	//}
-	
-	//} // 12 hour format
-	
-	
-	//else //24 hour
-	//{
-	//starthour_str = g_strdup_printf("%d", start_hour);
-	//} // 24
-	
-	//startmin_str = g_strdup_printf("%d", start_min);
-	
-	//if (start_min < 10)
-	//{
-	//time_str = g_strconcat(time_str, starthour_str, ":0", startmin_str, NULL);
-	//}
-	//else
-	//{
-	//time_str = g_strconcat(time_str, starthour_str, ":", startmin_str, NULL);
-	//}
-	
-	//time_str = g_strconcat(time_str, ampm_str, NULL);
-	
-	time_str =get_time_str(start_hour,start_min);
+	{		
+	 time_str =get_time_str(start_hour,start_min);
 	
 	//------------------------------------------------------------------
 	if (m_show_end_time)
 	{	
-	//if (m_12hour_format)
-	//{
-	//ampm_str = "";
-	
-	//if (end_hour >= 13 && end_hour <= 23)
-	//{
-	//end_hour = end_hour - 12;
-	//ampm_str = "pm ";
-	//endhour_str = g_strdup_printf("%d", end_hour);
-	//}
-	
-	//if(end_hour == 12)
-	//{
-	//ampm_str = "pm ";					
-	//endhour_str = g_strdup_printf("%d", end_hour);
-	 //}
-	//if(end_hour <12)
-	//{
-	//ampm_str = "am ";					
-	//endhour_str = g_strdup_printf("%d", end_hour);
-	//}
-	
-	////else
-	////{
-	////ampm_str = "am ";
-	////endhour_str = g_strdup_printf("%d", end_hour);
-	////}
-	//} // 12
-	//else
-	//{
-	//endhour_str = g_strdup_printf("%d", end_hour);
-	//} // 24
-	
-	//endmin_str = g_strdup_printf("%d", end_min);
-	
-	//if (end_min < 10)
-	//{
-	//time_str = g_strconcat(time_str, "to ", endhour_str, ":0", endmin_str, NULL);
-	//}
-	//else
-	//{
-	//time_str = g_strconcat(time_str, "to ", endhour_str, ":", endmin_str, NULL);
-	//}
-	//time_str = g_strconcat(time_str, ampm_str, NULL);
-	//} // show_end_time	
-	
-	//time_str = g_strconcat(time_str, NULL);
-	
 	end_time_str =get_time_str(end_hour,end_min);
 	time_str = g_strconcat(time_str, "to ", end_time_str, NULL);
 	}	
@@ -2927,69 +2651,16 @@ static void callbk_calendar_day_selected(CustomCalendar *calendar, gpointer user
 }
 
 //======================================================================
-
-//GArray*  get_upcoming_array(int upcoming_days) 
-//{
-	
-	////if(upcoming_days >14) upcoming_days=14;	
-	//GArray *evt_arry_upcoming;
-	//evt_arry_upcoming = g_array_new(FALSE, FALSE, sizeof(CALENDAR_TYPE_EVENT)); 
-	
-	//GDate *today_date;
-	//today_date = g_date_new();
-	//g_date_set_time_t(today_date, time(NULL));
-	//int today = g_date_get_day(today_date);
-	//int month = g_date_get_month(today_date);
-	//int year = g_date_get_year(today_date);
-	//g_date_free(today_date); // freeit quick
-		
-	//GDate* date =g_date_new_dmy(today, month, year);
-	//g_date_add_days(date, 1); //start at next day
-	
-	//int loop_days=upcoming_days;
-		
-	////use while loop
-	//while(loop_days >=0)
-	//{	
-	
-	//int day =g_date_get_day (date);
-	//int month=g_date_get_month (date);
-	//int year =g_date_get_year (date);
-		
-	//GArray *evt_arry_day;	
-	//evt_arry_day = g_array_new(FALSE, FALSE, sizeof(CALENDAR_TYPE_EVENT)); // setup arraylist
-	
-	//db_get_all_events_year_month_day(evt_arry_day, year,month,day);
-	
-	//for (int i = 0; i < evt_arry_day->len; i++)
-	//{
-	//CalendarEvent *evt = g_array_index(evt_arry_day, CalendarEvent *, i);
-	
-	//char* summary_str;
-	//g_object_get(evt, "summary", &summary_str, NULL);	
-	//g_array_append_val(evt_arry_upcoming, evt);	  //!!
-		
-	//}//for
-    	
-	//g_array_free(evt_arry_day, FALSE); //clear the day array 
-	//g_date_add_days(date, 1);				
-	//loop_days=loop_days-1;
-	
-	//} //while
-	//// g_array_free(evt_arry_upcoming, TRUE); //calling funtion to free
-	
-	//if (evt_arry_upcoming!=NULL) return evt_arry_upcoming;
-	//else return NULL;
- 
-//} 
+// new approach to get_upcoming_array
+//======================================================================
 
 GArray*  get_upcoming_array(int upcoming_days) 
 {
-	if(upcoming_days > 7) upcoming_days=7; //clamp
 	
-	int day1=1; //start day
-	int day2=1; //end day
-		
+	//if(upcoming_days >14) upcoming_days=14;	
+	GArray *evt_arry_upcoming;
+	evt_arry_upcoming = g_array_new(FALSE, FALSE, sizeof(CALENDAR_TYPE_EVENT)); 
+	
 	GDate *today_date;
 	today_date = g_date_new();
 	g_date_set_time_t(today_date, time(NULL));
@@ -2997,93 +2668,152 @@ GArray*  get_upcoming_array(int upcoming_days)
 	int month = g_date_get_month(today_date);
 	int year = g_date_get_year(today_date);
 	g_date_free(today_date); // freeit quick
-	
-	guint8 month_days =g_date_get_days_in_month(month,year);	
 		
-	if(((today+1)+upcoming_days)<=month_days)
+	GDate* date =g_date_new_dmy(today, month, year);
+	g_date_add_days(date, 1); //start at next day
+	
+	int loop_days=upcoming_days;
+		
+	//use while loop
+	while(loop_days >=0)
+	{	
+	
+	int day =g_date_get_day (date);
+	int month=g_date_get_month (date);
+	int year =g_date_get_year (date);
+		
+	GArray *evt_arry_day;	
+	evt_arry_day = g_array_new(FALSE, FALSE, sizeof(CALENDAR_TYPE_EVENT)); // setup arraylist
+	
+	db_get_all_events_year_month_day(evt_arry_day, year,month,day);
+	
+	for (int i = 0; i < evt_arry_day->len; i++)
 	{
-		//Normal case
-		GArray *evt_arry_upcoming;
-	    evt_arry_upcoming = g_array_new(FALSE, FALSE, sizeof(CALENDAR_TYPE_EVENT)); 	
-		
-		day1=today+1;
-		day2=today+upcoming_days;
-		db_get_upcoming_events(evt_arry_upcoming,year,month,day1,day2);	
-	    return evt_arry_upcoming;		
-	}
+	CalendarEvent *evt = g_array_index(evt_arry_day, CalendarEvent *, i);
 	
-	else {
-		//special edge cases 
+	char* summary_str;
+	g_object_get(evt, "summary", &summary_str, NULL);	
+	g_array_append_val(evt_arry_upcoming, evt);	  //!!
 		
-		if (today == month_days){
-		//Special case: today is last day of month 
-		//so today+1 will be first day of next month
+	}//for
+    	
+	g_array_free(evt_arry_day, FALSE); //clear the day array 
+	g_date_add_days(date, 1);				
+	loop_days=loop_days-1;
+	
+	} //while
+	// g_array_free(evt_arry_upcoming, TRUE); //calling funtion to free
+	
+	if (evt_arry_upcoming!=NULL) return evt_arry_upcoming;
+	else return NULL;
+ 
+} 
+
+//======================================================================
+// old approach to get_upcoming_array
+//======================================================================
+
+//GArray*  get_upcoming_array(int upcoming_days) 
+//{
+	//if(upcoming_days > 7) upcoming_days=7; //clamp
+	
+	//int day1=1; //start day
+	//int day2=1; //end day
 		
-		GArray *evt_arry_upcoming;
-		evt_arry_upcoming = g_array_new(FALSE, FALSE, sizeof(CALENDAR_TYPE_EVENT)); 
+	//GDate *today_date;
+	//today_date = g_date_new();
+	//g_date_set_time_t(today_date, time(NULL));
+	//int today = g_date_get_day(today_date);
+	//int month = g_date_get_month(today_date);
+	//int year = g_date_get_year(today_date);
+	//g_date_free(today_date); // freeit quick
+	
+	//guint8 month_days =g_date_get_days_in_month(month,year);	
+		
+	//if(((today+1)+upcoming_days)<=month_days)
+	//{
+		////Normal case
+		//GArray *evt_arry_upcoming;
+	    //evt_arry_upcoming = g_array_new(FALSE, FALSE, sizeof(CALENDAR_TYPE_EVENT)); 	
+		
+		//day1=today+1;
+		//day2=today+upcoming_days;
+		//db_get_upcoming_events(evt_arry_upcoming,year,month,day1,day2);	
+	    //return evt_arry_upcoming;		
+	//}
+	
+	//else {
+		////special edge cases 
+		
+		//if (today == month_days){
+		////Special case: today is last day of month 
+		////so today+1 will be first day of next month
+		
+		//GArray *evt_arry_upcoming;
+		//evt_arry_upcoming = g_array_new(FALSE, FALSE, sizeof(CALENDAR_TYPE_EVENT)); 
 			
-		day1=1;
-		day2=upcoming_days;
-		month=month+1; //next month
+		//day1=1;
+		//day2=upcoming_days;
+		//month=month+1; //next month
 		
-		if(month>12) { //december then becomes january
-			month =1; 	
-			year=year+1;
-		}
+		//if(month>12) { //december then becomes january
+			//month =1; 	
+			//year=year+1;
+		//}
 		
-		db_get_upcoming_events(evt_arry_upcoming,year,month,day1,day2);	
-		return evt_arry_upcoming;	
-		}
-		else
-		{	
-		//complex two month case
-		int day1=today+1;
+		//db_get_upcoming_events(evt_arry_upcoming,year,month,day1,day2);	
+		//return evt_arry_upcoming;	
+		//}
+		//else
+		//{	
+		////complex two month case
+		//int day1=today+1;
 		
-		int day_diff=(today+upcoming_days)-month_days;		
+		//int day_diff=(today+upcoming_days)-month_days;		
 		
-		GArray *total_arry;
-	    total_arry= g_array_new(FALSE, FALSE, sizeof(CALENDAR_TYPE_EVENT)); 
+		//GArray *total_arry;
+	    //total_arry= g_array_new(FALSE, FALSE, sizeof(CALENDAR_TYPE_EVENT)); 
 	    
-	    GArray *month1_arry;
-	    month1_arry= g_array_new(FALSE, FALSE, sizeof(CALENDAR_TYPE_EVENT));
-	    db_get_upcoming_events(month1_arry,year,month,day1,month_days); 
+	    //GArray *month1_arry;
+	    //month1_arry= g_array_new(FALSE, FALSE, sizeof(CALENDAR_TYPE_EVENT));
+	    //db_get_upcoming_events(month1_arry,year,month,day1,month_days); 
 	    
-	    //return month1_arry;
-	    //Append month1_arry to total_arry
-	    for (int i = 0; i < month1_arry->len; i++)
-	    {
-		CalendarEvent *evt = g_array_index(month1_arry, CalendarEvent *, i);
-		g_array_append_val(total_arry, evt);		
-		}
+	    ////return month1_arry;
+	    ////Append month1_arry to total_arry
+	    //for (int i = 0; i < month1_arry->len; i++)
+	    //{
+		//CalendarEvent *evt = g_array_index(month1_arry, CalendarEvent *, i);
+		//g_array_append_val(total_arry, evt);		
+		//}
 	   
-	    int next_month=1;
-	    //find next month and year
-	    if(month+1>12) {
-	    next_month=1;
-	    year=year+1;
-	    } 
-	    else {
-			next_month=month+1;
-		}
+	    //int next_month=1;
+	    ////find next month and year
+	    //if(month+1>12) {
+	    //next_month=1;
+	    //year=year+1;
+	    //} 
+	    //else {
+			//next_month=month+1;
+		//}
 	     
-	    GArray *month2_arry;
-	    month2_arry= g_array_new(FALSE, FALSE, sizeof(CALENDAR_TYPE_EVENT)); 
-	    db_get_upcoming_events(month2_arry,year,next_month,1,day_diff); 
+	    //GArray *month2_arry;
+	    //month2_arry= g_array_new(FALSE, FALSE, sizeof(CALENDAR_TYPE_EVENT)); 
+	    //db_get_upcoming_events(month2_arry,year,next_month,1,day_diff); 
 	    
-	    //Append  month2_arry to total arry	    
-	    for (int j = 0; j < month2_arry->len; j++)
-	    {
-		CalendarEvent *evt = g_array_index(month2_arry, CalendarEvent *, j);
-		g_array_append_val(total_arry, evt);		
-		}	
-		return total_arry;	
+	    ////Append  month2_arry to total arry	    
+	    //for (int j = 0; j < month2_arry->len; j++)
+	    //{
+		//CalendarEvent *evt = g_array_index(month2_arry, CalendarEvent *, j);
+		//g_array_append_val(total_arry, evt);		
+		//}	
+		//return total_arry;	
 		
-		} //else 2 month edge case
+		//} //else 2 month edge case
 		
-	}//else special cases
+	//}//else special cases
 	
-return NULL; //should never get here but if it does return NULL
-}
+//return NULL; //should never get here but if it does return NULL
+//}
 
 //======================================================================
 
@@ -3980,7 +3710,7 @@ static void callbk_about(GSimpleAction * action, GVariant *parameter, gpointer u
 	gtk_widget_set_size_request(about_dialog, 200,200);
     gtk_window_set_modal(GTK_WINDOW(about_dialog),TRUE);
 	gtk_about_dialog_set_program_name(GTK_ABOUT_DIALOG(about_dialog), "Speaking Calendar");
-	gtk_about_dialog_set_version (GTK_ABOUT_DIALOG(about_dialog), "Version 0.1.0");
+	gtk_about_dialog_set_version (GTK_ABOUT_DIALOG(about_dialog), "Version 0.1.1");
 	gtk_about_dialog_set_copyright(GTK_ABOUT_DIALOG(about_dialog),"Copyright © 2024");
 	gtk_about_dialog_set_comments(GTK_ABOUT_DIALOG(about_dialog),"Linux Speaking Calendar");
 	gtk_about_dialog_set_license_type (GTK_ABOUT_DIALOG(about_dialog), GTK_LICENSE_LGPL_2_1);
@@ -4004,46 +3734,13 @@ static void speak_reminder()
 	speak_word_list = g_list_append(speak_word_list, "calendar");
 	speak_word_list = g_list_append(speak_word_list, "reminder");
 	
-	gpointer word_list_pointer;
-	gchar* word_str;
-	gchar* word_str_lower;	
-	gint word_number  =g_list_length(speak_word_list);
+	int word_number  =g_list_length(speak_word_list);
 	
-	
-	//create word array using list size
 	unsigned char *word_arrays[word_number]; 
 	unsigned int word_arrays_sizes[word_number];
-	//load hex words into array
-	
-	for(int i=0; i < word_number; i++)
-	{
-	word_list_pointer=g_list_nth_data(speak_word_list,i);
-	word_str=(gchar *)word_list_pointer;
-	//g_print("time: wordStr = %s\n", word_str);
-	gchar* word_str_lower= g_ascii_strdown(word_str,-1);	//make sure lower	
+			
+	get_words_array(speak_word_list, word_number,word_arrays,word_arrays_sizes);
 		
-	//load up arrays
-	//dummy empty
-	
-	word_arrays[i] = (unsigned char*)malloc(empty_raw_len * sizeof(unsigned char));
-	word_arrays[i] = empty_raw;
-	word_arrays_sizes[i]=empty_raw_len; 
-	
-	//words	
-	
-	if (g_strcmp0(word_str_lower,"calendar")==0) {
-	word_arrays[i] = (unsigned char*)malloc(calendar_raw_len * sizeof(unsigned char));
-	word_arrays[i] = calendar_raw;
-	word_arrays_sizes[i]=calendar_raw_len;
-	}
-	
-	if (g_strcmp0(word_str_lower,"reminder")==0) {
-	word_arrays[i] = (unsigned char*)malloc(reminder_raw_len * sizeof(unsigned char));
-	word_arrays[i] = reminder_raw;
-	word_arrays_sizes[i]=reminder_raw_len;
-	}  
-   }
-   
    //concatenate using raw cat
 	unsigned char *data = rawcat(word_arrays, word_arrays_sizes, word_number);	
 	unsigned int data_len = get_merge_size(word_arrays_sizes,word_number);
@@ -4077,390 +3774,67 @@ static void speak_time(gint hour, gint min)
 	GList *speak_word_list = NULL;
 		
 	if(m_12hour_format) {
-	
-	if(hour >=1 && hour<12) {
-	//AM
+		
+	if (hour >= 13 && hour <= 23)
+	{
+	int s_hour = hour - 12;
+	ampm_str = "pm";					
+	hour_str =get_cardinal_string(s_hour);
+	}
+	if(hour == 12)
+	{
+	ampm_str = "pm";					
 	hour_str =get_cardinal_string(hour);
+	}
+	if(hour <12)
+	{
+	ampm_str = "am";					
+	hour_str =get_cardinal_string(hour);
+	}
 	
-	ampm_str="am";
 	speak_word_list = g_list_append(speak_word_list, hour_str);
 	
-	if(min!=0){
-	min_str=get_cardinal_string(min);		    
-	}
-	speak_word_list = g_list_append(speak_word_list, min_str);
-	speak_word_list = g_list_append(speak_word_list, ampm_str);				
-	}
-	else if(hour ==12) {
-	//PM
-	hour_str =get_cardinal_string(hour);
-	min_str=get_cardinal_string(min);
-	ampm_str="pm";
-	speak_word_list = g_list_append(speak_word_list, hour_str);
-	
-	if(min!=0){
-	min_str=get_cardinal_string(min);
-	speak_word_list = g_list_append(speak_word_list, min_str);
-	}				
-	speak_word_list = g_list_append(speak_word_list, ampm_str);
-	}
-	else if (hour >=13 && hour<=23) {
-	//PM
-	hour=hour-12;
-	hour_str =get_cardinal_string(hour);
-	//min_str=get_cardinal_string(min);
-	ampm_str="pm";
-	speak_word_list = g_list_append(speak_word_list, hour_str);
-	if(min!=0){
+	if (min > 0 && min < 10)
+	{				
+	speak_word_list = g_list_append(speak_word_list, "o");
 	min_str=get_cardinal_string(min);
 	speak_word_list = g_list_append(speak_word_list, min_str);
 	}
-	speak_word_list = g_list_append(speak_word_list, ampm_str);				
-	}		
+	else if(min >=10)
+	{
+	min_str=get_cardinal_string(min);
+	speak_word_list = g_list_append(speak_word_list, min_str);
+	}
+	
+	speak_word_list = g_list_append(speak_word_list,ampm_str);
+		
 	} //12hour format
+	
 	else
 	{				
-	hour_str =get_cardinal_string(hour);
-	min_str=get_cardinal_string(min);
+	hour_str =get_cardinal_string(hour);	
 	speak_word_list = g_list_append(speak_word_list, hour_str);
-	speak_word_list = g_list_append(speak_word_list, min_str);			    				
-	} //24 hour format	
+	
+	if (min > 0 && min < 10)
+	{				
+	speak_word_list = g_list_append(speak_word_list, "o");
+	min_str=get_cardinal_string(min);
+	speak_word_list = g_list_append(speak_word_list, min_str);
+	}
+	else if(min >=10)
+	{
+	min_str=get_cardinal_string(min);
+	speak_word_list = g_list_append(speak_word_list, min_str);
+	}			    				
+	} //24 hour format
+				
 		
-	gpointer word_list_pointer;
-	gchar* word_str;
-	gchar* word_str_lower;	
-	gint word_number  =g_list_length(speak_word_list);
+	int word_number  =g_list_length(speak_word_list);
 	
-	
-	//create word array using list size
 	unsigned char *word_arrays[word_number]; 
 	unsigned int word_arrays_sizes[word_number];
-	//load hex words into array
-	
-	for(int i=0; i < word_number; i++)
-	{
-	word_list_pointer=g_list_nth_data(speak_word_list,i);
-	word_str=(gchar *)word_list_pointer;
-	//g_print("time: wordStr = %s\n", word_str);
-	gchar* word_str_lower= g_ascii_strdown(word_str,-1);	//make sure lower	
-		
-	//load up arrays
-	//dummy empty
-	
-	word_arrays[i] = (unsigned char*)malloc(empty_raw_len * sizeof(unsigned char));
-	word_arrays[i] = empty_raw;
-	word_arrays_sizes[i]=empty_raw_len; 
-	
-	//cardinals
-	if (g_strcmp0(word_str_lower,"one")==0) {
-	word_arrays[i] = (unsigned char*)malloc(one_raw_len * sizeof(unsigned char));
-	word_arrays[i] = one_raw;
-	word_arrays_sizes[i]=one_raw_len;
-	}
-	if (g_strcmp0(word_str_lower,"two")==0) {
-	word_arrays[i] = (unsigned char*)malloc(two_raw_len * sizeof(unsigned char));
-	word_arrays[i] = two_raw;
-	word_arrays_sizes[i]=two_raw_len;
-	}
-	if (g_strcmp0(word_str_lower,"three")==0) {
-	word_arrays[i] = (unsigned char*)malloc(three_raw_len * sizeof(unsigned char));
-	word_arrays[i] = three_raw;
-	word_arrays_sizes[i]=three_raw_len;
-	}
-	if (g_strcmp0(word_str_lower,"four")==0) {
-	word_arrays[i] = (unsigned char*)malloc(four_raw_len * sizeof(unsigned char));
-	word_arrays[i] = four_raw;
-	word_arrays_sizes[i]=four_raw_len;
-	}
-	if (g_strcmp0(word_str_lower,"five")==0) {
-	word_arrays[i] = (unsigned char*)malloc(five_raw_len * sizeof(unsigned char));
-	word_arrays[i] = five_raw;
-	word_arrays_sizes[i]=five_raw_len;
-	}
-	if (g_strcmp0(word_str_lower,"six")==0) {
-	word_arrays[i] = (unsigned char*)malloc(six_raw_len * sizeof(unsigned char));
-	word_arrays[i] = six_raw;
-	word_arrays_sizes[i]=six_raw_len;
-	}
-	if (g_strcmp0(word_str_lower,"seven")==0) {
-	word_arrays[i] = (unsigned char*)malloc(seven_raw_len * sizeof(unsigned char));
-	word_arrays[i] = seven_raw;
-	word_arrays_sizes[i]=seven_raw_len;
-	}
-	if (g_strcmp0(word_str_lower,"eight")==0) {
-	word_arrays[i] = (unsigned char*)malloc(eight_raw_len * sizeof(unsigned char));
-	word_arrays[i] = eight_raw;
-	word_arrays_sizes[i]=eight_raw_len;
-	}
-	if (g_strcmp0(word_str_lower,"nine")==0) {
-	word_arrays[i] = (unsigned char*)malloc(nine_raw_len * sizeof(unsigned char));
-	word_arrays[i] = nine_raw;
-	word_arrays_sizes[i]=nine_raw_len;
-	}
-	if (g_strcmp0(word_str_lower,"ten")==0) {
-	word_arrays[i] = (unsigned char*)malloc(ten_raw_len * sizeof(unsigned char));
-	word_arrays[i] = ten_raw;
-	word_arrays_sizes[i]=ten_raw_len;
-	}
-	if (g_strcmp0(word_str_lower,"eleven")==0) {
-	word_arrays[i] = (unsigned char*)malloc(eleven_raw_len * sizeof(unsigned char));
-	word_arrays[i] = eleven_raw;
-	word_arrays_sizes[i]=eleven_raw_len;
-	}
-	if (g_strcmp0(word_str_lower,"twelve")==0) {
-	word_arrays[i] = (unsigned char*)malloc(twelve_raw_len * sizeof(unsigned char));
-	word_arrays[i] = twelve_raw;
-	word_arrays_sizes[i]=twelve_raw_len;
-	}
-	if (g_strcmp0(word_str_lower,"thirteen")==0) {
-	word_arrays[i] = (unsigned char*)malloc(thirteen_raw_len * sizeof(unsigned char));
-	word_arrays[i] = thirteen_raw;
-	word_arrays_sizes[i]=thirteen_raw_len;
-	}
-	if (g_strcmp0(word_str_lower,"fourteen")==0) {
-	word_arrays[i] = (unsigned char*)malloc(fourteen_raw_len * sizeof(unsigned char));
-	word_arrays[i] = fourteen_raw;
-	word_arrays_sizes[i]=fourteen_raw_len;
-	}	
-	if (g_strcmp0(word_str_lower,"fifteen")==0) {
-	word_arrays[i] = (unsigned char*)malloc(fifteen_raw_len * sizeof(unsigned char));
-	word_arrays[i] = fifteen_raw;
-	word_arrays_sizes[i]=fifteen_raw_len;
-	}
-	if (g_strcmp0(word_str_lower,"sixteen")==0) {
-	word_arrays[i] = (unsigned char*)malloc(sixteen_raw_len * sizeof(unsigned char));
-	word_arrays[i] = sixteen_raw;
-	word_arrays_sizes[i]=sixteen_raw_len;
-	}
-	if (g_strcmp0(word_str_lower,"seventeen")==0) {
-	word_arrays[i] = (unsigned char*)malloc(seventeen_raw_len * sizeof(unsigned char));
-	word_arrays[i] = seventeen_raw;
-	word_arrays_sizes[i]=seventeen_raw_len;
-	}
-	if (g_strcmp0(word_str_lower,"eighteen")==0) {
-	word_arrays[i] = (unsigned char*)malloc(eighteen_raw_len * sizeof(unsigned char));
-	word_arrays[i] = eighteen_raw;
-	word_arrays_sizes[i]=eighteen_raw_len;
-	}
-	if (g_strcmp0(word_str_lower,"nineteen")==0) {
-	word_arrays[i] = (unsigned char*)malloc(nineteen_raw_len * sizeof(unsigned char));
-	word_arrays[i] = nineteen_raw;
-	word_arrays_sizes[i]=nineteen_raw_len;
-	}
-	if (g_strcmp0(word_str_lower,"twenty")==0) {
-	word_arrays[i] = (unsigned char*)malloc(twenty_raw_len * sizeof(unsigned char));
-	word_arrays[i] = twenty_raw;
-	word_arrays_sizes[i]=twenty_raw_len;
-	}
-	if (g_strcmp0(word_str_lower,"twentyone")==0) {
-	word_arrays[i] = (unsigned char*)malloc(twentyone_raw_len * sizeof(unsigned char));
-	word_arrays[i] = twentyone_raw;
-	word_arrays_sizes[i]=twentyone_raw_len;
-	}
-	if (g_strcmp0(word_str_lower,"twentytwo")==0) {
-	word_arrays[i] = (unsigned char*)malloc(twentytwo_raw_len * sizeof(unsigned char));
-	word_arrays[i] = twentytwo_raw;
-	word_arrays_sizes[i]=twentytwo_raw_len;
-	}
-	if (g_strcmp0(word_str_lower,"twentythree")==0) {
-	word_arrays[i] = (unsigned char*)malloc(twentythree_raw_len * sizeof(unsigned char));
-	word_arrays[i] = twentythree_raw;
-	word_arrays_sizes[i]=twentythree_raw_len;
-	}
-	if (g_strcmp0(word_str_lower,"twentyfour")==0) {
-	word_arrays[i] = (unsigned char*)malloc(twentyfour_raw_len * sizeof(unsigned char));
-	word_arrays[i] = twentyfour_raw;
-	word_arrays_sizes[i]=twentyfour_raw_len;
-	}
-	if (g_strcmp0(word_str_lower,"twentyfive")==0) {
-	word_arrays[i] = (unsigned char*)malloc(twentyfive_raw_len * sizeof(unsigned char));
-	word_arrays[i] = twentyfive_raw;
-	word_arrays_sizes[i]=twentyfive_raw_len;
-	}
-	if (g_strcmp0(word_str_lower,"twentysix")==0) {
-	word_arrays[i] = (unsigned char*)malloc(twentysix_raw_len * sizeof(unsigned char));
-	word_arrays[i] = twentysix_raw;
-	word_arrays_sizes[i]=twentysix_raw_len;
-	}	
-	if (g_strcmp0(word_str_lower,"twentyseven")==0) {
-	word_arrays[i] = (unsigned char*)malloc(twentyseven_raw_len * sizeof(unsigned char));
-	word_arrays[i] = twentyseven_raw;
-	word_arrays_sizes[i]=twentyseven_raw_len;
-	}
-	if (g_strcmp0(word_str_lower,"twentyeight")==0) {
-	word_arrays[i] = (unsigned char*)malloc(twentyeight_raw_len * sizeof(unsigned char));
-	word_arrays[i] = twentyeight_raw;
-	word_arrays_sizes[i]=twentyeight_raw_len;
-	}
-	if (g_strcmp0(word_str_lower,"twentynine")==0) {
-	word_arrays[i] = (unsigned char*)malloc(twentynine_raw_len * sizeof(unsigned char));
-	word_arrays[i] = twentynine_raw;
-	word_arrays_sizes[i]=twentynine_raw_len;
-	}
-	if (g_strcmp0(word_str_lower,"thirty")==0) {
-	word_arrays[i] = (unsigned char*)malloc(thirty_raw_len * sizeof(unsigned char));
-	word_arrays[i] = thirty_raw;
-	word_arrays_sizes[i]=thirty_raw_len;
-	}
-	if (g_strcmp0(word_str_lower,"thirtyone")==0) {
-	word_arrays[i] = (unsigned char*)malloc(thirtyone_raw_len * sizeof(unsigned char));
-	word_arrays[i] = thirtyone_raw;
-	word_arrays_sizes[i]=thirtyone_raw_len;
-	}
-	if (g_strcmp0(word_str_lower,"thirtytwo")==0) {
-	word_arrays[i] = (unsigned char*)malloc(thirtytwo_raw_len * sizeof(unsigned char));
-	word_arrays[i] = thirtytwo_raw;
-	word_arrays_sizes[i]=thirtytwo_raw_len;
-	}
-	if (g_strcmp0(word_str_lower,"thirtythree")==0) {
-	word_arrays[i] = (unsigned char*)malloc(thirtythree_raw_len * sizeof(unsigned char));
-	word_arrays[i] = thirtythree_raw;
-	word_arrays_sizes[i]=thirtythree_raw_len;
-	}
-	if (g_strcmp0(word_str_lower,"thirtyfour")==0) {
-	word_arrays[i] = (unsigned char*)malloc(thirtyfour_raw_len * sizeof(unsigned char));
-	word_arrays[i] = thirtyfour_raw;
-	word_arrays_sizes[i]=thirtyfour_raw_len;
-	}
-	if (g_strcmp0(word_str_lower,"thirtyfive")==0) {
-	word_arrays[i] = (unsigned char*)malloc(thirtyfive_raw_len * sizeof(unsigned char));
-	word_arrays[i] = thirtyfive_raw;
-	word_arrays_sizes[i]=thirtyfive_raw_len;
-	}
-	if (g_strcmp0(word_str_lower,"thirtysix")==0) {
-	word_arrays[i] = (unsigned char*)malloc(thirtysix_raw_len * sizeof(unsigned char));
-	word_arrays[i] = thirtysix_raw;
-	word_arrays_sizes[i]=thirtysix_raw_len;
-	}
-	if (g_strcmp0(word_str_lower,"thirtyseven")==0) {
-	word_arrays[i] = (unsigned char*)malloc(thirtyseven_raw_len * sizeof(unsigned char));
-	word_arrays[i] = thirtyseven_raw;
-	word_arrays_sizes[i]=thirtyseven_raw_len;
-	}
-	if (g_strcmp0(word_str_lower,"thirtyeight")==0) {
-	word_arrays[i] = (unsigned char*)malloc(thirtyeight_raw_len * sizeof(unsigned char));
-	word_arrays[i] = thirtyeight_raw;
-	word_arrays_sizes[i]=thirtyeight_raw_len;
-	}
-	if (g_strcmp0(word_str_lower,"thirtynine")==0) {
-	word_arrays[i] = (unsigned char*)malloc(thirtynine_raw_len * sizeof(unsigned char));
-	word_arrays[i] = thirtynine_raw;
-	word_arrays_sizes[i]=thirtynine_raw_len;
-	}
-	if (g_strcmp0(word_str_lower,"forty")==0) {
-	word_arrays[i] = (unsigned char*)malloc(forty_raw_len * sizeof(unsigned char));
-	word_arrays[i] = forty_raw;
-	word_arrays_sizes[i]=forty_raw_len;
-	}
-	if (g_strcmp0(word_str_lower,"fortyone")==0) {
-	word_arrays[i] = (unsigned char*)malloc(fortyone_raw_len * sizeof(unsigned char));
-	word_arrays[i] = fortyone_raw;
-	word_arrays_sizes[i]=fortyone_raw_len;
-	}
-	if (g_strcmp0(word_str_lower,"fortytwo")==0) {
-	word_arrays[i] = (unsigned char*)malloc(fortytwo_raw_len * sizeof(unsigned char));
-	word_arrays[i] = fortytwo_raw;
-	word_arrays_sizes[i]=fortythree_raw_len;
-	}
-	if (g_strcmp0(word_str_lower,"fortythree")==0) {
-	word_arrays[i] = (unsigned char*)malloc(fortythree_raw_len * sizeof(unsigned char));
-	word_arrays[i] = fortythree_raw;
-	word_arrays_sizes[i]=fortythree_raw_len;
-	}
-	if (g_strcmp0(word_str_lower,"fortyfour")==0) {
-	word_arrays[i] = (unsigned char*)malloc(fortyfour_raw_len * sizeof(unsigned char));
-	word_arrays[i] = fortyfour_raw;
-	word_arrays_sizes[i]=fortyfour_raw_len;
-	}
-	if (g_strcmp0(word_str_lower,"fortyfive")==0) {
-	word_arrays[i] = (unsigned char*)malloc(fortyfive_raw_len * sizeof(unsigned char));
-	word_arrays[i] = fortyfive_raw;
-	word_arrays_sizes[i]=fortyfive_raw_len;
-	}
-	if (g_strcmp0(word_str_lower,"fortysix")==0) {
-	word_arrays[i] = (unsigned char*)malloc(fortysix_raw_len * sizeof(unsigned char));
-	word_arrays[i] = fortysix_raw;
-	word_arrays_sizes[i]=fortysix_raw_len;
-	}
-	if (g_strcmp0(word_str_lower,"fortyseven")==0) {
-	word_arrays[i] = (unsigned char*)malloc(fortyseven_raw_len * sizeof(unsigned char));
-	word_arrays[i] = fortyseven_raw;
-	word_arrays_sizes[i]=fortyseven_raw_len;
-	}
-	if (g_strcmp0(word_str_lower,"fortyeight")==0) {
-	word_arrays[i] = (unsigned char*)malloc(fortyeight_raw_len * sizeof(unsigned char));
-	word_arrays[i] = fortyeight_raw;
-	word_arrays_sizes[i]=fortyeight_raw_len;
-	}
-	if (g_strcmp0(word_str_lower,"fortynine")==0) {
-	word_arrays[i] = (unsigned char*)malloc(fortynine_raw_len * sizeof(unsigned char));
-	word_arrays[i] = fortynine_raw;
-	word_arrays_sizes[i]=fortynine_raw_len;
-	}
-	if (g_strcmp0(word_str_lower,"fifty")==0) {
-	word_arrays[i] = (unsigned char*)malloc(fifty_raw_len * sizeof(unsigned char));
-	word_arrays[i] = fifty_raw;
-	word_arrays_sizes[i]=fifty_raw_len;
-	}																																																																																																
-	if (g_strcmp0(word_str_lower,"fiftyone")==0) {
-	word_arrays[i] = (unsigned char*)malloc(fiftyone_raw_len * sizeof(unsigned char));
-	word_arrays[i] = fiftyone_raw;
-	word_arrays_sizes[i]=fiftyone_raw_len;
-	}
-	if (g_strcmp0(word_str_lower,"fiftytwo")==0) {
-	word_arrays[i] = (unsigned char*)malloc(fiftytwo_raw_len * sizeof(unsigned char));
-	word_arrays[i] = fiftytwo_raw;
-	word_arrays_sizes[i]=fiftytwo_raw_len;
-	}
-	if (g_strcmp0(word_str_lower,"fiftythree")==0) {
-	word_arrays[i] = (unsigned char*)malloc(fiftythree_raw_len * sizeof(unsigned char));
-	word_arrays[i] = fiftythree_raw;
-	word_arrays_sizes[i]=fiftythree_raw_len;
-	}
-	if (g_strcmp0(word_str_lower,"fiftyfour")==0) {
-	word_arrays[i] = (unsigned char*)malloc(fiftyfour_raw_len * sizeof(unsigned char));
-	word_arrays[i] = fiftyfour_raw;
-	word_arrays_sizes[i]=fiftyfour_raw_len;
-	}
-	if (g_strcmp0(word_str_lower,"fiftyfive")==0) {
-	word_arrays[i] = (unsigned char*)malloc(fiftyfive_raw_len * sizeof(unsigned char));
-	word_arrays[i] = fiftyfive_raw;
-	word_arrays_sizes[i]=fiftyfive_raw_len;
-	}
-	if (g_strcmp0(word_str_lower,"fiftysix")==0) {
-	word_arrays[i] = (unsigned char*)malloc(fiftysix_raw_len * sizeof(unsigned char));
-	word_arrays[i] = fiftysix_raw;
-	word_arrays_sizes[i]=fiftysix_raw_len;
-	}
-	if (g_strcmp0(word_str_lower,"fiftyseven")==0) {
-	word_arrays[i] = (unsigned char*)malloc(fiftyseven_raw_len * sizeof(unsigned char));
-	word_arrays[i] = fiftyseven_raw;
-	word_arrays_sizes[i]=fiftyseven_raw_len;
-	}
-	if (g_strcmp0(word_str_lower,"fiftyeight")==0) {
-	word_arrays[i] = (unsigned char*)malloc(fiftyeight_raw_len * sizeof(unsigned char));
-	word_arrays[i] = fiftyeight_raw;
-	word_arrays_sizes[i]=fiftyeight_raw_len;
-	}
-	if (g_strcmp0(word_str_lower,"fiftynine")==0) {
-	word_arrays[i] = (unsigned char*)malloc(fiftynine_raw_len * sizeof(unsigned char));
-	word_arrays[i] = fiftynine_raw;
-	word_arrays_sizes[i]=fiftynine_raw_len;
-	}
-	
-	//24 hour
-	if (g_strcmp0(word_str_lower,"am")==0) {
-	word_arrays[i] = (unsigned char*)malloc(am_raw_len * sizeof(unsigned char));
-	word_arrays[i] = am_raw;
-	word_arrays_sizes[i]=am_raw_len;
-	}
-	if (g_strcmp0(word_str_lower,"pm")==0) {
-	word_arrays[i] = (unsigned char*)malloc(pm_raw_len * sizeof(unsigned char));
-	word_arrays[i] = pm_raw;
-	word_arrays_sizes[i]=pm_raw_len;
-	}		
-	} //for words
-	
+			
+	get_words_array(speak_word_list, word_number,word_arrays,word_arrays_sizes);
 	
 	//concatenate using raw cat
 	unsigned char *data = rawcat(word_arrays, word_arrays_sizes, word_number);	
@@ -4510,7 +3884,7 @@ static void play_audio_async (GTask *task,
                           GCancellable *cancellable)
 {
    
-    m_speaking=TRUE; 
+    m_speaking=TRUE;  
        
     gchar *m_sample_rate_str = g_strdup_printf("%i", m_speak_rate); 
     gchar *sample_rate_str ="-r ";    
@@ -5041,50 +4415,27 @@ static char* get_cardinal_string(int number)
 	return result;
 
 }
-
-
 //======================================================================
-// speak events
-//======================================================================
-static void speak_events() {
 
-	if(m_speak==0) return;
-	if (m_speaking ==TRUE) return;
-	
-	GList *speak_word_list = NULL;
-	
-	//---------------------------------------------------------------
-	
-	gchar *dow_str=get_day_of_week(m_start_day, m_start_month, m_start_year);	//get day of week
-	gchar *day_number_str=get_day_number_ordinal_string(m_start_day); //get day number
-	gchar *month_str=get_month_string(m_start_month); //get month
-	
-	speak_word_list = g_list_append(speak_word_list, dow_str);
-	speak_word_list = g_list_append(speak_word_list, day_number_str);
-	speak_word_list = g_list_append(speak_word_list, month_str);
+GList *get_public_holiday_speak_list()
+{
+	GList *holiday_word_list = NULL;
 		
-	
-	//Check for public holidays and special days (Christmas, Easter, Fathers etc,.)
-	//---------------------------------------------------------------
-	if ((m_holidays ==1) && (is_public_holiday(m_start_day)))		
-	//if (m_holidays ==1)
-	{
-		//markup public holidays
 	if (m_start_month==1 && m_start_day ==1) {
-	speak_word_list = g_list_append(speak_word_list, "new");
-	speak_word_list = g_list_append(speak_word_list, "year");
+	holiday_word_list = g_list_append(holiday_word_list, "new");
+	holiday_word_list = g_list_append(holiday_word_list, "year");
 	}
 
 	if (m_start_month==12 && m_start_day==25) {
 	//christmas day
-	speak_word_list = g_list_append(speak_word_list, "christmas");
-	speak_word_list = g_list_append(speak_word_list, "day");
+	holiday_word_list = g_list_append(holiday_word_list, "christmas");
+	holiday_word_list = g_list_append(holiday_word_list, "day");
 	}
 
 	if (m_start_month==12 && m_start_day==26) {
 	//boxing day
-	speak_word_list = g_list_append(speak_word_list, "boxing");
-	speak_word_list = g_list_append(speak_word_list, "day");
+	holiday_word_list = g_list_append(holiday_word_list, "boxing");
+	holiday_word_list = g_list_append(holiday_word_list, "day");
 	}
 	//Easter		
 	GDate *easter_date =calculate_easter(m_start_year);
@@ -5094,8 +4445,8 @@ static void speak_events() {
 	if(m_start_month==easter_month && m_start_day == easter_day)
 	{
 	//easter day
-	speak_word_list = g_list_append(speak_word_list, "easter");
-	speak_word_list = g_list_append(speak_word_list, "day");
+	holiday_word_list = g_list_append(holiday_word_list, "easter");
+	holiday_word_list = g_list_append(holiday_word_list, "day");
 	}
 	
 	g_date_subtract_days(easter_date,2);
@@ -5105,8 +4456,8 @@ static void speak_events() {
 	if(m_start_month==easter_friday_month && m_start_day ==easter_friday)
 	{
 	//easter friday
-	speak_word_list = g_list_append(speak_word_list, "easter");
-	speak_word_list = g_list_append(speak_word_list, "friday");
+	holiday_word_list = g_list_append(holiday_word_list, "easter");
+	holiday_word_list = g_list_append(holiday_word_list, "friday");
 	}
 	g_date_add_days(easter_date,3);
 	int easter_monday = g_date_get_day(easter_date); //easter monday
@@ -5115,8 +4466,8 @@ static void speak_events() {
 	if(m_start_month==easter_monday_month && m_start_day ==easter_monday)
 	{
 	//easter monday
-	speak_word_list = g_list_append(speak_word_list, "easter");
-	speak_word_list = g_list_append(speak_word_list, "monday");
+	holiday_word_list = g_list_append(holiday_word_list, "easter");
+	holiday_word_list = g_list_append(holiday_word_list, "monday");
 	}	
 	
 	//May complicated
@@ -5130,8 +4481,8 @@ static void speak_events() {
      int may_day = g_date_get_day(first_monday_may);
 
      if( m_start_day==may_day) {		
-		 speak_word_list = g_list_append(speak_word_list, "bank");
-	     speak_word_list = g_list_append(speak_word_list, "holiday");
+		 holiday_word_list = g_list_append(holiday_word_list, "bank");
+	     holiday_word_list = g_list_append(holiday_word_list, "holiday");
 	 }
       
      int days_in_may =g_date_get_days_in_month (m_start_month, m_start_year);
@@ -5149,9 +4500,9 @@ static void speak_events() {
      int spring_bank_day = g_date_get_day(spring_bank);
      if (g_date_valid_dmy (spring_bank_day,m_start_month,m_start_year) && m_start_day ==spring_bank_day)
      {
-	 speak_word_list = g_list_append(speak_word_list, "spring");
-     speak_word_list = g_list_append(speak_word_list, "bank");
-     speak_word_list = g_list_append(speak_word_list, "holiday");     
+	 holiday_word_list = g_list_append(holiday_word_list, "spring");
+     holiday_word_list = g_list_append(holiday_word_list, "bank");
+     holiday_word_list = g_list_append(holiday_word_list, "holiday");     
      }
 	} //m_start_month ==5 (May)
 	
@@ -5183,15 +4534,53 @@ static void speak_events() {
 	if (g_date_valid_dmy (august_bank_day,m_start_month,m_start_year) && m_start_day ==august_bank_day)
 	{
 	//return " August Bank Holiday ";   //august bank holiday	
-	speak_word_list = g_list_append(speak_word_list, "bank");
-	speak_word_list = g_list_append(speak_word_list, "holiday"); 
+	holiday_word_list = g_list_append(holiday_word_list, "bank");
+	holiday_word_list = g_list_append(holiday_word_list, "holiday"); 
 	}
 
     } //m_start_month==8 (august)
-		
-	} //if public holidays 
 	
+	return holiday_word_list;
+}
+//======================================================================
+// speak events
+//======================================================================
+static void speak_events() {
 
+	if(m_speak==0) return;
+	if (m_speaking ==TRUE) return;
+	
+	GList *speak_word_list = NULL;
+	
+	//---------------------------------------------------------------
+	
+	gchar *dow_str=get_day_of_week(m_start_day, m_start_month, m_start_year);	//get day of week
+	gchar *day_number_str=get_day_number_ordinal_string(m_start_day); //get day number
+	gchar *month_str=get_month_string(m_start_month); //get month
+	
+	speak_word_list = g_list_append(speak_word_list, dow_str);
+	speak_word_list = g_list_append(speak_word_list, day_number_str);
+	speak_word_list = g_list_append(speak_word_list, month_str);
+		
+	
+	//Check for public holidays and special days (Christmas, Easter, Fathers etc,.)
+	//---------------------------------------------------------------
+	if ((m_holidays ==1) && (is_public_holiday(m_start_day)))	
+	{
+		//markup public holidays
+		gpointer word_list_pointer;
+	    gchar* word_str;  
+		
+		GList *holiday_word_list = get_public_holiday_speak_list();
+		
+		for (int i =0; i < g_list_length(holiday_word_list); i++){		
+			word_list_pointer=g_list_nth_data(holiday_word_list,i);
+		    word_str=(gchar *)word_list_pointer;
+		    //gchar* word_str_lower= g_ascii_strdown(word_str,-1);
+		    speak_word_list = g_list_append(speak_word_list, word_str);			
+		}	
+		g_list_free(holiday_word_list);	
+	} //if public holidays 
 	
 	//cycle through day events adding event titles
 	GArray *day_events_arry =g_array_new(FALSE, FALSE, sizeof(CALENDAR_TYPE_EVENT));
@@ -5204,8 +4593,7 @@ static void speak_events() {
 	int event_number = day_events_arry->len;		
 	if (event_number ==0) {			
 	speak_word_list = g_list_append(speak_word_list, "no");
-	speak_word_list = g_list_append(speak_word_list, "events");
-	//speak_word_list = g_list_append(speak_word_list, "today");		
+	speak_word_list = g_list_append(speak_word_list, "events");			
 	} //if count=0		
 	else if(event_number ==1){		
 	speak_word_list = g_list_append(speak_word_list, "one");
@@ -5242,14 +4630,15 @@ static void speak_events() {
 		gint start_hour = 0;
 		gint start_min = 0;
 		gint is_allday = 0;
-		//gint is_priority = 0;
+		gint is_priority = 0;
 		
 		CalendarEvent *evt = g_array_index(day_events_arry, CalendarEvent *, i);
 		
 		g_object_get(evt, "summary", &summary_str, NULL);		
 		g_object_get(evt, "starthour", &start_hour, NULL);
 		g_object_get(evt, "startmin", &start_min, NULL);		
-		g_object_get(evt, "isallday", &is_allday, NULL);		
+		g_object_get(evt, "isallday", &is_allday, NULL);
+		g_object_get(evt, "ispriority", &is_priority, NULL);		
 		
 		//Get time first
 		gchar* hour_str="";
@@ -5258,72 +4647,80 @@ static void speak_events() {
 		
 		if(m_speak_time) {
 		
-		if(is_allday)
-		{
-		speak_word_list = g_list_append(speak_word_list, "all");
-		speak_word_list = g_list_append(speak_word_list, "day");
-		speak_word_list = g_list_append(speak_word_list, "event");
-		}		
-		else {		
+		if(!is_allday) {		
+		
 		if(m_12hour_format) {
 		
-		if(start_hour >=1 && start_hour<12) {
-		//AM
+		if (start_hour >= 13 && start_hour <= 23)
+		{
+		int s_hour = start_hour - 12;
+		ampm_str = "pm";					
+		hour_str =get_cardinal_string(s_hour);
+		}
+		if(start_hour == 12)
+		{
+		ampm_str = "pm";					
 		hour_str =get_cardinal_string(start_hour);
+		}
+		if(start_hour <12)
+		{
+		ampm_str = "am";					
+		hour_str =get_cardinal_string(start_hour);
+		}
 		
-		ampm_str="am";
 		speak_word_list = g_list_append(speak_word_list, hour_str);
 		
-		if(start_min!=0){
-		min_str=get_cardinal_string(start_min);				    
-		}
-		speak_word_list = g_list_append(speak_word_list, min_str);
-		speak_word_list = g_list_append(speak_word_list, ampm_str);				
-		}
-		else if(start_hour ==12) {
-		//PM
-		hour_str =get_cardinal_string(start_hour);
-		min_str=get_cardinal_string(start_min);
-		ampm_str="pm";
-		speak_word_list = g_list_append(speak_word_list, hour_str);
-		
-		if(start_min!=0){
-		min_str=get_cardinal_string(start_min);
-		speak_word_list = g_list_append(speak_word_list, min_str);
-		}				
-		speak_word_list = g_list_append(speak_word_list, ampm_str);
-		}
-		else if (start_hour >=13 && start_hour<=23) {
-		//PM
-		start_hour=start_hour-12;
-		hour_str =get_cardinal_string(start_hour);
-		min_str=get_cardinal_string(start_min);
-		ampm_str="pm";
-		speak_word_list = g_list_append(speak_word_list, hour_str);
-		if(start_min!=0){
+		if (start_min > 0 && start_min< 10)
+		{				
+		speak_word_list = g_list_append(speak_word_list, "o");
 		min_str=get_cardinal_string(start_min);
 		speak_word_list = g_list_append(speak_word_list, min_str);
 		}
-		speak_word_list = g_list_append(speak_word_list, ampm_str);				
-		}	
+		else if(start_min >=10)
+		{
+		min_str=get_cardinal_string(start_min);
+		speak_word_list = g_list_append(speak_word_list, min_str);
+		}
+		
+		speak_word_list = g_list_append(speak_word_list,ampm_str);
 		
 		} //12hour format
+		
 		else
 		{				
-		hour_str =get_cardinal_string(start_hour);
-		min_str=get_cardinal_string(start_min);
+		hour_str =get_cardinal_string(start_hour);	
 		speak_word_list = g_list_append(speak_word_list, hour_str);
-		speak_word_list = g_list_append(speak_word_list, min_str);			    				
-		} //24 hour format	
-		} //else not all_day		
+		
+		if (start_min > 0 && start_min < 10)
+		{				
+		speak_word_list = g_list_append(speak_word_list, "o");
+		min_str=get_cardinal_string(start_min);
+		speak_word_list = g_list_append(speak_word_list, min_str);
+		}
+		else if(start_min >=10)
+		{
+		min_str=get_cardinal_string(start_min);
+		speak_word_list = g_list_append(speak_word_list, min_str);
+		}			    				
+		} //24 hour format
+				
+		} //not allday	
 		}//m_speak_time
+	
 		
 		//now add event title
 		if(m_speak_event_words) {
 		gchar* summary_lower= g_ascii_strdown(summary_str,-1);		
-		gchar *event_title =get_event_title_word(summary_lower);		
-		speak_word_list = g_list_append(speak_word_list, event_title);
+		//gchar *event_title =get_event_title_word(summary_lower);		
+		speak_word_list = g_list_append(speak_word_list, summary_str);
 		}//m_speak_event_words	
+		
+		if(is_priority) {
+		speak_word_list = g_list_append(speak_word_list, "high");
+		speak_word_list = g_list_append(speak_word_list, "priority");
+		}		
+		
+		speak_word_list = g_list_append(speak_word_list, "space"); //space between events
 		
 	} //for
 	
@@ -5340,10 +4737,9 @@ static void speak_events() {
 		if(m_speak_upcoming && m_start_day==today && m_start_month ==month && m_start_year==year)  
 		{		
 			
-			GArray *evts_upcoming = get_upcoming_array(7); //next 7 days		
+			GArray *evts_upcoming = get_upcoming_array(m_upcoming_days); //next days		
 			int num_upcoming = evts_upcoming->len;	
-			
-			
+						
 			if (num_upcoming ==0) {			
 			speak_word_list = g_list_append(speak_word_list, "no");
 			speak_word_list = g_list_append(speak_word_list, "upcoming");
@@ -5392,7 +4788,9 @@ static void speak_events() {
 				if(is_priority) {
 					speak_word_list = g_list_append(speak_word_list, "high");
 					speak_word_list = g_list_append(speak_word_list, "priority");
-				}				
+				}
+			 speak_word_list = g_list_append(speak_word_list, "space"); //space between events	
+			 speak_word_list = g_list_append(speak_word_list, "space");			
 			}
 					
 		}//m_speak_upcoming	
@@ -5407,805 +4805,8 @@ static void speak_events() {
 	//create word array using list size
 	unsigned char *word_arrays[word_number]; 
 	unsigned int word_arrays_sizes[word_number];
-	//load hex words into array
-		
-	
-	//load word array
-	for(int i=0; i < word_number; i++)
-	{
-		word_list_pointer=g_list_nth_data(speak_word_list,i);
-		word_str=(gchar *)word_list_pointer;
-		gchar* word_str_lower= g_ascii_strdown(word_str,-1);	//make sure lower			
-		//load up arrays
-		//dummy
-		
-		word_arrays[i] = (unsigned char*)malloc(empty_raw_len * sizeof(unsigned char));
-		word_arrays[i] = empty_raw;
-		word_arrays_sizes[i]=empty_raw_len; 
-				
-		if (g_strcmp0(word_str_lower,"monday")==0) {		
-		word_arrays[i] = (unsigned char*)malloc(monday_raw_len * sizeof(unsigned char));
-		word_arrays[i] = monday_raw;
-		word_arrays_sizes[i]=monday_raw_len;
-	    } 		
-		if (g_strcmp0(word_str_lower,"tuesday")==0) {			
-		word_arrays[i] = (unsigned char*)malloc(tuesday_raw_len * sizeof(unsigned char));
-		word_arrays[i] = tuesday_raw;
-		word_arrays_sizes[i]=tuesday_raw_len;
-	    }
-		if (g_strcmp0(word_str_lower,"wednesday")==0) {		
-		word_arrays[i] = (unsigned char*)malloc(wednesday_raw_len * sizeof(unsigned char));
-		word_arrays[i] = wednesday_raw;
-		word_arrays_sizes[i]=wednesday_raw_len; 
-	    }
-		if (g_strcmp0(word_str_lower,"thursday")==0) {	
-		word_arrays[i] = (unsigned char*)malloc(thursday_raw_len * sizeof(unsigned char));
-		word_arrays[i] = thursday_raw;
-		word_arrays_sizes[i]=thursday_raw_len; 
-	    }
-	    if (g_strcmp0(word_str_lower,"friday")==0) {	
-		word_arrays[i] = (unsigned char*)malloc(friday_raw_len * sizeof(unsigned char));
-		word_arrays[i] = friday_raw;
-		word_arrays_sizes[i]=friday_raw_len;  
-	    }
-		if (g_strcmp0(word_str_lower,"saturday")==0) {		
-		word_arrays[i] = (unsigned char*)malloc(saturday_raw_len * sizeof(unsigned char));
-		word_arrays[i] = saturday_raw;
-		word_arrays_sizes[i]=saturday_raw_len; 
-	    }
-	    if (g_strcmp0(word_str_lower,"sunday")==0) {		
-		word_arrays[i] = (unsigned char*)malloc(sunday_raw_len * sizeof(unsigned char));
-		word_arrays[i] = sunday_raw;
-		word_arrays_sizes[i]=sunday_raw_len;
-	    }
-	    
-	    if (g_strcmp0(word_str_lower,"first")==0) {		
-		word_arrays[i] = (unsigned char*)malloc(first_raw_len * sizeof(unsigned char));
-		word_arrays[i] = first_raw;
-		word_arrays_sizes[i]=first_raw_len;	
-	    }
-	    if (g_strcmp0(word_str_lower,"second")==0) {		
-		word_arrays[i] = (unsigned char*)malloc(second_raw_len * sizeof(unsigned char));
-		word_arrays[i] = second_raw;
-		word_arrays_sizes[i]=second_raw_len;	
-	    }
-	    if (g_strcmp0(word_str_lower,"third")==0) {		
-		word_arrays[i] = (unsigned char*)malloc(third_raw_len * sizeof(unsigned char));
-		word_arrays[i] = third_raw;
-		word_arrays_sizes[i]=third_raw_len;	
-	    }
-	    if (g_strcmp0(word_str_lower,"fourth")==0) {		
-		word_arrays[i] = (unsigned char*)malloc(fourth_raw_len * sizeof(unsigned char));
-		word_arrays[i] = fourth_raw;
-		word_arrays_sizes[i]=fourth_raw_len;	
-	    }
-	    if (g_strcmp0(word_str_lower,"fifth")==0) {		
-		word_arrays[i] = (unsigned char*)malloc(fifth_raw_len * sizeof(unsigned char));
-		word_arrays[i] = fifth_raw;
-		word_arrays_sizes[i]=fifth_raw_len;	
-	    }
-	    if (g_strcmp0(word_str_lower,"sixth")==0) {		
-		word_arrays[i] = (unsigned char*)malloc(sixth_raw_len * sizeof(unsigned char));
-		word_arrays[i] = sixth_raw;
-		word_arrays_sizes[i]=sixth_raw_len;	
-	    }
-	    if (g_strcmp0(word_str_lower,"seventh")==0) {		
-		word_arrays[i] = (unsigned char*)malloc(seventh_raw_len * sizeof(unsigned char));
-		word_arrays[i] = seventh_raw;
-		word_arrays_sizes[i]=seventh_raw_len;	
-	    }
-	    if (g_strcmp0(word_str_lower,"eighth")==0) {		
-		word_arrays[i] = (unsigned char*)malloc(eighth_raw_len * sizeof(unsigned char));
-		word_arrays[i] = eighth_raw;
-		word_arrays_sizes[i]=eighth_raw_len;	
-	    }
-	    if (g_strcmp0(word_str_lower,"ninth")==0) {		
-		word_arrays[i] = (unsigned char*)malloc(ninth_raw_len * sizeof(unsigned char));
-		word_arrays[i] = ninth_raw;
-		word_arrays_sizes[i]=ninth_raw_len;	
-	    }
-	    if (g_strcmp0(word_str_lower,"tenth")==0) {		
-		word_arrays[i] = (unsigned char*)malloc(tenth_raw_len * sizeof(unsigned char));
-		word_arrays[i] = tenth_raw;
-		word_arrays_sizes[i]=tenth_raw_len;	
-	    }
-	    if (g_strcmp0(word_str_lower,"eleventh")==0) {		
-		word_arrays[i] = (unsigned char*)malloc(eleventh_raw_len * sizeof(unsigned char));
-		word_arrays[i] = eleventh_raw;
-		word_arrays_sizes[i]=eleventh_raw_len;	
-	    }
-	    if (g_strcmp0(word_str_lower,"twelfth")==0) {		
-		word_arrays[i] = (unsigned char*)malloc(twelfth_raw_len * sizeof(unsigned char));
-		word_arrays[i] = twelfth_raw;
-		word_arrays_sizes[i]=twelfth_raw_len;	
-	    }
-		if (g_strcmp0(word_str_lower,"thirteenth")==0) {		
-		word_arrays[i] = (unsigned char*)malloc(thirteenth_raw_len * sizeof(unsigned char));
-		word_arrays[i] = thirteenth_raw;;
-		word_arrays_sizes[i]=thirteenth_raw_len;	
-	    }
-	    if (g_strcmp0(word_str_lower,"fourteenth")==0) {		
-		word_arrays[i] = (unsigned char*)malloc(fourteenth_raw_len * sizeof(unsigned char));
-		word_arrays[i] = fourteenth_raw;
-		word_arrays_sizes[i]=fourteenth_raw_len;	
-	    }		
-		if (g_strcmp0(word_str_lower,"fifteenth")==0) {		
-		word_arrays[i] = (unsigned char*)malloc(fifteenth_raw_len * sizeof(unsigned char));
-		word_arrays[i] = fifteenth_raw;;
-		word_arrays_sizes[i]=fifteenth_raw_len;	
-	    }
-	    if (g_strcmp0(word_str_lower,"sixteenth")==0) {		
-		word_arrays[i] = (unsigned char*)malloc(sixteenth_raw_len * sizeof(unsigned char));
-		word_arrays[i] = sixteenth_raw;
-		word_arrays_sizes[i]=sixteenth_raw_len;	
-	    }
-	    if (g_strcmp0(word_str_lower,"seventeenth")==0) {		
-		word_arrays[i] = (unsigned char*)malloc(seventeenth_raw_len * sizeof(unsigned char));
-		word_arrays[i] = seventeenth_raw;
-		word_arrays_sizes[i]=seventeenth_raw_len;	
-	    }
-	    if (g_strcmp0(word_str_lower,"eighteenth")==0) {		
-		word_arrays[i] = (unsigned char*)malloc(eighteenth_raw_len * sizeof(unsigned char));
-		word_arrays[i] = eighteenth_raw;
-		word_arrays_sizes[i]=eighteenth_raw_len;	
-	    }
-	    if (g_strcmp0(word_str_lower,"nineteenth")==0) {		
-		word_arrays[i] = (unsigned char*)malloc(nineteenth_raw_len * sizeof(unsigned char));
-		word_arrays[i] = nineteenth_raw;
-		word_arrays_sizes[i]=nineteenth_raw_len;	
-	    }						
-		if (g_strcmp0(word_str_lower,"twentieth")==0) {		
-		word_arrays[i] = (unsigned char*)malloc(twentieth_raw_len * sizeof(unsigned char));
-		word_arrays[i] = twentieth_raw;
-		word_arrays_sizes[i]=twentieth_raw_len;	
-	    }
-	    if (g_strcmp0(word_str_lower,"twentyfirst")==0) {		
-		word_arrays[i] = (unsigned char*)malloc(twentyfirst_raw_len * sizeof(unsigned char));
-		word_arrays[i] = twentyfirst_raw;
-		word_arrays_sizes[i]=twentyfirst_raw_len;	
-	    }		
-		if (g_strcmp0(word_str_lower,"twentysecond")==0) {		
-		word_arrays[i] = (unsigned char*)malloc(twentysecond_raw_len * sizeof(unsigned char));
-		word_arrays[i] = twentysecond_raw;
-		word_arrays_sizes[i]=twentysecond_raw_len;	
-	    }
-	    if (g_strcmp0(word_str_lower,"twentythird")==0) {		
-		word_arrays[i] = (unsigned char*)malloc(twentythird_raw_len * sizeof(unsigned char));
-		word_arrays[i] = twentythird_raw;
-		word_arrays_sizes[i]=twentythird_raw_len;	
-	    }
-	    if (g_strcmp0(word_str_lower,"twentyfourth")==0) {		
-		word_arrays[i] = (unsigned char*)malloc(twentyfourth_raw_len * sizeof(unsigned char));
-		word_arrays[i] = twentyfourth_raw;
-		word_arrays_sizes[i]=twentyfourth_raw_len;	
-	    }
-	    if (g_strcmp0(word_str_lower,"twentyfifth")==0) {		
-		word_arrays[i] = (unsigned char*)malloc(twentyfifth_raw_len * sizeof(unsigned char));
-		word_arrays[i] = twentyfifth_raw;
-		word_arrays_sizes[i]=twentyfifth_raw_len;	
-	    }		
-		if (g_strcmp0(word_str_lower,"twentysixth")==0) {		
-		word_arrays[i] = (unsigned char*)malloc(twentysixth_raw_len * sizeof(unsigned char));
-		word_arrays[i] = twentysixth_raw;
-		word_arrays_sizes[i]=twentysixth_raw_len;	
-	    }
-	    if (g_strcmp0(word_str_lower,"twentyseventh")==0) {		
-		word_arrays[i] = (unsigned char*)malloc(twentyseventh_raw_len * sizeof(unsigned char));
-		word_arrays[i] = twentyseventh_raw;
-		word_arrays_sizes[i]=twentyseventh_raw_len;	
-	    }		
-		if (g_strcmp0(word_str_lower,"twentyeighth")==0) {		
-		word_arrays[i] = (unsigned char*)malloc(twentyeighth_raw_len * sizeof(unsigned char));
-		word_arrays[i] = twentyeighth_raw;
-		word_arrays_sizes[i]=twentyeighth_raw_len;	
-	    }
-	    if (g_strcmp0(word_str_lower,"twentynineth")==0) {		
-		word_arrays[i] = (unsigned char*)malloc(twentynineth_raw_len * sizeof(unsigned char));
-		word_arrays[i] = twentynineth_raw;
-		word_arrays_sizes[i]=twentynineth_raw_len;	
-	    }
-	    if (g_strcmp0(word_str_lower,"thirtieth")==0) {	
-		word_arrays[i] = (unsigned char*)malloc(thirtieth_raw_len * sizeof(unsigned char));
-		word_arrays[i] = thirtieth_raw;
-		word_arrays_sizes[i]=thirtieth_raw_len;	
-	    }
-	    if (g_strcmp0(word_str_lower,"thirtyfirst")==0) {
-		word_arrays[i] = (unsigned char*)malloc(thirtyfirst_raw_len * sizeof(unsigned char));
-		word_arrays[i] = thirtyfirst_raw;
-		word_arrays_sizes[i]=thirtyfirst_raw_len;	
-	    }						
-		
-		if (g_strcmp0(word_str_lower,"january")==0) {		
-		word_arrays[i] = (unsigned char*)malloc(january_raw_len * sizeof(unsigned char));
-		word_arrays[i] = january_raw;
-		word_arrays_sizes[i]=january_raw_len;	
-	    }
-	    if (g_strcmp0(word_str_lower,"february")==0) {		
-		word_arrays[i] = (unsigned char*)malloc(february_raw_len * sizeof(unsigned char));
-		word_arrays[i] = february_raw;
-		word_arrays_sizes[i]=february_raw_len;	
-	    }		
-		if (g_strcmp0(word_str_lower,"march")==0) {		
-		word_arrays[i] = (unsigned char*)malloc(march_raw_len * sizeof(unsigned char));
-		word_arrays[i] = march_raw;
-		word_arrays_sizes[i]=march_raw_len;	
-	    }	
-		if (g_strcmp0(word_str_lower,"april")==0) {		
-		word_arrays[i] = (unsigned char*)malloc(april_raw_len * sizeof(unsigned char));
-		word_arrays[i] = april_raw;
-		word_arrays_sizes[i]=april_raw_len;	
-	    }	
-		if (g_strcmp0(word_str_lower,"may")==0) {		
-		word_arrays[i] = (unsigned char*)malloc(may_raw_len * sizeof(unsigned char));
-		word_arrays[i] = may_raw;
-		word_arrays_sizes[i]=may_raw_len;	
-	    }
-	    if (g_strcmp0(word_str_lower,"june")==0) {		
-		word_arrays[i] = (unsigned char*)malloc(june_raw_len * sizeof(unsigned char));
-		word_arrays[i] = june_raw;
-		word_arrays_sizes[i]=june_raw_len;	
-	    }		
-		if (g_strcmp0(word_str_lower,"july")==0) {		
-		word_arrays[i] = (unsigned char*)malloc(july_raw_len * sizeof(unsigned char));
-		word_arrays[i] = july_raw;
-		word_arrays_sizes[i]=july_raw_len;	
-	    }	
-		if (g_strcmp0(word_str_lower,"august")==0) {		
-		word_arrays[i] = (unsigned char*)malloc(august_raw_len * sizeof(unsigned char));
-		word_arrays[i] = august_raw;
-		word_arrays_sizes[i]=august_raw_len;	
-	    }
-	    if (g_strcmp0(word_str_lower,"september")==0) {		
-		word_arrays[i] = (unsigned char*)malloc(september_raw_len * sizeof(unsigned char));
-		word_arrays[i] = september_raw;
-		word_arrays_sizes[i]=september_raw_len;	
-	    }
-	    if (g_strcmp0(word_str_lower,"october")==0) {		
-		word_arrays[i] = (unsigned char*)malloc(october_raw_len * sizeof(unsigned char));
-		word_arrays[i] = october_raw;
-		word_arrays_sizes[i]=october_raw_len;	
-	    }
-	    if (g_strcmp0(word_str_lower,"november")==0) {		
-		word_arrays[i] = (unsigned char*)malloc(november_raw_len * sizeof(unsigned char));
-		word_arrays[i] = november_raw;
-		word_arrays_sizes[i]=november_raw_len;	
-	    }
-	    if (g_strcmp0(word_str_lower,"december")==0) {		
-		word_arrays[i] = (unsigned char*)malloc(december_raw_len * sizeof(unsigned char));
-		word_arrays[i] = december_raw;
-		word_arrays_sizes[i]=december_raw_len;	
-	    }					
-		
-	    //cardinals
-	    if (g_strcmp0(word_str_lower,"one")==0) {		
-		word_arrays[i] = (unsigned char*)malloc(one_raw_len * sizeof(unsigned char));
-		word_arrays[i] = one_raw;
-		word_arrays_sizes[i]=one_raw_len;
-	    }
-	     if (g_strcmp0(word_str_lower,"two")==0) {		
-		word_arrays[i] = (unsigned char*)malloc(two_raw_len * sizeof(unsigned char));
-		word_arrays[i] = two_raw;
-		word_arrays_sizes[i]=two_raw_len;
-	    }
-	     if (g_strcmp0(word_str_lower,"three")==0) {		
-		word_arrays[i] = (unsigned char*)malloc(three_raw_len * sizeof(unsigned char));
-		word_arrays[i] = three_raw;
-		word_arrays_sizes[i]=three_raw_len;
-	    }
-	     if (g_strcmp0(word_str_lower,"four")==0) {		
-		word_arrays[i] = (unsigned char*)malloc(four_raw_len * sizeof(unsigned char));
-		word_arrays[i] = four_raw;
-		word_arrays_sizes[i]=four_raw_len;
-	    }
-	     if (g_strcmp0(word_str_lower,"five")==0) {		
-		word_arrays[i] = (unsigned char*)malloc(five_raw_len * sizeof(unsigned char));
-		word_arrays[i] = five_raw;
-		word_arrays_sizes[i]=five_raw_len;
-	    }
-	     if (g_strcmp0(word_str_lower,"six")==0) {		
-		word_arrays[i] = (unsigned char*)malloc(six_raw_len * sizeof(unsigned char));
-		word_arrays[i] = six_raw;
-		word_arrays_sizes[i]=six_raw_len;
-	    }
-	     if (g_strcmp0(word_str_lower,"seven")==0) {		
-		word_arrays[i] = (unsigned char*)malloc(seven_raw_len * sizeof(unsigned char));
-		word_arrays[i] = seven_raw;
-		word_arrays_sizes[i]=seven_raw_len;
-	    }
-	     if (g_strcmp0(word_str_lower,"eight")==0) {		
-		word_arrays[i] = (unsigned char*)malloc(eight_raw_len * sizeof(unsigned char));
-		word_arrays[i] = eight_raw;
-		word_arrays_sizes[i]=eight_raw_len;
-	    }
-	     if (g_strcmp0(word_str_lower,"nine")==0) {		
-		word_arrays[i] = (unsigned char*)malloc(nine_raw_len * sizeof(unsigned char));
-		word_arrays[i] = nine_raw;
-		word_arrays_sizes[i]=nine_raw_len;
-	    }
-	     if (g_strcmp0(word_str_lower,"ten")==0) {		
-		word_arrays[i] = (unsigned char*)malloc(ten_raw_len * sizeof(unsigned char));
-		word_arrays[i] = ten_raw;
-		word_arrays_sizes[i]=ten_raw_len;
-	    }
-	     if (g_strcmp0(word_str_lower,"eleven")==0) {		
-		word_arrays[i] = (unsigned char*)malloc(eleven_raw_len * sizeof(unsigned char));
-		word_arrays[i] = eleven_raw;
-		word_arrays_sizes[i]=eleven_raw_len;
-	    }
-	     if (g_strcmp0(word_str_lower,"twelve")==0) {
-		word_arrays[i] = (unsigned char*)malloc(twelve_raw_len * sizeof(unsigned char));
-		word_arrays[i] = twelve_raw;
-		word_arrays_sizes[i]=twelve_raw_len;
-	    }
-	     if (g_strcmp0(word_str_lower,"thirteen")==0) {		
-		word_arrays[i] = (unsigned char*)malloc(thirteen_raw_len * sizeof(unsigned char));
-		word_arrays[i] = thirteen_raw;
-		word_arrays_sizes[i]=thirteen_raw_len;
-	    }
-	     if (g_strcmp0(word_str_lower,"fourteen")==0) {		
-		word_arrays[i] = (unsigned char*)malloc(fourteen_raw_len * sizeof(unsigned char));
-		word_arrays[i] = fourteen_raw;
-		word_arrays_sizes[i]=fourteen_raw_len;
-	    }	
-	     if (g_strcmp0(word_str_lower,"fifteen")==0) {		
-		word_arrays[i] = (unsigned char*)malloc(fifteen_raw_len * sizeof(unsigned char));
-		word_arrays[i] = fifteen_raw;
-		word_arrays_sizes[i]=fifteen_raw_len;
-	    }
-	     if (g_strcmp0(word_str_lower,"sixteen")==0) {		
-		word_arrays[i] = (unsigned char*)malloc(sixteen_raw_len * sizeof(unsigned char));
-		word_arrays[i] = sixteen_raw;
-		word_arrays_sizes[i]=sixteen_raw_len;
-	    }
-	     if (g_strcmp0(word_str_lower,"seventeen")==0) {		
-		word_arrays[i] = (unsigned char*)malloc(seventeen_raw_len * sizeof(unsigned char));
-		word_arrays[i] = seventeen_raw;
-		word_arrays_sizes[i]=seventeen_raw_len;
-	    }
-	     if (g_strcmp0(word_str_lower,"eighteen")==0) {		
-		word_arrays[i] = (unsigned char*)malloc(eighteen_raw_len * sizeof(unsigned char));
-		word_arrays[i] = eighteen_raw;
-		word_arrays_sizes[i]=eighteen_raw_len;
-	    }
-	     if (g_strcmp0(word_str_lower,"nineteen")==0) {		
-		word_arrays[i] = (unsigned char*)malloc(nineteen_raw_len * sizeof(unsigned char));
-		word_arrays[i] = nineteen_raw;
-		word_arrays_sizes[i]=nineteen_raw_len;
-	    }
-	     if (g_strcmp0(word_str_lower,"twenty")==0) {		
-		word_arrays[i] = (unsigned char*)malloc(twenty_raw_len * sizeof(unsigned char));
-		word_arrays[i] = twenty_raw;
-		word_arrays_sizes[i]=twenty_raw_len;
-	    }
-	     if (g_strcmp0(word_str_lower,"twentyone")==0) {		
-		word_arrays[i] = (unsigned char*)malloc(twentyone_raw_len * sizeof(unsigned char));
-		word_arrays[i] = twentyone_raw;
-		word_arrays_sizes[i]=twentyone_raw_len;
-	    }
-	     if (g_strcmp0(word_str_lower,"twentytwo")==0) {		
-		word_arrays[i] = (unsigned char*)malloc(twentytwo_raw_len * sizeof(unsigned char));
-		word_arrays[i] = twentytwo_raw;
-		word_arrays_sizes[i]=twentytwo_raw_len;
-	    }
-	     if (g_strcmp0(word_str_lower,"twentythree")==0) {		
-		word_arrays[i] = (unsigned char*)malloc(twentythree_raw_len * sizeof(unsigned char));
-		word_arrays[i] = twentythree_raw;
-		word_arrays_sizes[i]=twentythree_raw_len;
-	    }
-	     if (g_strcmp0(word_str_lower,"twentyfour")==0) {
-		word_arrays[i] = (unsigned char*)malloc(twentyfour_raw_len * sizeof(unsigned char));
-		word_arrays[i] = twentyfour_raw;
-		word_arrays_sizes[i]=twentyfour_raw_len;
-	    }
-	     if (g_strcmp0(word_str_lower,"twentyfive")==0) {		
-		word_arrays[i] = (unsigned char*)malloc(twentyfive_raw_len * sizeof(unsigned char));
-		word_arrays[i] = twentyfive_raw;
-		word_arrays_sizes[i]=twentyfive_raw_len;
-	    }
-	     if (g_strcmp0(word_str_lower,"twentysix")==0) {		
-		word_arrays[i] = (unsigned char*)malloc(twentysix_raw_len * sizeof(unsigned char));
-		word_arrays[i] = twentysix_raw;
-		word_arrays_sizes[i]=twentysix_raw_len;
-	    }	
-	     if (g_strcmp0(word_str_lower,"twentyseven")==0) {		
-		word_arrays[i] = (unsigned char*)malloc(twentyseven_raw_len * sizeof(unsigned char));
-		word_arrays[i] = twentyseven_raw;
-		word_arrays_sizes[i]=twentyseven_raw_len;
-	    }
-	     if (g_strcmp0(word_str_lower,"twentyeight")==0) {		
-		word_arrays[i] = (unsigned char*)malloc(twentyeight_raw_len * sizeof(unsigned char));
-		word_arrays[i] = twentyeight_raw;
-		word_arrays_sizes[i]=twentyeight_raw_len;
-	    }
-	     if (g_strcmp0(word_str_lower,"twentynine")==0) {		
-		word_arrays[i] = (unsigned char*)malloc(twentynine_raw_len * sizeof(unsigned char));
-		word_arrays[i] = twentynine_raw;
-		word_arrays_sizes[i]=twentynine_raw_len;
-	    }
-	     if (g_strcmp0(word_str_lower,"thirty")==0) {		
-		word_arrays[i] = (unsigned char*)malloc(thirty_raw_len * sizeof(unsigned char));
-		word_arrays[i] = thirty_raw;
-		word_arrays_sizes[i]=thirty_raw_len;
-	    }
-	     if (g_strcmp0(word_str_lower,"thirtyone")==0) {		
-		word_arrays[i] = (unsigned char*)malloc(thirtyone_raw_len * sizeof(unsigned char));
-		word_arrays[i] = thirtyone_raw;
-		word_arrays_sizes[i]=thirtyone_raw_len;
-	    }
-	     if (g_strcmp0(word_str_lower,"thirtytwo")==0) {		
-		word_arrays[i] = (unsigned char*)malloc(thirtytwo_raw_len * sizeof(unsigned char));
-		word_arrays[i] = thirtytwo_raw;
-		word_arrays_sizes[i]=thirtytwo_raw_len;
-	    }
-	     if (g_strcmp0(word_str_lower,"thirtythree")==0) {		
-		word_arrays[i] = (unsigned char*)malloc(thirtythree_raw_len * sizeof(unsigned char));
-		word_arrays[i] = thirtythree_raw;
-		word_arrays_sizes[i]=thirtythree_raw_len;
-	    }
-	     if (g_strcmp0(word_str_lower,"thirtyfour")==0) {		
-		word_arrays[i] = (unsigned char*)malloc(thirtyfour_raw_len * sizeof(unsigned char));
-		word_arrays[i] = thirtyfour_raw;
-		word_arrays_sizes[i]=thirtyfour_raw_len;
-	    }
-	     if (g_strcmp0(word_str_lower,"thirtyfive")==0) {		
-		word_arrays[i] = (unsigned char*)malloc(thirtyfive_raw_len * sizeof(unsigned char));
-		word_arrays[i] = thirtyfive_raw;
-		word_arrays_sizes[i]=thirtyfive_raw_len;
-	    }
-	     if (g_strcmp0(word_str_lower,"thirtysix")==0) {		
-		word_arrays[i] = (unsigned char*)malloc(thirtysix_raw_len * sizeof(unsigned char));
-		word_arrays[i] = thirtysix_raw;
-		word_arrays_sizes[i]=thirtysix_raw_len;
-	    }
-	     if (g_strcmp0(word_str_lower,"thirtyseven")==0) {		
-		word_arrays[i] = (unsigned char*)malloc(thirtyseven_raw_len * sizeof(unsigned char));
-		word_arrays[i] = thirtyseven_raw;
-		word_arrays_sizes[i]=thirtyseven_raw_len;
-	    }
-	     if (g_strcmp0(word_str_lower,"thirtyeight")==0) {		
-		word_arrays[i] = (unsigned char*)malloc(thirtyeight_raw_len * sizeof(unsigned char));
-		word_arrays[i] = thirtyeight_raw;
-		word_arrays_sizes[i]=thirtyeight_raw_len;
-	    }
-	     if (g_strcmp0(word_str_lower,"thirtynine")==0) {		
-		word_arrays[i] = (unsigned char*)malloc(thirtynine_raw_len * sizeof(unsigned char));
-		word_arrays[i] = thirtynine_raw;
-		word_arrays_sizes[i]=thirtynine_raw_len;
-	    }
-	     if (g_strcmp0(word_str_lower,"forty")==0) {		
-		word_arrays[i] = (unsigned char*)malloc(forty_raw_len * sizeof(unsigned char));
-		word_arrays[i] = forty_raw;
-		word_arrays_sizes[i]=forty_raw_len;
-	    }
-	     if (g_strcmp0(word_str_lower,"fortyone")==0) {		
-		word_arrays[i] = (unsigned char*)malloc(fortyone_raw_len * sizeof(unsigned char));
-		word_arrays[i] = fortyone_raw;
-		word_arrays_sizes[i]=fortyone_raw_len;
-	    }
-	     if (g_strcmp0(word_str_lower,"fortytwo")==0) {		
-		word_arrays[i] = (unsigned char*)malloc(fortytwo_raw_len * sizeof(unsigned char));
-		word_arrays[i] = fortytwo_raw;
-		word_arrays_sizes[i]=fortythree_raw_len;
-	    }
-	     if (g_strcmp0(word_str_lower,"fortythree")==0) {		
-		word_arrays[i] = (unsigned char*)malloc(fortythree_raw_len * sizeof(unsigned char));
-		word_arrays[i] = fortythree_raw;
-		word_arrays_sizes[i]=fortythree_raw_len;
-	    }
-	     if (g_strcmp0(word_str_lower,"fortyfour")==0) {		
-		word_arrays[i] = (unsigned char*)malloc(fortyfour_raw_len * sizeof(unsigned char));
-		word_arrays[i] = fortyfour_raw;
-		word_arrays_sizes[i]=fortyfour_raw_len;
-	    }
-	     if (g_strcmp0(word_str_lower,"fortyfive")==0) {		
-		word_arrays[i] = (unsigned char*)malloc(fortyfive_raw_len * sizeof(unsigned char));
-		word_arrays[i] = fortyfive_raw;
-		word_arrays_sizes[i]=fortyfive_raw_len;
-	    }
-	     if (g_strcmp0(word_str_lower,"fortysix")==0) {		
-		word_arrays[i] = (unsigned char*)malloc(fortysix_raw_len * sizeof(unsigned char));
-		word_arrays[i] = fortysix_raw;
-		word_arrays_sizes[i]=fortysix_raw_len;
-	    }
-	     if (g_strcmp0(word_str_lower,"fortyseven")==0) {		
-		word_arrays[i] = (unsigned char*)malloc(fortyseven_raw_len * sizeof(unsigned char));
-		word_arrays[i] = fortyseven_raw;
-		word_arrays_sizes[i]=fortyseven_raw_len;
-	    }
-	     if (g_strcmp0(word_str_lower,"fortyeight")==0) {		
-		word_arrays[i] = (unsigned char*)malloc(fortyeight_raw_len * sizeof(unsigned char));
-		word_arrays[i] = fortyeight_raw;
-		word_arrays_sizes[i]=fortyeight_raw_len;
-	    }
-	     if (g_strcmp0(word_str_lower,"fortynine")==0) {		
-		word_arrays[i] = (unsigned char*)malloc(fortynine_raw_len * sizeof(unsigned char));
-		word_arrays[i] = fortynine_raw;
-		word_arrays_sizes[i]=fortynine_raw_len;
-	    }
-	     if (g_strcmp0(word_str_lower,"fifty")==0) {		
-		word_arrays[i] = (unsigned char*)malloc(fifty_raw_len * sizeof(unsigned char));
-		word_arrays[i] = fifty_raw;
-		word_arrays_sizes[i]=fifty_raw_len;
-	    }																																																																																																
-	      if (g_strcmp0(word_str_lower,"fiftyone")==0) {		
-		word_arrays[i] = (unsigned char*)malloc(fiftyone_raw_len * sizeof(unsigned char));
-		word_arrays[i] = fiftyone_raw;
-		word_arrays_sizes[i]=fiftyone_raw_len;
-	    }
-	      if (g_strcmp0(word_str_lower,"fiftytwo")==0) {		
-		word_arrays[i] = (unsigned char*)malloc(fiftytwo_raw_len * sizeof(unsigned char));
-		word_arrays[i] = fiftytwo_raw;
-		word_arrays_sizes[i]=fiftytwo_raw_len;
-	    }
-	      if (g_strcmp0(word_str_lower,"fiftythree")==0) {		
-		word_arrays[i] = (unsigned char*)malloc(fiftythree_raw_len * sizeof(unsigned char));
-		word_arrays[i] = fiftythree_raw;
-		word_arrays_sizes[i]=fiftythree_raw_len;
-	    }
-	      if (g_strcmp0(word_str_lower,"fiftyfour")==0) {		
-		word_arrays[i] = (unsigned char*)malloc(fiftyfour_raw_len * sizeof(unsigned char));
-		word_arrays[i] = fiftyfour_raw;
-		word_arrays_sizes[i]=fiftyfour_raw_len;
-	    }
-	      if (g_strcmp0(word_str_lower,"fiftyfive")==0) {		
-		word_arrays[i] = (unsigned char*)malloc(fiftyfive_raw_len * sizeof(unsigned char));
-		word_arrays[i] = fiftyfive_raw;
-		word_arrays_sizes[i]=fiftyfive_raw_len;
-	    }
-	      if (g_strcmp0(word_str_lower,"fiftysix")==0) {		
-		word_arrays[i] = (unsigned char*)malloc(fiftysix_raw_len * sizeof(unsigned char));
-		word_arrays[i] = fiftysix_raw;
-		word_arrays_sizes[i]=fiftysix_raw_len;
-	    }
-	      if (g_strcmp0(word_str_lower,"fiftyseven")==0) {		
-		word_arrays[i] = (unsigned char*)malloc(fiftyseven_raw_len * sizeof(unsigned char));
-		word_arrays[i] = fiftyseven_raw;
-		word_arrays_sizes[i]=fiftyseven_raw_len;
-	    }
-	      if (g_strcmp0(word_str_lower,"fiftyeight")==0) {		
-		word_arrays[i] = (unsigned char*)malloc(fiftyeight_raw_len * sizeof(unsigned char));
-		word_arrays[i] = fiftyeight_raw;
-		word_arrays_sizes[i]=fiftyeight_raw_len;
-	    }
-	      if (g_strcmp0(word_str_lower,"fiftynine")==0) {		
-		word_arrays[i] = (unsigned char*)malloc(fiftynine_raw_len * sizeof(unsigned char));
-		word_arrays[i] = fiftynine_raw;
-		word_arrays_sizes[i]=fiftynine_raw_len;
-	    }
-	    
-	    
-	    //words
-	     //A words   
-	    if (g_strcmp0(word_str_lower,"all")==0) {		
-		word_arrays[i] = (unsigned char*)malloc(all_raw_len * sizeof(unsigned char));
-		word_arrays[i] = all_raw;
-		word_arrays_sizes[i]=all_raw_len;
-	    }
-	    if (g_strcmp0(word_str_lower,"am")==0) {		
-		word_arrays[i] = (unsigned char*)malloc(am_raw_len * sizeof(unsigned char));
-		word_arrays[i] = am_raw;
-		word_arrays_sizes[i]=am_raw_len;
-	    }
-	    if (g_strcmp0(word_str_lower,"activity")==0) {		
-		word_arrays[i] = (unsigned char*)malloc(activity_raw_len * sizeof(unsigned char));
-		word_arrays[i] = activity_raw;
-		word_arrays_sizes[i]=activity_raw_len;	
-	    }
-	    if (g_strcmp0(word_str_lower,"anniversary")==0) {		
-		word_arrays[i] = (unsigned char*)malloc(anniversary_raw_len * sizeof(unsigned char));
-		word_arrays[i] = anniversary_raw;
-		word_arrays_sizes[i]=anniversary_raw_len;	
-	    }		
-	    if (g_strcmp0(word_str_lower,"appointment")==0) {		
-		word_arrays[i] = (unsigned char*)malloc(appointment_raw_len * sizeof(unsigned char));
-		word_arrays[i] = appointment_raw;
-		word_arrays_sizes[i]=appointment_raw_len;	
-	    }	
-	    
-	    //B words
-	     if (g_strcmp0(word_str_lower,"bank")==0) {		
-		word_arrays[i] = (unsigned char*)malloc(bank_raw_len * sizeof(unsigned char));
-		word_arrays[i] = bank_raw;
-		word_arrays_sizes[i]=bank_raw_len;	
-	    }
-	     if (g_strcmp0(word_str_lower,"birthday")==0) {		
-		word_arrays[i] = (unsigned char*)malloc(birthday_raw_len * sizeof(unsigned char));
-		word_arrays[i] = birthday_raw;
-		word_arrays_sizes[i]=birthday_raw_len;	
-	    }
-	     if (g_strcmp0(word_str_lower,"boxing")==0) {		
-		word_arrays[i] = (unsigned char*)malloc(boxing_raw_len * sizeof(unsigned char));
-		word_arrays[i] = boxing_raw;
-		word_arrays_sizes[i]=boxing_raw_len;	
-	    }		
-	    //c-words
-	     if (g_strcmp0(word_str_lower,"cabbie")==0) {		
-		word_arrays[i] = (unsigned char*)malloc(cabbie_raw_len * sizeof(unsigned char));
-		word_arrays[i] = cabbie_raw;
-		word_arrays_sizes[i]=cabbie_raw_len;	
-	    }
-	     if (g_strcmp0(word_str_lower,"cafe")==0) {		
-		word_arrays[i] = (unsigned char*)malloc(cafe_raw_len * sizeof(unsigned char));
-		word_arrays[i] = cafe_raw;
-		word_arrays_sizes[i]=cafe_raw_len;	
-	    }
-	     if (g_strcmp0(word_str_lower,"car")==0) {		
-		word_arrays[i] = (unsigned char*)malloc(car_raw_len * sizeof(unsigned char));
-		word_arrays[i] = car_raw;
-		word_arrays_sizes[i]=car_raw_len;	
-	    }
-	    if (g_strcmp0(word_str_lower,"christmas")==0) {		
-		word_arrays[i] = (unsigned char*)malloc(christmas_raw_len * sizeof(unsigned char));
-		word_arrays[i] = christmas_raw;
-		word_arrays_sizes[i]=christmas_raw_len;	
-	    }				
-	    
-	    //D words
-	    if (g_strcmp0(word_str_lower,"day")==0) {		
-		word_arrays[i] = (unsigned char*)malloc(day_raw_len * sizeof(unsigned char));
-		word_arrays[i] = day_raw;
-		word_arrays_sizes[i]=day_raw_len;
-	    }
-	    if (g_strcmp0(word_str_lower,"dentist")==0) {		
-		word_arrays[i] = (unsigned char*)malloc(dentist_raw_len * sizeof(unsigned char));
-		word_arrays[i] = dentist_raw;
-		word_arrays_sizes[i]=dentist_raw_len;	
-	    }
-	    if (g_strcmp0(word_str_lower,"doctor")==0) {		
-		word_arrays[i] = (unsigned char*)malloc(doctor_raw_len * sizeof(unsigned char));
-		word_arrays[i] = doctor_raw;
-		word_arrays_sizes[i]=doctor_raw_len;	
-	    }
-	    
-	    // E words
-	    if (g_strcmp0(word_str_lower,"easter")==0) {		
-		word_arrays[i] = (unsigned char*)malloc(easter_raw_len * sizeof(unsigned char));
-		word_arrays[i] = easter_raw;
-		word_arrays_sizes[i]=easter_raw_len;
-	    }
-	    if (g_strcmp0(word_str_lower,"event")==0) {		
-		word_arrays[i] = (unsigned char*)malloc(event_raw_len * sizeof(unsigned char));
-		word_arrays[i] = event_raw;
-		word_arrays_sizes[i]=event_raw_len;
-	    }
-	    if (g_strcmp0(word_str_lower,"events")==0) {		
-		word_arrays[i] = (unsigned char*)malloc(events_raw_len * sizeof(unsigned char));
-		word_arrays[i] = events_raw;
-		word_arrays_sizes[i]=events_raw_len;
-	    }
-	    //F words
-	    
-	    if (g_strcmp0(word_str_lower,"family")==0) {		
-		word_arrays[i] = (unsigned char*)malloc(family_raw_len * sizeof(unsigned char));
-		word_arrays[i] = family_raw;
-		word_arrays_sizes[i]=family_raw_len;	
-	    }
-	    if (g_strcmp0(word_str_lower,"funeral")==0) {
-		g_print("funeral detected\n");		
-		word_arrays[i] = (unsigned char*)malloc(funeral_raw_len  * sizeof(unsigned char));
-		word_arrays[i] = funeral_raw;
-		word_arrays_sizes[i]=funeral_raw_len;	
-	    }			
-	    //H words
-	     if (g_strcmp0(word_str_lower,"high")==0) {
-		word_arrays[i] = (unsigned char*)malloc(high_raw_len * sizeof(unsigned char));
-		word_arrays[i] = high_raw;
-		word_arrays_sizes[i]=high_raw_len;	
-	    }	   
-	     if (g_strcmp0(word_str_lower,"holiday")==0) {
-		word_arrays[i] = (unsigned char*)malloc(holiday_raw_len * sizeof(unsigned char));
-		word_arrays[i] = holiday_raw;
-		word_arrays_sizes[i]=holiday_raw_len;	
-	    }
-	    if (g_strcmp0(word_str_lower,"hospital")==0) {
-		word_arrays[i] = (unsigned char*)malloc(hospital_raw_len * sizeof(unsigned char));
-		word_arrays[i] = hospital_raw;
-		word_arrays_sizes[i]=hospital_raw_len;	
-	    }
-	    //M words
-	     
-	    if (g_strcmp0(word_str_lower,"meeting")==0) {
-		word_arrays[i] = (unsigned char*)malloc(meeting_raw_len * sizeof(unsigned char));
-		word_arrays[i] = meeting_raw;
-		word_arrays_sizes[i]=meeting_raw_len;	
-	    } 
-	     if (g_strcmp0(word_str_lower,"meetup")==0) {
-		word_arrays[i] = (unsigned char*)malloc(meetup_raw_len * sizeof(unsigned char));
-		word_arrays[i] = meetup_raw;
-		word_arrays_sizes[i]=meetup_raw_len;	
-	    } 
-	    	    	    
-	    //N words
-	     if (g_strcmp0(word_str_lower,"new")==0) {
-		word_arrays[i] = (unsigned char*)malloc(new_raw_len * sizeof(unsigned char));
-		word_arrays[i] = new_raw;
-		word_arrays_sizes[i]=new_raw_len;	
-	    }
-	    
-	    if (g_strcmp0(word_str_lower,"no")==0) {
-		word_arrays[i] = (unsigned char*)malloc(no_raw_len * sizeof(unsigned char));
-		word_arrays[i] = no_raw;
-		word_arrays_sizes[i]=no_raw_len;	
-	    }
-	     
-	     //P words
-	    if (g_strcmp0(word_str_lower,"payment")==0) {
-		word_arrays[i] = (unsigned char*)malloc(payment_raw_len * sizeof(unsigned char));
-		word_arrays[i] = payment_raw;
-		word_arrays_sizes[i]=payment_raw_len;	
-	    } 
-	    if (g_strcmp0(word_str_lower,"pm")==0) {
-		word_arrays[i] = (unsigned char*)malloc(pm_raw_len * sizeof(unsigned char));
-		word_arrays[i] = pm_raw;
-		word_arrays_sizes[i]=pm_raw_len;
-	    }
-	     if (g_strcmp0(word_str_lower,"priority")==0) {
-		word_arrays[i] = (unsigned char*)malloc(priority_raw_len * sizeof(unsigned char));
-		word_arrays[i] = priority_raw;
-		word_arrays_sizes[i]=priority_raw_len;	
-	    }
-	    //R words
-	    if (g_strcmp0(word_str_lower,"reminder")==0) {
-		word_arrays[i] = (unsigned char*)malloc(reminder_raw_len * sizeof(unsigned char));
-		word_arrays[i] = reminder_raw;
-		word_arrays_sizes[i]=reminder_raw_len;	
-	    }
-	    if (g_strcmp0(word_str_lower,"restaurant")==0) {
-		word_arrays[i] = (unsigned char*)malloc(restaurant_raw_len * sizeof(unsigned char));
-		word_arrays[i] = restaurant_raw;
-		word_arrays_sizes[i]=restaurant_raw_len;	
-	    }
-	    //S words
-	     if (g_strcmp0(word_str_lower,"spring")==0) {
-		word_arrays[i] = (unsigned char*)malloc(spring_raw_len * sizeof(unsigned char));
-		word_arrays[i] = spring_raw;
-		word_arrays_sizes[i]=spring_raw_len;
-		}	
-	    
-	    //T words
-	    if (g_strcmp0(word_str_lower,"task")==0) {
-		word_arrays[i] = (unsigned char*)malloc(task_raw_len * sizeof(unsigned char));
-		word_arrays[i] = task_raw;
-		word_arrays_sizes[i]=task_raw_len;	
-	    }
-	    if (g_strcmp0(word_str_lower,"today")==0) {
-		word_arrays[i] = (unsigned char*)malloc(today_raw_len * sizeof(unsigned char));
-		word_arrays[i] = today_raw;
-		word_arrays_sizes[i]=today_raw_len;	
-	    }
-	    if (g_strcmp0(word_str_lower,"travel")==0) {
-		word_arrays[i] = (unsigned char*)malloc(travel_raw_len * sizeof(unsigned char));
-		word_arrays[i] = travel_raw;
-		word_arrays_sizes[i]=travel_raw_len;	
-	    }
-	    //U words	    
-	    if (g_strcmp0(word_str_lower,"upcoming")==0) {
-		word_arrays[i] = (unsigned char*)malloc(upcoming_raw_len * sizeof(unsigned char));
-		word_arrays[i] = upcoming_raw;
-		word_arrays_sizes[i]=upcoming_raw_len;
-	    }	
-	    
-	    //V words
-	    
-	    if (g_strcmp0(word_str_lower,"visit")==0) {
-		word_arrays[i] = (unsigned char*)malloc(visit_raw_len * sizeof(unsigned char));
-		word_arrays[i] = visit_raw;
-		word_arrays_sizes[i]=visit_raw_len;	
-	    }
-	    //W words
-	    if (g_strcmp0(word_str_lower,"work")==0) {
-		word_arrays[i] = (unsigned char*)malloc(work_raw_len * sizeof(unsigned char));
-		word_arrays[i] = work_raw;
-		word_arrays_sizes[i]=work_raw_len;	
-	    }
-	     //Y words
-	    if (g_strcmp0(word_str_lower,"year")==0) {
-		word_arrays[i] = (unsigned char*)malloc(year_raw_len * sizeof(unsigned char));
-		word_arrays[i] = year_raw;
-		word_arrays_sizes[i]=year_raw_len;	
-	    }																													
-	
-	}//for
+	//word dictioary
+	get_words_array(speak_word_list, word_number,word_arrays,word_arrays_sizes);
 		
 	//concatenate using raw cat
 	unsigned char *data = rawcat(word_arrays, word_arrays_sizes, word_number);	
@@ -6215,16 +4816,16 @@ static void speak_events() {
     fwrite(data, data_len, 1, f);
     fclose(f); 
     
+     
+    //task = g_task_new (self, cancellable, callback, user_data);
+    //GTask* task = g_task_new(NULL, cancellable, NULL, NULL);
 	GTask* task = g_task_new(NULL, NULL, NULL, NULL);
     g_task_run_in_thread(task, play_audio_async);     
     g_object_unref(task);
 	
 	//clean up 
 	g_list_free(speak_word_list);	
-	free(data);	//prevent memory leak
-	
-
-	
+	free(data);	//prevent memory leak	
 }
 
 //=====================================================================
@@ -6719,9 +5320,7 @@ static void callbk_preferences(GSimpleAction* action, GVariant *parameter,gpoint
 	{
 		gtk_color_dialog_button_set_rgba (GTK_COLOR_DIALOG_BUTTON(colour_button_holiday),&rgba_holiday);
 	}
-		
 	
-
 	button_set = gtk_button_new_with_label ("Set Preferences");
 	g_signal_connect (button_set, "clicked", G_CALLBACK (callbk_set_preferences), window);
 
@@ -6735,8 +5334,7 @@ static void callbk_preferences(GSimpleAction* action, GVariant *parameter,gpoint
 	label_todaycolour = gtk_label_new("Today Colour: ");		
 	label_holidaycolour = gtk_label_new("Public Holiday Colour: ");	
 	label_eventcolour = gtk_label_new("Event Colour: ");
-	
-	
+		
 	//speech
 	check_button_speak = gtk_check_button_new_with_label ("Enable Speaking");
 	check_button_speak_startup = gtk_check_button_new_with_label ("Speak At Startup");
@@ -6865,7 +5463,19 @@ static void callbk_preferences(GSimpleAction* action, GVariant *parameter,gpoint
 	gtk_window_present(GTK_WINDOW(dialog));
 		
 }
+//=====================================================================
 
+static void callbk_replay_speaking(GSimpleAction *action, GVariant *parameter,  gpointer user_data)
+{
+	g_print("replay");
+	GtkWidget *window = user_data;
+	
+	if(m_speak==0) return;
+	if (m_speaking ==TRUE) return;
+	
+	speak_events();	
+	
+}
 
 //======================================================================
 
@@ -6899,8 +5509,7 @@ static void callbk_info(GSimpleAction *action, GVariant *parameter,  gpointer us
 	PangoAttrList *attrs;
 	attrs = pango_attr_list_new();	 
 	pango_attr_list_insert(attrs, pango_attr_weight_new(PANGO_WEIGHT_BOLD));
-		
-    //replaced dialog with window as gtk_dialog_new_with_buttons to be deprecated gtk4.10
+
 	dialog =gtk_window_new();
 	
 	gtk_window_set_default_size(GTK_WINDOW(dialog),380,100);
@@ -7008,6 +5617,7 @@ static void window_header(GtkWindow *window)
 	GtkWidget *menu_button;
 	GtkWidget *label;
 	GtkWidget *button_new_event;
+	GtkWidget *button_replay;	
 	GtkWidget *popover;
 	
 	header = gtk_header_bar_new ();  
@@ -7016,8 +5626,11 @@ static void window_header(GtkWindow *window)
 	//create headerbar buttons
 	button_new_event = gtk_button_new_with_label ("New Event");
 	g_signal_connect (button_new_event, "clicked", G_CALLBACK (callbk_new_event), window);
-	
 	gtk_header_bar_pack_start(GTK_HEADER_BAR (header), button_new_event);
+	
+	button_replay = gtk_button_new_from_icon_name ("view-refresh-symbolic");
+	gtk_widget_set_tooltip_text(button_replay, "Replay");
+	g_signal_connect (button_replay, "clicked", G_CALLBACK (callbk_replay_speaking), window);
   
 	//create menu (model)
 	GMenu *menu;
@@ -7049,8 +5662,7 @@ static void window_header(GtkWindow *window)
 	item =g_menu_item_new("Delete All Events", "app.deleteall");
 	g_menu_append_item(menu,item);
 	g_object_unref(item);	
-	
-	
+		
 	//Calendar items
 	item =g_menu_item_new("Go To Today", "app.home");
 	g_menu_append_item(menu,item);
@@ -7076,17 +5688,21 @@ static void window_header(GtkWindow *window)
 	g_menu_append_item(menu,item);
 	g_object_unref(item);
 		
+	//symbolic menu
 	//menu_button = gtk_menu_button_new();
 	//gtk_widget_set_tooltip_text(menu_button, "Menu");
 	//gtk_menu_button_set_icon_name (GTK_MENU_BUTTON (menu_button),"open-menu-symbolic"); 		
 	//gtk_menu_button_set_menu_model (GTK_MENU_BUTTON (menu_button), G_MENU_MODEL(menu));
 	
+	//popver menu
 	//Use GTK4 popover i.e. a bubble-like context popup now used to replace menus
 	menu_button = gtk_menu_button_new ();	
 	popover = gtk_popover_menu_new_from_model(G_MENU_MODEL(menu));
 	gtk_menu_button_set_popover(GTK_MENU_BUTTON (menu_button),popover);
 	gtk_popover_set_has_arrow(GTK_POPOVER(popover),TRUE);
 	
+		
+	gtk_header_bar_pack_end(GTK_HEADER_BAR (header), button_replay);
 	gtk_header_bar_pack_end(GTK_HEADER_BAR (header), menu_button);
 	  
 }
@@ -7136,16 +5752,7 @@ static void activate (GtkApplication *app, gpointer  user_data)
 	g_object_set(calendar, "todaycolour", m_todaycolour, NULL);
 	g_object_set(calendar, "eventcolour", m_eventcolour, NULL);
 	g_object_set(calendar, "holidaycolour", m_holidaycolour, NULL);	
-	
-		
-	
-	//char* day_str = g_strdup_printf("%d", m_start_day);
-	//char* month_str =g_strdup_printf("%d", m_start_month);
-	//char* year_str =g_strdup_printf("%d", m_start_year);	
-    //gchar *today_str="";
-    //today_str = g_strconcat(today_str, day_str, "-",month_str,"-",year_str,NULL);
-    //g_print("today is: %s\n", today_str);
-       
+	       
     set_titles_on_calendar(CUSTOM_CALENDAR(calendar));
 	custom_calendar_update(CUSTOM_CALENDAR(calendar));
     
@@ -7245,16 +5852,11 @@ static void activate (GtkApplication *app, gpointer  user_data)
 	gtk_application_set_accels_for_action(GTK_APPLICATION(app),"app.quit", quit_accels);
 	
 	g_timeout_add_seconds(1, callbk_timer_update, NULL);
-	
-	//send_notification((gpointer) "testing");
-	
-	 //speak_reminder();
-	
+		
 	if(m_speak && m_speak_at_startup) {
 		speak_events();		
 	}
 		
-	//speak_reminder();
 	gtk_window_maximize(GTK_WINDOW(window));
 	
 	gtk_window_set_child(GTK_WINDOW(window),GTK_WIDGET(calendar));

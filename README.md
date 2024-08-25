@@ -34,7 +34,7 @@ The "org.gtk.speakingcalendar.desktop" file is shown below. You need to modify t
 
 ```
 [Desktop Entry]
-Version=0.1.0
+Version=0.1.1
 Type=Application
 Name=Speaking Calendar
 Comment=Linux Speaking Calendar
@@ -96,6 +96,7 @@ A tooltip is a text bubble that displays event details when the mouse hovers ove
 
 * Select "Search For Events" from the hamburger menu .
 * Enter a search term or location.
+* See screenshot below.
 
 ![](speakingcalendar-search.png)
 
@@ -113,7 +114,7 @@ A tooltip is a text bubble that displays event details when the mouse hovers ove
 
 ## Speaking
 
-* Speaking the selected day events is done by pressing the "s" key or using the menu item "Speak Selected Day".
+* Speaking the selected day events is done by pressing the "s" key or using the menu item "Speak Selected Day" or replay button on the header bar.
 * Selecting a day in the month-view calendar will read out the date and any event details (e.g. time and event words) assuming that speaking is selected in the preferences.
 * The Linux Speaking Calendar will tell you the time if you press the "t" key (i.e. a speaking clock).
 * Change the "Speech Rate" value in the Preferences dialog to speed up speaking (if required).
