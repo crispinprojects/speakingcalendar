@@ -634,17 +634,21 @@ static void custom_calendar_init(CustomCalendar *calendar)
 	PangoAttrList *attr;
 	attr = pango_attr_list_new();	
 	pango_attr_list_insert(attr, pango_attr_weight_new(PANGO_WEIGHT_BOLD));
-	calendar->btn_next_month = gtk_button_new_with_label ("Next Month >");		
+	
+	calendar->btn_next_month = gtk_button_new_with_label ("Next Month >");
+	gtk_widget_set_tooltip_text(GTK_WIDGET(calendar->btn_next_month), "Next Month");		
 	g_signal_connect_swapped(calendar->btn_next_month, "clicked", G_CALLBACK(callbk_next_month), calendar);
-
 	
 	calendar->btn_next_year=gtk_button_new_with_label ("Next Year >>");	
+	gtk_widget_set_tooltip_text(GTK_WIDGET(calendar->btn_next_year), "Next Year");
 	g_signal_connect_swapped(calendar->btn_next_year, "clicked", G_CALLBACK(callbk_next_year), calendar);
 	
 	calendar->btn_prev_month=gtk_button_new_with_label ("< Prev Month");
+	gtk_widget_set_tooltip_text(GTK_WIDGET(calendar->btn_prev_month), "Previous Month");
 	g_signal_connect_swapped(calendar->btn_prev_month, "clicked", G_CALLBACK(callbk_prev_month), calendar);
 
 	calendar->btn_prev_year =gtk_button_new_with_label ("<< Prev Year");
+	gtk_widget_set_tooltip_text(GTK_WIDGET(calendar->btn_prev_year), "Previous Year");
 	g_signal_connect_swapped(calendar->btn_prev_year, "clicked", G_CALLBACK(callbk_prev_year), calendar);
 
 	GtkWidget *label_my = gtk_label_new("month-year"); //label month year
@@ -773,6 +777,19 @@ static void custom_calendar_select_day(CustomCalendar *calendar, guint dday, gui
 	month_year_str = g_strconcat(month_year_str, " ", month_str, " ", year_str, NULL);
 	
 	gtk_label_set_label(GTK_LABEL(calendar->month_year_label), month_year_str);
+	
+	calendar->btn_next_month = gtk_button_new_with_label ("Next Month >");
+	gtk_widget_set_tooltip_text(GTK_WIDGET(calendar->btn_next_month), "Next Month");		
+	g_signal_connect_swapped(calendar->btn_next_month, "clicked", G_CALLBACK(callbk_next_month), calendar);
+	
+	//if(calendar->show_tooltips==1)
+    //{
+	//gtk_widget_set_tooltip_text(GTK_WIDGET(calendar->btn_next_year), "Next Year");
+	//gtk_widget_set_tooltip_text(GTK_WIDGET(calendar->btn_next_month), "Next Month");
+	//gtk_widget_set_tooltip_text(GTK_WIDGET(calendar->btn_prev_year), "Previous Year");
+	//gtk_widget_set_tooltip_text(GTK_WIDGET(calendar->btn_prev_month), "Previous Month");
+    //}
+	
 	
 	GDate *today_date;
 	today_date = g_date_new();

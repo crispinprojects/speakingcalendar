@@ -34,7 +34,7 @@ The "org.gtk.speakingcalendar.desktop" file is shown below. You need to modify t
 
 ```
 [Desktop Entry]
-Version=0.1.1
+Version=0.1.2
 Type=Application
 Name=Speaking Calendar
 Comment=Linux Speaking Calendar
@@ -241,7 +241,7 @@ You may need to use the [Ubuntu snap store](https://snapcraft.io/) to install th
 
 ### Building on Debian 12 Bookworm
 
-Debian 12 Bookworm uses GTK4.8. The Speaking Calendar source code has been developed using GTK4.14 (Fedora 40) and so it will not compile using GTK4.8 without making a number of changes (see code notes below). Debian testing (Trixie) is the current development state of the next stable Debian distribution. According to the [Debian GTK4 tracker](https://tracker.debian.org/pkg/gtk4) Trixie currently has GTK4.12 in its repositories. Debian experimental is using GTK4.14. Speaking Calendar code will most likely compile using Debian testing and experimental but I have not tried this.
+Debian 12 Bookworm uses GTK4.8. The Speaking Calendar source code has been developed using GTK4.14 (Fedora 40) and so it will not compile using GTK4.8 without making a number of changes to the source code (see code notes below). Debian testing (Trixie) is the current development state of the next stable Debian distribution. According to the [Debian GTK4 tracker](https://tracker.debian.org/pkg/gtk4) Trixie currently has GTK4.12 in its repositories. Debian experimental is using GTK4.14. Speaking Calendar code will most likely compile using Debian testing and experimental but I have not tried this.
 
 To determine which version of GTK4 is running on a Debian system use the following terminal command.
 
@@ -265,15 +265,19 @@ The Calendar itself has received a number of updates including using tooltips to
 
 Speaking Calendar incorporates a small word-based speech synthesizer used to concatenate and play-back pre-recorded English words using the computer speaker. The voice used by this version of Speaking Calendar is based on my own recordings and so is subject to same license as the project. Words are recorded in a headless RAW audio format so that they can be converted to hexadecimal values and stored in an array and added to a voice header file. The voice will be improved and updated in future versions of the project.
 
-Many open source and commercial speech synthesizers use the formant speech synthesis approach. For example, the excellent [eSpeak](https://espeak.sourceforge.net/) open source speech synthesizer for Linux and Windows uses a formant synthesis method. I had considered using eSpeak rather than code my own speech synthesizer but I discovered that some of its components may not be compatible with the GTK LGPL v2.1 license. For example, the IEEE80.c file [license](https://github.com/espeak-ng/espeak-ng/blob/c1d9341f86eee4b7a0da50712b627d8a76e92fea/src/libespeak-ng/ieee80.c) says "Copyright (C) 1989-1991 Apple Computer, Inc." which is very strange given that espeak has a GPL v3 [license](https://espeak.sourceforge.net/license.html). This is discussed further in the forum post [here](https://opensource.stackexchange.com/questions/11545/possibilities-to-use-a-gpl-v3-licensed-library-in-a-closed-source-game). 
+I spend some time investigating speech synthesis. One approach I looked into was to separately install the eSpeak speech synthesizer so that commands could be send to it for speech output. The [eSpeak](https://espeak.sourceforge.net/) open source speech synthesizer is widely available in most Linux distributions. However, I discovered a potential eSpeak license compatibility issue in that some of its components may not be compatible with the GTK LGPL v2.1 license. For example, the IEEE80.c file [license](https://github.com/espeak-ng/espeak-ng/blob/c1d9341f86eee4b7a0da50712b627d8a76e92fea/src/libespeak-ng/ieee80.c) says "Copyright (C) 1989-1991 Apple Computer, Inc." which is very strange given that espeak has a GPL v3 [license](https://espeak.sourceforge.net/license.html). This is discussed further in the forum post [here](https://opensource.stackexchange.com/questions/11545/possibilities-to-use-a-gpl-v3-licensed-library-in-a-closed-source-game). Consequently, I decided not to use eSpeak.
 
-Consequently, as Speaking Calendar is a hobby project I would rather just use my own small word-based speech synthesizer  to avoid any potential license compatibility issues with using eSpeak. 
+Many open source (e.g. eSpeak) and commercial speech synthesizers use the formant speech synthesis approach. I looked into developing a small formant speech synthesizer the details of which can be found [here](https://github.com/crispinprojects/formant-synthesizer). The sound quality is very robotic with buzzing and humming background noise and so I have not used this.
 
-I have also been working on a formant speech synthesizer the details of which can be found [here](https://github.com/crispinprojects/formant-synthesizer) but the sound quality is very robotic with buzzing and humming background noise.
+I then developed a diphone speech synthesizer the details of which can be found [here](https://github.com/crispinprojects/talkdp). I decided that audibility was not a good as just using a word concatenation approach which is currently used. 
+
+As Speaking Calendar is a hobby project I would rather just use my own small word-based speech synthesizer coded from scratch and based on my own voice so that I can use the LGPL v2.1 license in-line with the rest of the project.
 
 ### History
 
-The original project was named Talk Calendar but feedback suggested that the project would have some sort of voice control which is not the case.  The name "Speaking Calendar" better conveys the purpose of the application. Also early versions of this project required that the eSpeak speech synthesizer be installed separately so that commands could be send to it to handle speech output.  However, I dropped this approach in favour of my own integral speech engine. I also discovered a potential eSpeak license compatibilty issue discussed above.
+The original project was named Talk Calendar but feedback along the lines "how do you talk to it" made me realise that this was not a good name as it suggested some sort of voice control which is not the case.  The name "Speaking Calendar" better conveys the purpose of the application. In the same way as a speaking clock reads out the time this speaking calendar read outs calendar event details (it also incorporates a speaking clock).
+
+Regarding GUI toolkits, I experimented with C++ based GUI toolkits such as [gtkmm](https://www.gtkmm.org/en/documentation.html), [CopperSpice](https://www.copperspice.com/) and [Qt](https://www.qt.io/). Qt announced various license changes so that their LTS versions would be [commercial only](https://www.phoronix.com/news/Qt-6.5.4-LTS-Out). Consequently, Qt was not an option for this project. Regarding gtkmm there were articles suggesting that it was heading towards [non-maintenance](https://www.reddit.com/r/GTK/comments/t0mybk/is_it_unwise_to_start_a_new_project_using_gtkmm/). Copperspice turned out to be excellent but it is not widely available in Linux repositories and so shared libraries specific to different Linux distributions would have to be packaged and shipped with the calendar application. Consequently, I decided to use C and GTK4 as both runtime packages (used for running built software) and development packages (used for building software) are available in most Linux distributions.
 
 ## Versioning
 

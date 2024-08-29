@@ -47,8 +47,10 @@ void get_words_array(GList *speak_word_list, int word_number,unsigned char **wor
 	    	    
 		if (g_strcmp0(word_str_lower,"tuesday")==0) {			
 		word_arrays[i] = (unsigned char*)malloc(tuesday_raw_len * sizeof(unsigned char));
-		word_arrays[i] = tuesday_raw;	
+		word_arrays[i] = tuesday_raw;
+		word_arrays_sizes[i]=tuesday_raw_len; 	
 	    }
+	    
 		if (g_strcmp0(word_str_lower,"wednesday")==0) {		
 		word_arrays[i] = (unsigned char*)malloc(wednesday_raw_len * sizeof(unsigned char));
 		word_arrays[i] = wednesday_raw;
