@@ -3722,7 +3722,7 @@ static void callbk_about(GSimpleAction * action, GVariant *parameter, gpointer u
 	gtk_widget_set_size_request(about_dialog, 200,200);
     gtk_window_set_modal(GTK_WINDOW(about_dialog),TRUE);
 	gtk_about_dialog_set_program_name(GTK_ABOUT_DIALOG(about_dialog), "Speaking Calendar");
-	gtk_about_dialog_set_version (GTK_ABOUT_DIALOG(about_dialog), "Version 0.1.2");
+	gtk_about_dialog_set_version (GTK_ABOUT_DIALOG(about_dialog), "Version 0.1.3");
 	gtk_about_dialog_set_copyright(GTK_ABOUT_DIALOG(about_dialog),"Copyright © 2024");
 	gtk_about_dialog_set_comments(GTK_ABOUT_DIALOG(about_dialog),"Linux Speaking Calendar");
 	gtk_about_dialog_set_license_type (GTK_ABOUT_DIALOG(about_dialog), GTK_LICENSE_LGPL_2_1);
@@ -4832,11 +4832,33 @@ static void speak_events() {
 	        {
 				//find titles
 				gchar *summary_str = "";
+				int start_year=0;
+				int start_month=0;
+				int start_day =0;
 				gint is_priority;
+				
 				CalendarEvent *evt = g_array_index(evts_upcoming, CalendarEvent *, i);
+				
 				g_object_get(evt, "summary", &summary_str, NULL);
-				g_object_get(evt, "ispriority", &is_priority, NULL);
+				g_object_get(evt, "startyear", &start_year, NULL);
+				g_object_get(evt, "startmonth", &start_month, NULL);
+				g_object_get(evt, "startday", &start_day, NULL);
+				//g_object_get(evt, "starthour", &start_hour, NULL);
+				//g_object_get(evt, "startmin", &start_min, NULL);						
+				//g_object_get(evt, "isallday", &is_allday, NULL);
+				g_object_get(evt, "ispriority", &is_priority, NULL);	
+				
+				
+				
+				gchar *dow_str=get_day_of_week(start_day, start_month, start_year);	//get day of week
+				gchar *day_number_str=get_day_number_ordinal_string(start_day); //get day number
+				gchar *month_str=get_month_string(start_month); //get month
+				
+				speak_word_list = g_list_append(speak_word_list, dow_str);
+				speak_word_list = g_list_append(speak_word_list, day_number_str);
+				speak_word_list = g_list_append(speak_word_list, month_str);
 				speak_word_list = g_list_append(speak_word_list, summary_str);
+								
 				if(is_priority) {
 					speak_word_list = g_list_append(speak_word_list, "high");
 					speak_word_list = g_list_append(speak_word_list, "priority");
