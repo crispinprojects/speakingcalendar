@@ -34,7 +34,7 @@ The "org.gtk.speakingcalendar.desktop" file is shown below. You need to modify t
 
 ```
 [Desktop Entry]
-Version=0.1.2
+Version=0.1.4
 Type=Application
 Name=Speaking Calendar
 Comment=Linux Speaking Calendar

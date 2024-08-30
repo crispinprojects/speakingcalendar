@@ -3722,7 +3722,7 @@ static void callbk_about(GSimpleAction * action, GVariant *parameter, gpointer u
 	gtk_widget_set_size_request(about_dialog, 200,200);
     gtk_window_set_modal(GTK_WINDOW(about_dialog),TRUE);
 	gtk_about_dialog_set_program_name(GTK_ABOUT_DIALOG(about_dialog), "Speaking Calendar");
-	gtk_about_dialog_set_version (GTK_ABOUT_DIALOG(about_dialog), "Version 0.1.3");
+	gtk_about_dialog_set_version (GTK_ABOUT_DIALOG(about_dialog), "Version 0.1.4");
 	gtk_about_dialog_set_copyright(GTK_ABOUT_DIALOG(about_dialog),"Copyright © 2024");
 	gtk_about_dialog_set_comments(GTK_ABOUT_DIALOG(about_dialog),"Linux Speaking Calendar");
 	gtk_about_dialog_set_license_type (GTK_ABOUT_DIALOG(about_dialog), GTK_LICENSE_LGPL_2_1);
@@ -4866,7 +4866,7 @@ static void speak_events() {
 			 speak_word_list = g_list_append(speak_word_list, "space"); //space between events	
 			 speak_word_list = g_list_append(speak_word_list, "space");			
 			}
-					
+			 g_array_free(evts_upcoming, TRUE);	
 		}//m_speak_upcoming	
 	
 	
@@ -5218,7 +5218,7 @@ static void callbk_set_preferences(GtkButton *button, gpointer  user_data)
 	GtkWidget *colour_button_today= g_object_get_data(G_OBJECT(button), "colour-button-today-key");
 	GtkWidget *colour_button_event= g_object_get_data(G_OBJECT(button), "colour-button-event-key");
 	GtkWidget *colour_button_holiday= g_object_get_data(G_OBJECT(button), "colour-button-holiday-key");
-		
+			
 	const GdkRGBA *rgba_today;
 	rgba_today = gtk_color_dialog_button_get_rgba(GTK_COLOR_DIALOG_BUTTON(colour_button_today));	
 	m_todaycolour = gdk_rgba_to_string (rgba_today);			
@@ -5297,9 +5297,10 @@ static void callbk_set_preferences(GtkButton *button, gpointer  user_data)
 	set_titles_on_calendar(CUSTOM_CALENDAR(calendar));
 	custom_calendar_update(CUSTOM_CALENDAR(calendar));
 		
-	//g_free(rgba_today);
-	//g_free(rgba_event);
-	//g_free(rgba_holiday);
+	//core dumped when attempting to free (invalid pointer)
+	//g_free((GdkRGBA*)rgba_today);
+	//g_free((GdkRGBA*)rgba_event);
+	//g_free((GdkRGBA*)rgba_holiday);
 	
 	gtk_window_destroy(GTK_WINDOW(dialog));
 	
